@@ -50,16 +50,23 @@ para a ingestão de novas fontes de dados.
 %
 
 Em contraposto, o \textit{Data Lake} (DL) é projetado para armazenar grandes volumes de dados em seu formato nativo, 
-sem a necessidade de pré-processamento. 
+sem a necessidade de pré-processamento, podendo estar estruturados, semi-estruturados ou não estruturados. Nessa abordagem, 
+o conceito de \textit{schema-on-read} é aplicado, ou seja, os dados são ingeridos sem uma política extrita de modelagem de dados 
+a ser seguida desde o início. Essa maior flexibilidade torna maior a escala da infraestrutura proposta, entretanto, isso faz
+com que seja mais suscetível a casos de \textit{data swamp}, ou seja, um repositório de dados desorganizado e sem governança.
+%
 
-\cite{nuthalapati2024architecting}, \cite{sundar2022comprehensive}
+Na tentativa de propor um modelo arquitetural híbrido que aplicasse conceitos de ambas as arquiteturas, \cite{sundar2022comprehensive} aplica
+um modelo arquitetônico híbrido, que combina as características de de armazenamento massivo com uma estruturação de qualidade de
+dados voltados à política de governança de dados \cite{nuthalapati2024architecting}.
+%
 
-
-
-
-
-
-
+Portanto, em nossa solução, embora operemos na camada basal como um Data Lake autogerenciado em Hadoop para garantir a 
+escalabilidade do insumo bruto, seguimos o entendimento literário de que abordagens analíticas empresariais necessitam de 
+sistematicidade \cite{sundar2022comenig}. Entende-se que as mesmas engrenagens do HDFS, ao serem coordenadas de forma 
+disciplinada, são o alicerce viável para que uma camada lógica superior — semelhante a um ecossistema Lakehouse na nuvem
+ — posicione os dados governados, garantindo assim que a plataforma forneça valor sem perdas de governança e legibilidade
+ em função de altos volumes de dados.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Infrastructure As Code (IaC)}
