@@ -54,41 +54,13 @@ Therefore, although our proposed solution operates at its foundational layer as 
 \bnote{Trazer a base teórica de IaC. Por que usar código em vez de configurar via console (ClickOps)? Focar na idempotência e na reprodutibilidade do cluster.}
 \bnote{Explicar como IaC possibilita a reprodutibilidade descrita na introdução e as vantagens/desafios da arquitetura ARM.}
 
-Com a evolução do paradigma da computação em nuvem, no contexto de infraestrutura como serviço (IaaS), surgiu a 
-necessidade de gerenciar e provisionar recursos de forma automatizada, dando origem ao conceito de Infraestrutura 
-como Código (IaC). Isso ocorre como uma resposta automatizada e mais rápida à operações realizadas no modelo \textit{ClickOps},
-onde a infraestrutura provisionada é gerenciada manualmente por meio de interface de linha de comando ou gráfica. Dessa
-forma, o paradigma de Infraestrutura como Código (\emph{Infrastructure as Code} - IaC) emergiu, 
-tratando a definição e provisão de servidores e serviços na nuvem da mesma maneira que se desenvolvem códigos de 
-\textit{software} \cite{morris2016infrastructure}.
-%
+With the evolution of the cloud computing paradigm, particularly within the context of Infrastructure as a Service (IaaS), the need emerged to manage and provision resources in an automated manner, giving rise to the concept of Infrastructure as Code (IaC). This approach serves as an automated and faster response to operations performed under the \emph{ClickOps} model, where provisioned infrastructure is managed manually through graphical user interfaces or ad-hoc command-line executions. Thus, the \emph{Infrastructure as Code} (IaC) paradigm emerged, treating the definition and provisioning of servers and cloud services in the same way that software code is developed \cite{morris2016infrastructure}.
 
-Segundo \cite{morris2016infrastructure}, os princípios fundamentais da IaC baseiam-se em automatizar o fluxo de 
-infraestrutura de modo que as configurações não precisem da memória operacional de uma equipe ou de documentações 
-passivas; o estado do sistema e sua forma de provisão ficam formalmente documentados no próprio código.
-\cite{Bollineni2022IaCDataEngineering}. No contexto da engenharia de dados, \cite{Bollineni2022IaCDataEngineering} 
-argumenta que a adoção de IaC mitiga riscos operacionais significativos e é um fator essencial para garantir 
-previsibilidade em pipelines de processamento.
-%
+According to \cite{morris2016infrastructure}, the fundamental principles of IaC are based on automating the infrastructure workflow so that configurations do not rely on a team's operational memory or passive documentation; instead, the system's state and its provisioning methods are formally documented within the code itself \cite{Bollineni2022IaCDataEngineering}. In the context of data engineering, \cite{Bollineni2022IaCDataEngineering} argues that adopting IaC mitigates significant operational risks and is an essential factor in ensuring predictability in processing pipelines.
 
-Essa transformação da infraestura em código, faz com que seja mais rastreável e previsível os requisitos arquitetônicos de 
-determinada infraestutura, como também, com o auxílio de ferramentas de versionamento, é possível identificar mudanças que
-podem, ou não, ter introduzido falhas estruturais ou vulnerabilidades.
-%
+This transformation of infrastructure into code makes the architectural requirements of a given infrastructure more traceable and predictable. Furthermore, with the aid of version control tools, it becomes possible to identify changes that may or may not have introduced structural flaws or vulnerabilities.
 
-Para criar o \textit{cluster} descentralizado que embasa a pesquisa proposta, a utilização do paradigma IaC é imperativa 
-e centraliza-se em duas propriedades essenciais: \textbf{idempotência} e \textbf{reprodutibilidade}. Ferramentas 
-declarativas como o Terraform asseguram que o estado final da infraestrutura na Oracle Cloud (OCI) sempre reflita 
-exatamente o que está codificado, destruindo ou recriando nós (\textit{nodes}) somente quando necessário. Posteriormente,
- ferramentas de automação orientadas a tarefas, como o Ansible, atilam-se a esse cenário configurando o sistema 
- operacional e realizando as tarefas referentes à configuração prévia do ambiente, em todas as máquinas, e realizando por fim
- o deploy do ambiente final.
-
-
-
-
-
-
+To create the decentralized \emph{cluster} that underpins the proposed research, utilizing the IaC paradigm is imperative, and it centers on two essential properties: \textbf{idempotency} and \textbf{reproducibility}. Declarative tools such as Terraform ensure that the final state of the infrastructure in the Oracle Cloud Infrastructure (OCI) always reflects exactly what is coded, destroying or recreating nodes only when necessary. Subsequently, task-oriented automation tools such as Ansible adapt to this scenario by configuring the operating system, performing tasks related to the environment's preliminary setup across all machines, and ultimately deploying the final environment.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{ARM Architecture Family}
