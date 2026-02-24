@@ -48,7 +48,4 @@
 .DS_Store
 Thumbs.db
 
-# ============================================================
-# Exceções — garantir que assets permaneçam versionados
-# ============================================================
 !content/assets/**

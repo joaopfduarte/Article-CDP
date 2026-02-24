@@ -40,6 +40,17 @@ However, even with initiatives that reduce deployment and operational friction, 
 \tresumo{Data Lake vs DW: Estruturação de dados vs Armazenamento bruto.}
 \bnote{Criar um paralelo entre as duas abordagens (schema-on-read vs schema-on-write). Ligar este conceito à nossa solução: nós estamos propondo um Data Lake devido ao uso do HDFS/Hadoop para ingestão de múltiplas fontes.}
 
+No contexto de concepção de arquiteturas para processamento de alto volume de dados, duas arquiteturas têm grande presença: 
+o \textit{Data Warehouse} (DW) e o \textit{Data Lake} (DL).  O \textit{Data Warehouse} é consolidado como um repositório
+otimizado para carags de trabalho voltadas para \textit{Business Intelligence} (BI), de forma a, rigidamente, lidar com informação
+estruturada. Nessa abordagem, o conceito de \textit{schema-on-write} é mandatório, tal qual, toda informação é limpa, transformada
+e modelada antes de ser devidamente armazenada. Muito embora a confiabilidade dos dados tendem a ser superior, devido às 
+regras de armazenamento, essa abordagem se mostra mais rígida e custosa, demandando maior esforço de engenharia de dados 
+para a ingestão de novas fontes de dados.
+%
+
+Em contraposto, o \textit{Data Lake} (DL) é projetado para armazenar grandes volumes de dados em seu formato nativo, 
+sem a necessidade de pré-processamento. 
 
 \cite{nuthalapati2024architecting}, \cite{sundar2022comprehensive}
 
