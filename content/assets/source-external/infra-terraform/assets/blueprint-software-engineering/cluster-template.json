@@ -1,0 +1,43 @@
+{
+    "blueprint": "odp-blueprint",
+    "config_recommendation_strategy": "NEVER_APPLY",
+    "provision_action": "INSTALL_AND_START",
+    "configurations": [],
+    "host_groups": [
+        {
+            "name": "host_group_0",
+            "hosts": [
+                {
+                    "fqdn": "master.cdp"
+                }
+            ]
+        },
+        {
+            "name": "host_group_1",
+            "hosts": [
+                {
+                    "fqdn": "node1.cdp"
+                }
+            ]
+        },
+        {
+            "name": "host_group_2",
+            "hosts": [
+                {
+                    "fqdn": "node2.cdp"
+                }
+            ]
+        },
+        {
+            "name": "host_group_3",
+            "hosts": [
+                {
+                    "fqdn": "node3.cdp"
+                }
+            ]
+        }
+    ],
+    "Clusters": {
+        "cluster_name": "cdp-cluster"
+    }
+}

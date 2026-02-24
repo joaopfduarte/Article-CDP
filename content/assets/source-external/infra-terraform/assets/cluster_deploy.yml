@@ -1,0 +1,123 @@
+- name: Deploy Ambari Cluster
+  hosts: localhost
+  gather_facts: no
+  vars:
+    ambari_user: admin
+    ambari_pass: admin
+    ambari_url: http://localhost:8080/api/v1
+    blueprint_file: /root/blueprint.json
+    vdf_file: /root/ODP-VDF.xml
+    cluster_template_file: /root/cluster-template.json
+    cluster_name: cdp-cluster
+
+  tasks:
+  - name: Attempt Deployment
+    block:
+    - name: Run Deployment Tasks (First Attempt)
+      include_tasks: deploy_tasks.yml
+      vars:
+        deploy_retries: 100
+
+    rescue:
+    - name: Deployment Failed - Starting Recovery Procedure
+      debug:
+        msg: "Deployment failed. Initiating cleanup and retry sequence..."
+
+    - name: Stop Ambari Server
+      shell: ambari-server stop
+      ignore_errors: yes
+
+    - name: Reset Ambari Server
+      shell: ambari-server reset --silent
+      ignore_errors: yes
+
+    - name: Remove Phoenix PID file
+      shell: rm -f /var/run/hbase/phoenix-hbase-queryserver.pid
+      ignore_errors: yes
+
+    - name: Run HDFS Corrections
+      shell: /root/hdfscorrections.sh
+      ignore_errors: yes
+
+    - name: Run Hive Setup
+      shell: /root/hivesetup.sh
+      ignore_errors: yes
+
+    - name: Ensure Ambari Server is started
+      shell: ambari-server start
+      ignore_errors: yes
+
+    - name: Second Deployment Attempt
+      block:
+      - name: Run Deployment Tasks (Retry after Reset)
+        include_tasks: deploy_tasks.yml
+        vars:
+          deploy_retries: 120
+
+      rescue:
+      - name: Second Deployment Failed - Starting Recovery Procedure
+        debug:
+          msg: "Second deployment attempt failed. Initiating cleanup and final retry sequence..."
+
+      - name: Stop Ambari Server (2nd retry)
+        shell: ambari-server stop
+        ignore_errors: yes
+
+      - name: Reset Ambari Server (2nd retry)
+        shell: ambari-server reset --silent
+        ignore_errors: yes
+
+      - name: Remove Phoenix PID file (2nd retry)
+        shell: rm -f /var/run/hbase/phoenix-hbase-queryserver.pid
+        ignore_errors: yes
+
+      - name: Run HDFS Corrections (2nd retry)
+        shell: /root/hdfscorrections.sh
+        ignore_errors: yes
+
+      - name: Run Hive Setup (2nd retry)
+        shell: /root/hivesetup.sh
+        ignore_errors: yes
+
+      - name: Ensure Ambari Server is started (2nd retry)
+        shell: ambari-server start
+        ignore_errors: yes
+
+      - name: Third Deployment Attempt
+        block:
+        - name: Run Deployment Tasks (Final Attempt)
+          include_tasks: deploy_tasks.yml
+          vars:
+            deploy_retries: 120
+
+        rescue:
+        - name: Final Deployment Failed - Execute Manual Service Initialization
+          debug:
+            msg: "All automated deployment attempts failed. Executing manual NiFi and Hive initialization..."
+
+        - name: Copy Manual Service Init Script to Master
+          copy:
+            src: manual_service_init.sh
+            dest: /root/manual_service_init.sh
+            mode: '0755'
+          ignore_errors: yes
+
+        - name: Execute Manual Service Initialization
+          shell: /root/manual_service_init.sh
+          register: manual_init_result
+          args:
+            executable: /bin/bash
+
+        - name: Display Manual Initialization Output
+          debug:
+            var: manual_init_result.stdout_lines
+
+        - name: Display Manual Initialization Errors (if any)
+          debug:
+            var: manual_init_result.stderr_lines
+          when: manual_init_result.stderr_lines is defined and manual_init_result.stderr_lines | length > 0
+
+        - name: Fail if Manual Initialization Failed
+          fail:
+            msg: "Manual service initialization failed. Check logs above for details."
+          when: manual_init_result.rc != 0

@@ -1,0 +1,21 @@
+#cloud-config
+package_update: true
+packages:
+- openssh-server
+- chrony
+- python3
+
+write_files:
+- path: /etc/hosts
+  append: true
+  content: |
+    10.0.0.2   ${hg1}
+    10.0.0.3   ${hg2}
+    10.0.0.4   ${hg3}
+    10.0.0.5   ${hg4}
+
+runcmd:
+- [ sh, -lc, "systemctl enable chronyd && systemctl start chronyd" ]
+- [ sh, -lc, "(setenforce 0 || true)" ]
+- [ sh, -lc, "systemctl stop firewalld || true" ]
+- [ sh, -lc, "systemctl disable firewalld || true" ]

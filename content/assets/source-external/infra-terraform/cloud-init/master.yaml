@@ -1,0 +1,162 @@
+#cloud-config
+package_update: true
+packages:
+- git
+- python3
+- python3-pip
+- openssh-clients
+- chrony
+
+write_files:
+- path: /root/.ssh/id_rsa
+  permissions: '0600'
+  owner: root:root
+  encoding: b64
+  content: ${private_key_pem_b64}
+
+- path: /etc/hosts
+  append: true
+  content: |
+    10.0.0.2   ${hg1}
+    10.0.0.3   ${hg2}
+    10.0.0.4   ${hg3}
+    10.0.0.5   ${hg4}
+
+- path: /etc/ansible/ansible.cfg
+  permissions: '0644'
+  content: |
+    [defaults]
+    host_key_checking = False
+    inventory = /etc/ansible/hosts
+    retry_files_enabled = False
+    deprecation_warnings = False
+    log_path = /var/log/ansible/ansible.log
+
+- path: /etc/ansible/hosts
+  permissions: '0644'
+  content: |
+    [master]
+    master.cdp
+
+    [workers]
+    node1.cdp
+    node2.cdp
+    node3.cdp
+
+    [all:vars]
+    ansible_user=opc
+    ansible_become=True
+    ansible_ssh_private_key_file=/root/.ssh/id_rsa
+
+- path: /root/hdfscorrections.sh
+  permissions: '0755'
+  owner: root:root
+  content: |
+    #!/bin/bash
+    if ! command -v hdfs &> /dev/null; then
+        echo "HDFS command not found, skipping HDFS corrections."
+        exit 0
+    fi
+    ambari-server stop
+    sudo -u hdfs hdfs dfs -chown root:root /odp/apps/1.2.2.0-128/hbase
+    sudo -u hdfs hdfs dfs -chmod 755 /odp/apps/1.2.2.0-128/hbase
+    sudo -u hdfs hdfs dfs -put /var/lib/ambari-agent/tmp/yarn-ats/1.2.2.0-128/hbase.tar.gz /odp/apps/1.2.2.0-128/hbase/
+    sudo -u hdfs hdfs dfs -chmod 555 /odp/apps/1.2.2.0-128/hbase
+
+    # Add ACL for dr.who user to access Hive warehouse
+    # Apply to existing files/directories
+    sudo -u hdfs hdfs dfs -setfacl -R -m user:dr.who:r-x /warehouse/tablespace/managed/hive 2>/dev/null || true
+    # Apply default ACL for future files/directories
+    sudo -u hdfs hdfs dfs -setfacl -R -m default:user:dr.who:r-x /warehouse/tablespace/managed/hive 2>/dev/null || true
+
+    ambari-server restart
+
+- path: /root/hivesetup.sh
+  permissions: '0755'
+  owner: root:root
+  content: |
+    #!/bin/bash
+    ambari-server stop
+    sed -i "s/^#port = 5432/port = 5432/" /var/lib/pgsql/data/postgresql.conf
+    echo "host all hive 10.0.0.2/32 trust" | tee -a /var/lib/pgsql/data/pg_hba.conf
+    sudo -u postgres psql -U postgres -c "CREATE DATABASE hive;" || true
+    sudo -u postgres psql -U postgres -c "CREATE USER hive WITH PASSWORD 'HiveUserMeta2025';" || true
+    sudo -u postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE hive TO hive;" || true
+    sudo -u postgres psql -U postgres -c "CREATE DATABASE ranger;" || true
+    sudo -u postgres psql -U postgres -c "CREATE USER rangeradmin WITH PASSWORD 'RangerAdminPassword2025';" || true
+    sudo -u postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ranger TO rangeradmin;" || true
+    systemctl restart postgresql
+    yum install -y postgresql-jdbc.noarch
+    ambari-server setup -j /usr/lib/jvm/java-1.8.0-openjdk --jdbc-db=postgres --jdbc-driver=/usr/share/java/postgresql-jdbc.jar
+    ambari-server start
+
+- path: /root/run-ansible.sh
+  permissions: '0755'
+  owner: root:root
+  content: |
+    #!/usr/bin/env bash
+    set -Eeuo pipefail
+    export PATH=$PATH:/usr/local/bin
+    KEY=/root/.ssh/id_rsa
+    HOSTS=(node1.cdp node2.cdp node3.cdp)
+    echo "[run-ansible] Preparando log do Ansible..."
+    mkdir -p /var/log/ansible || true
+    chmod 755 /var/log/ansible || true
+    echo "[run-ansible] Aguardando SSH dos workers..."
+    for h in "$${HOSTS[@]}"; do
+      echo "[run-ansible] Esperando $h:22 ficar disponível"
+      # espera a porta 22 responder por até 15 minutos
+      for i in $(seq 1 90); do
+        if timeout 3 bash -lc "</dev/tcp/$h/22" 2>/dev/null; then
+          break
+        fi
+        sleep 10
+      done
+      # testa SSH sem checagem de hostkey
+      for i in $(seq 1 30); do
+        if ssh -i "$KEY" -o StrictHostKeyChecking=no -o ConnectTimeout=5 opc@"$h" echo ok 2>/dev/null; then
+          break
+        fi
+        sleep 5
+      done
+    done
+    echo "[run-ansible] Aguardando Terraform provisionar arquivos..."
+    # Wait for Terraform to provision files (max 5 minutes)
+    for i in $(seq 1 60); do
+      if [ -f /root/site.yml ] && [ -f /root/cluster_deploy.yml ] && [ -f /root/deploy_tasks.yml ] && [ -f /root/manual_service_init.sh ]; then
+        echo "[run-ansible] Todos os arquivos provisionados encontrados!"
+        break
+      fi
+      echo "[run-ansible] Aguardando arquivos... ($i/60)"
+      sleep 5
+    done
+
+    # Verify files exist
+    if [ ! -f /root/site.yml ]; then
+      echo "[run-ansible] ERRO: site.yml não encontrado!"
+      exit 1
+    fi
+    if [ ! -f /root/cluster_deploy.yml ]; then
+      echo "[run-ansible] ERRO: cluster_deploy.yml não encontrado!"
+      exit 1
+    fi
+    if [ ! -f /root/deploy_tasks.yml ]; then
+      echo "[run-ansible] ERRO: deploy_tasks.yml não encontrado!"
+      exit 1
+    fi
+    if [ ! -f /root/manual_service_init.sh ]; then
+      echo "[run-ansible] ERRO: manual_service_init.sh não encontrado!"
+      exit 1
+    fi
+
+    echo "[run-ansible] Executando playbook de configuração..."
+    ANSIBLE_NOCOLOR=1 ansible-playbook /root/site.yml
+
+    echo "[run-ansible] Executando playbook de deploy..."
+    ANSIBLE_NOCOLOR=1 ansible-playbook /root/cluster_deploy.yml
+
+runcmd:
+- [ sh, -lc, "systemctl enable chronyd && systemctl start chronyd" ]
+- [ sh, -lc, "mkdir -p /var/log/ansible && chmod 755 /var/log/ansible" ]
+- [ sh, -lc, "python3 -m pip install --upgrade pip ansible" ]
+- [ sh, -lc, "/root/run-ansible.sh" ]

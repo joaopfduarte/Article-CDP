@@ -1,0 +1,107 @@
+# Copyright (c) 2019, 2020 Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+# 
+
+title: "CDP Data Lake"
+description: "Hadoop cluster"
+schemaVersion: 1.1.0
+
+source:
+  type: quickstart
+
+locale: "en"
+groupings:
+  - title: "Basic Hidden"
+    visible: false
+    variables:
+    - compartment_ocid
+    - tenancy_ocid
+    - region
+    - ocpus_master
+    - memory_in_gbs_master
+    - ocpus_worker
+    - memory_in_gbs_worker
+    - instance_shape
+    - image_operating_system
+    - image_operating_system_version
+    - instance_visibility_master
+    - instance_visibility_worker
+    - private_key_path
+    - user_ocid
+    - fingerprint
+    - generate_public_ssh_key
+
+  - title: "General Configuration"
+    variables:
+    - public_ssh_key
+    - is_pv_encryption_in_transit_enabled
+    - InstallAmbari
+    - PublicIP
+  
+  - title: "VPN Configuration"
+    variables:
+    - PublicIP_vpn
+    - StaticRoute
+    - PrivateIP
+    - IKEversion
+
+variables:
+  compartment_ocid:
+    type: oci:identity:compartment:id
+    required: true
+    title: "Compartment"
+    description: "Compartment in which cluster will be deployed"
+
+  public_ssh_key:
+    type: oci:core:ssh:publickey
+    title: "SSH Public Key"
+    description: "The public SSH key for the key-pair that you want to use, if you wish to login to the instances over SSH."
+    additionalProps:
+      allowMultiple: true
+    pattern: "((^(ssh-rsa AAAAB3NzaC1yc2|ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT|ecdsa-sha2-nistp384 AAAAE2VjZHNhLXNoYTItbmlzdHAzODQAAAAIbmlzdHAzOD|ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1Mj|ssh-ed25519 AAAAC3NzaC1lZDI1NTE5|ssh-dss AAAAB3NzaC1kc3)[0-9A-Za-z+\/]+[=]{0,3})( [^,]*)?)(,((ssh-rsa AAAAB3NzaC1yc2|ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT|ecdsa-sha2-nistp384 AAAAE2VjZHNhLXNoYTItbmlzdHAzODQAAAAIbmlzdHAzOD|ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1Mj|ssh-ed25519 AAAAC3NzaC1lZDI1NTE5|ssh-dss AAAAB3NzaC1kc3)[0-9A-Za-z+\/]+[=]{0,3})( [^,]*)?)*$"
+    visible: true
+    
+  is_pv_encryption_in_transit_enabled:
+    type: boolean
+    title: "Use in-transit encryption?"
+    description: "Encrypts data in transit between the instance and the boot volume. In-transit encryption for boot and block volumes is only available for virtual machine (VM) instances launched from Oracle-provided images, it is not supported on bare metal instances."
+    visible: true
+
+  installAmbari:
+    type: boolean
+    title: "Install Ambari and configure hosts?"
+    description: "Open Source Data Platform (ODP) stack version 1.2.2.0 from Clemlabs will be installed. https://www.opensourcedataplatform.com/"
+    visible: true
+
+  PublicIP:
+    type: string
+    title: "Type an IP to access the cluster applications and to be the VPN equipment"
+    description: "If null, edit in the Security List of the created VCN (vcn-data-lake) an IP to access the cluster ports running the applications"
+    visible: true
+  
+  PublicIP_vpn:
+    type: string
+    title: "IP address"
+    description: "This IP address will be used as your CPE IKE identifier."
+    visible: true
+
+  StaticRoute:
+    type: string
+    title: "Routes to your on-premises network"
+    description: "Provide an IPv4 CIDR block or IPv6 prefix."
+    visible: true
+
+  PrivateIP:
+    type: string
+    title: "CPE IKE identifier"
+    description: "Your identifier for your CPE device."
+    visible: true
+
+  IKEversion:
+    type: enum
+    enum:
+    - "V1"
+    - "V2"
+    title: "IKE version"
+    description: "The internet key exchange (IKE) version to use for this tunnel. Only select IKEv2 if your CPE supports it. You must also then configure the CPE to use only IKEv2 for this tunnel."
+    visible: true
