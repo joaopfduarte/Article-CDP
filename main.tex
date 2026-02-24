@@ -1,0 +1,130 @@
+%%%%%%%%%%%%%%%%%%%%%%
+% Inderscience Single Column Template Project
+% Based on singlecol-new.cls
+%%%%%%%%%%%%%%%%%%%%%%
+
+% Load the document class. 
+% Note: The .cls file must be in the same directory or within the TEX inputs path
+\documentclass{singlecol-new}
+
+% Load custom preamble (packages and commands)
+\input{structure/preamble}
+
+% Metadata Information
+\JOURNALNAME{\TEN{\it Int. J. Cloud Computing,
+Vol. \theVOL, No. \theISSUE, \thePUBYEAR\hfill\thepage}}%
+\VOL{1}
+\ISSUE{1}
+\PUBYEAR{2026}
+
+% Title and Author Information
+\title{Open-Source Framework for Secure and Scalable Data Lakes on Free-Tier Cloud Infrastructure}
+
+\authorB{Evandrino Gomes Barros}
+\affB{Department of Computing,\\
+Federal Center for Technological Education of Minas Gerais (CEFET-MG),\\
+Belo Horizonte, Brazil\\
+E-mail: evandrino@cefetmg.br}
+
+\authorA{João Pedro Ferreira Duarte}
+\affA{Department of Computing,\\
+Federal Center for Technological Education of Minas Gerais (CEFET-MG),\\
+Timóteo, Brazil\\
+E-mail: joao.duarte@aluno.cefetmg.br}
+
+\authorC{Rafael Pereira Duarte}
+\affC{Department of Computing,\\
+Federal Center for Technological Education of Minas Gerais (CEFET-MG),\\
+Belo Horizonte, Brazil\\
+E-mail: rafael.duarte@aluno.cefetmg.br}
+
+\authorD{Thiago de Souza Rodrigues}
+\affD{Department of Computing,\\
+Federal Center for Technological Education of Minas Gerais (CEFET-MG),\\
+Belo Horizonte, Brazil\\
+E-mail: thiagothiago@cefetmg.br}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Document Content
+\begin{document}
+
+% Abstract and Keywords
+\input{content/00-abstract}
+
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Main Content Sections
+\input{content/01-introduction}
+\input{content/02-Theoretical-Reference}
+\input{content/03-Technology-Patterns-and-Tools}
+\input{content/04-Architecture-Design}
+\input{content/05-Use-Case–Driven-Performance-Evaluation}
+\input{content/06-conclusion}
+
+% Bibliography
+% Use plainnat or similar style as per Inderscience requirement (often unsrt or plain)
+% The sample used natbib, so we stick to it if the class loads it.
+% The class loads natbib.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\clearpage
+\bibliographystyle{plainnat}
+\bibliography{bib/references}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\appendix
+% ============================================================
+% Appendix — Infrastructure Diagrams
+% ============================================================
+% This appendix presents the detailed infrastructure diagrams
+% that support the framework description in the main body.
+% Diagrams were generated from Mermaid source files and
+% rendered at 2400x1800 px for print quality.
+% ============================================================
+\clearpage
+\section{Provisioning Workflow — View 1: Terraform Execution}
+\label{appendix:prov-terraform}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth, height=0.90\textheight, keepaspectratio]{content/assets/provisioning-01-terraform.png}
+  \caption{Provisioning workflow — View 1: Terraform execution sequence,
+           from key generation to asset upload.
+           Continues in Appendix~\ref{appendix:prov-os}.}
+  \label{fig:prov-terraform}
+\end{figure}
+
+% ------------------------------------------------------------
+\clearpage
+\section{Provisioning Workflow — View 2: OS-Level Configuration}
+\label{appendix:prov-os}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth, height=0.78\textheight, keepaspectratio]{content/assets/provisioning-02-os.png}
+  \caption{Provisioning workflow — View 2: OS-level configuration
+           via cloud-init and Ansible \texttt{site.yml}.
+           Follows Appendix~\ref{appendix:prov-terraform};
+           continues in Appendix~\ref{appendix:prov-cluster}.}
+  \label{fig:prov-os}
+\end{figure}
+
+% ------------------------------------------------------------
+
+\clearpage
+\section{Provisioning Workflow — View 3: Cluster Deployment}
+\label{appendix:prov-cluster}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth, height=0.78\textheight, keepaspectratio]{content/assets/provisioning-03-cluster.png}
+  \caption{Provisioning workflow — View 3: Ambari REST API cluster
+           deployment with automated retry and recovery logic.
+           Follows Appendix~\ref{appendix:prov-os}.}
+  \label{fig:prov-cluster}
+\end{figure}
+
+\end{document}

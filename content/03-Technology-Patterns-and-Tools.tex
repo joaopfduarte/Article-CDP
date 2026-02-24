@@ -1,0 +1,54 @@
+\section{Technology Patterns and Tools}
+\label{sec:technology_patterns}
+
+\tresumo{Tecnologias Utilizadas: Detalhamento da infraestrutura ARM no OCI e a stack de software orquestrada pelo Apache Ambari.}
+
+The proposed Cefet-MG Data Platform (CDP) is characterized by a set of architectural patterns and technology choices aligned with scalable, low-cost data engineering. Its design follows the Data Lake paradigm, leveraging ARM-based cloud instances for cost-efficiency and an open-source Hadoop ecosystem managed via Apache Ambari.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Cloud Infrastructure and ARM Architecture}
+The infrastructure is provisioned on Oracle Cloud Infrastructure (OCI), specifically leveraging the ARM Ampere A1 compute instances to maximize cost-efficiency without compromising performance. The cluster configuration consists of four compute nodes, serving as a distinct implementation of Big Data workloads on non-x86 architectures.
+
+The hardware specifications for the cluster are defined as follows:
+\begin{enumerate}[noitemsep,topsep=0pt]
+    \item \textbf{Compute Shape:} VM.Standard.A1.Flex (ARMv8 architecture).
+    \item \textbf{Total Capacity:} 4 OCPUs and 24 GB of RAM, distributed across the cluster notes.
+    \item \textbf{Storage:} Block Volumes attached to each instance for HDFS and log management.
+    \item \textbf{Provisioning:} Automated via Terraform and Ansible, ensuring reproducibility and scalability.
+\end{enumerate}
+
+This configuration explicitly addresses the challenge of running resource-intensive Hadoop components on constrained, low-power hardware, validating the feasibility of ARM-based big data clusters. \bnote{Explicar a divisão/fragmentação dos 24GB de RAM e 4 OCPUs entre o nó master e os workers.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Software Stack and Component Orchestration}
+The software stack is built upon the OpenSource Data Platform (ODP), managed and orchestrated by Apache Ambari. Ambari provides a centralized interface for provisioning, managing, and monitoring the Hadoop cluster, abstracing the complexities of configuration management. \bnote{Conferir se alguma das tecnologias da stack apresenta limitação por rodar em arquitetura ARM, e como isso foi contornado.}
+
+The core components of the stack include:
+\begin{enumerate}[noitemsep,topsep=0pt]
+    \item \textbf{Core Infrastructure:} 
+    \begin{itemize}[noitemsep,topsep=0pt]
+        \item \textit{HDFS (Hadoop Distributed File System):} Provides the primary storage layer, configured for fault tolerance across the ARM nodes.
+        \item \textit{YARN (Yet Another Resource Negotiator):} Manages cluster resources and job scheduling.
+        \item \textit{Zookeeper:} Ensures coordination and high availability for distributed services.
+    \end{itemize}
+    
+    \item \textbf{Data Processing and Analytics:}
+    \begin{itemize}[noitemsep,topsep=0pt]
+        \item \textit{Apache Spark 3:} Utilized for large-scale data processing. The inclusion of \textit{Livy} enables REST-based interaction with Spark contexts, facilitating remote job submission.
+        \item \textit{Apache Hive:} Serves as the data warehousing layer. Optimization techniques, such as Hash Joins, are enabled to improve query performance on the limited hardware resources.
+    \end{itemize}
+    
+    \item \textbf{Governance and Security:}
+    \begin{itemize}[noitemsep,topsep=0pt]
+        \item \textit{Apache Ranger:} Delivers centralized security administration. 
+        \item \textit{Infra Solr:} Used internally by Ranger for indexing audit logs and metadata.
+    \end{itemize}
+    
+    \item \textbf{Orchestration and Streaming:}
+    \begin{itemize}[noitemsep,topsep=0pt]
+        \item \textit{Apache NiFi:} Provides a flow-based data ingestion and routing layer, enabling visual pipeline design, back-pressure control.
+        \item \textit{Apache Kafka:} Functions as the ingestion layer for real-time data streaming, decoupled from the processing layer to ensure high throughput.
+    \end{itemize}
+\end{enumerate}
+
+This stack represents a full-featured modern data platform, successfully adapted to run on a cost-constrained ARM architecture.

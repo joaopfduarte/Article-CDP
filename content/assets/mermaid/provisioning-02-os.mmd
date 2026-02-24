@@ -1,0 +1,84 @@
+sequenceDiagram
+    %% View 02 — OS-Level Configuration (Cloud-Init + Ansible site.yml)
+    %% Follows: View 01 — Terraform Execution (provisioning-01-terraform.mmd)
+    %% Continues in: View 03 — Cluster Deployment (provisioning-03-cluster.mmd)
+
+    participant CIM  as Cloud-Init (Master)
+    participant CIW  as Cloud-Init (Workers x3)
+    participant Pip  as pip / Ansible
+    participant ANS  as run-ansible.sh
+    participant PB1  as Ansible: site.yml<br/>Play 1 — All Nodes
+    participant PB2  as Ansible: site.yml<br/>Play 2 — Repos & Agent
+    participant PB3  as Ansible: site.yml<br/>Play 3 — Master Only
+    participant PB4  as Ansible: site.yml<br/>Play 4 — Agents Config
+
+    Note over CIM,CIW: Cloud-Init executes concurrently
+
+    par Master cloud-init
+        CIM->>CIM: package_update: git · python3 · pip<br/>openssh-clients · chrony
+        CIM->>CIM: Write /root/.ssh/id_rsa (RSA private key from Terraform)
+        CIM->>CIM: Append /etc/hosts (10.0.0.2–5 → FQDNs)
+        CIM->>CIM: Write /etc/ansible/ansible.cfg + hosts inventory
+        CIM->>CIM: Write helper scripts:<br/>run-ansible.sh · hdfscorrections.sh · hivesetup.sh
+        CIM->>CIM: runcmd: enable chronyd
+        CIM->>Pip: pip install ansible (upgrade)
+        Pip-->>CIM: Ansible installed
+        CIM->>ANS: exec /root/run-ansible.sh
+    and Workers cloud-init
+        CIW->>CIW: package_update: openssh-server · chrony · python3
+        CIW->>CIW: Append /etc/hosts (10.0.0.2–5 → FQDNs)
+        CIW->>CIW: runcmd: enable chronyd
+        CIW->>CIW: setenforce 0 (disable SELinux runtime)
+        CIW->>CIW: systemctl stop+disable firewalld
+    end
+
+    Note over ANS: run-ansible.sh: wait for all 3 workers SSH :22<br/>(90 retries × 10s) + SSH handshake (30 retries × 5s)
+    ANS->>ANS: Wait for /root/site.yml, cluster_deploy.yml,<br/>deploy_tasks.yml, manual_service_init.sh<br/>(60 retries × 5s — files uploaded by Terraform)
+
+    ANS->>PB1: ansible-playbook site.yml → Play 1 (all nodes)
+    Note over PB1: Runs on: master.cdp · node1–3.cdp
+    PB1->>PB1: Bootstrap python3 (raw)
+    PB1->>PB1: Disable SELinux permanently (/etc/selinux/config)
+    PB1->>PB1: Stop + disable firewalld
+    PB1->>PB1: Install base packages:<br/>Java 8 · curl · wget · openssl · krb5 · snappy · openssh
+    PB1->>PB1: Set Java 8 as default (alternatives)
+    PB1->>PB1: Ensure chronyd running
+    PB1->>PB1: Create 4 GB swap file + persist in /etc/fstab
+    PB1->>PB1: Write cluster FQDNs to /etc/hosts (blockinfile)
+
+    ANS->>PB2: Play 2 — Ambari repos & agent (all nodes)
+    PB2->>PB2: Download + import Jenkins GPG key (5 retries)
+    PB2->>PB2: Install ODP repo (ODP 1.2.2.0-128 · aarch64)
+    PB2->>PB2: Install Ambari repo (Ambari 2.7.9.0.0-61 · aarch64)
+    PB2->>PB2: Install ambari-agent.aarch64
+
+    ANS->>PB3: Play 3 — Master configuration
+    Note over PB3: Runs on: master.cdp only
+    PB3->>PB3: Install: ambari-server · odp-select · postgresql-server · jdbc
+    PB3->>PB3: initdb (postgresql-setup)
+    PB3->>PB3: Configure pg_hba.conf (local + cluster + service accounts)
+    PB3->>PB3: Start + enable PostgreSQL
+    PB3->>PB3: Create DB roles: ambari · hive · rangeradmin
+    PB3->>PB3: Create databases: ambari · hive · ranger
+    PB3->>PB3: Populate Ambari DDL schema (Ambari-DDL-Postgres-CREATE.sql)
+    PB3->>PB3: ambari-server setup -s (PostgreSQL, Java 8, JDBC)
+    PB3->>PB3: Hotfix ODP stack (hive_service.py bash syntax error)
+    PB3->>PB3: Patch /etc/ambari-server/conf/ambari.properties (JDBC URLs)
+    PB3->>PB3: Start ambari-server service
+    PB3->>PB3: Create console OS user (wheel group)
+    PB3->>PB3: Export environment variables (ZK · Kafka · NiFi · Spark · Hive)
+    PB3->>PB3: Download MySQL connector JAR + configure in Ambari
+    PB3->>PB3: Restart ambari-server
+
+    ANS->>PB4: Play 4 — Configure Ambari Agents (all nodes)
+    PB4->>PB4: Install odp-select + ambari-agent (ensure latest)
+    PB4->>PB4: Force-kill ambari-agent process + remove PID files
+    PB4->>PB4: Clean agent SSL certificates (fixes SSL mismatch on retry)
+    PB4->>PB4: Point ambari-agent.ini → hostname=master.cdp
+    PB4->>PB4: systemctl daemon-reload
+    PB4->>PB4: Restart + enable ambari-agent
+
+    ANS-->>ANS: site.yml complete
+
+    Note over ANS: → Continues in View 03: Cluster Deployment (provisioning-03-cluster.mmd)
+    ANS->>ANS: ansible-playbook /root/cluster_deploy.yml

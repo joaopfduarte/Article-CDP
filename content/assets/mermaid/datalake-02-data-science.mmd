@@ -1,0 +1,85 @@
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1a2e", "primaryTextColor": "#e0e0e0", "primaryBorderColor": "#6c5ce7", "lineColor": "#6c5ce7", "secondaryColor": "#2d1b69", "tertiaryColor": "#130f40", "clusterBkg": "#0d1117", "clusterBorder": "#6c5ce7", "edgeLabelBackground": "#1a1a2e", "fontFamily": "Segoe UI, sans-serif"}}}%%
+graph TB
+    %% =========================================================
+    %%  Data Lake Architecture — Profile: DATA-SCIENCE
+    %%  Cluster: 1 Master Node + 3 Worker Nodes (OCI ARM / Ampere)
+    %%  Stack: ODP 1.2.2 managed by Apache Ambari
+    %%  Focus: Scalable analytics, ML workloads via Spark & Hive
+    %%  Removed vs default: HBase, Phoenix, NiFi (NiFi/HBase removed)
+    %% =========================================================
+
+    subgraph INGEST["① INGESTION LAYER"]
+        direction TB
+        KAFKA["Apache Kafka\n(Brokers on node1·2·3)\nReal-time event streaming\nML feature pipelines"]
+        NFS["NFS Gateway\n(node1)\nBatch dataset / CSV / Parquet ingest\nShared filesystem access"]
+        KAFKA -->|"event streams"| NFS
+    end
+
+    subgraph STORE["② STORAGE LAYER"]
+        direction TB
+        HDFS["HDFS — Hadoop Distributed File System\nNameNode (master) · 3× DataNode (node1·2·3)\nReplication factor 3 — columnar & raw dataset storage\nParquet · ORC · Avro format support"]
+        HIVE_META["Apache Hive Metastore\n(node1)\nCentral schema registry\nDataset versioning & partition catalog"]
+        HDFS --> HIVE_META
+    end
+
+    subgraph PROCESS["③ PROCESSING & ANALYTICS LAYER"]
+        direction TB
+        YARN["Apache YARN / MapReduce 2\nResourceManager (master) · 3× NodeManager\nDistributed resource scheduler\nFair & capacity queue management"]
+        SPARK["Apache Spark 3\nJobHistoryServer (master)\nThriftServer (node2) — SQL endpoint\nLivy2 REST Server (node3) — notebook sessions\nClients on all nodes — batch & streaming ML jobs"]
+        TEZ["Apache Tez\n(clients on all nodes)\nDAG engine for HiveQL execution\nOptimised for complex ETL queries"]
+        HIVE_SRV["Apache Hive Server 2\n(node1)\nSQL-on-Hadoop gateway\nHiveQL · JDBC · ODBC interface\nBI tool integration point"]
+        YARN --> SPARK
+        YARN --> TEZ
+        TEZ  --> HIVE_SRV
+        SPARK --> HIVE_SRV
+    end
+
+    subgraph GOVERN["④ GOVERNANCE & SECURITY LAYER"]
+        direction TB
+        RANGER["Apache Ranger\n(Admin + UserSync on master · TagSync on node3)\nRow & column-level access control\nData masking policies for sensitive datasets"]
+        ZK["Apache ZooKeeper\n(node1·2·3)\nDistributed coordination\nKafka broker registration & leader election"]
+        SOLR["Infra Solr\n(master)\nAudit log indexing for Ranger\nFull-text access audit trail"]
+        AMBARI["Apache Ambari Server\n(master)\nCluster lifecycle management\nService health dashboards & alerts"]
+        RANGER --> SOLR
+        ZK --> RANGER
+        AMBARI -.->|"manages all services"| ZK
+    end
+
+    %% Cross-layer flows
+    INGEST -->|"raw datasets & streams written to"| STORE
+    STORE  -->|"data read by analytical jobs"| PROCESS
+    GOVERN -.->|"RBAC & audit policies enforced"| INGEST
+    GOVERN -.->|"RBAC & audit policies enforced"| STORE
+    GOVERN -.->|"RBAC & audit policies enforced"| PROCESS
+
+    %% Notebook / ML access point
+    LIVY_NOTE["Data Scientists\nJupyter / Zeppelin notebooks\n↕ REST via Livy2"]
+    LIVY_NOTE -->|"submit Spark jobs"| SPARK
+
+    %% Infrastructure anchor
+    subgraph INFRA["⑤ INFRASTRUCTURE (OCI ARM — Ampere A1 Flex)"]
+        direction LR
+        MASTER["master.cdp — 10.0.0.2\nNameNode · ResourceManager · Ambari Server\nRanger Admin/Sync · Spark HistoryServer · Infra Solr"]
+        N1["node1.cdp — 10.0.0.3\nDataNode · NodeManager · Kafka Broker\nHive Metastore / Server · NFS Gateway"]
+        N2["node2.cdp — 10.0.0.4\nDataNode · NodeManager · Kafka Broker\nSpark ThriftServer (SQL endpoint for BI tools)"]
+        N3["node3.cdp — 10.0.0.5\nDataNode · NodeManager · Kafka Broker\nSpark Livy2 Server (notebook REST gateway)\nRanger TagSync"]
+    end
+
+    PROCESS  -.->|"runs on"| INFRA
+    STORE    -.->|"runs on"| INFRA
+    INGEST   -.->|"runs on"| INFRA
+
+    %% Styling
+    classDef ingestStyle   fill:#130f40,stroke:#fd79a8,color:#fff,rx:6
+    classDef storeStyle    fill:#192a56,stroke:#74b9ff,color:#fff,rx:6
+    classDef processStyle  fill:#0d1117,stroke:#a29bfe,color:#fff,rx:6
+    classDef governStyle   fill:#1e1e2e,stroke:#fdcb6e,color:#fff,rx:6
+    classDef infraStyle    fill:#2d2d2d,stroke:#6c5ce7,color:#dfe6e9,rx:4
+    classDef userStyle     fill:#2d3436,stroke:#00cec9,color:#dfe6e9,rx:8
+
+    class KAFKA,NFS ingestStyle
+    class HDFS,HIVE_META storeStyle
+    class YARN,SPARK,TEZ,HIVE_SRV processStyle
+    class RANGER,ZK,SOLR,AMBARI governStyle
+    class MASTER,N1,N2,N3 infraStyle
+    class LIVY_NOTE userStyle

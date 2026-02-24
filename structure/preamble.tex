@@ -1,0 +1,48 @@
+% Preamble: Packages and custom commands
+
+% Encoding and fonts
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% Graphics and figures
+\usepackage{graphicx}
+\usepackage{subcaption}
+
+% Mathematics
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+
+% Hyperlinks
+\usepackage[hidelinks]{hyperref}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{enumitem} % For compact lists
+\setlist[enumerate]{leftmargin=*, topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=0pt}
+\setlist[itemize]{leftmargin=*, topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=0pt}
+
+% Redefine thebibliography to be compatible with natbib and fix the class's broken definition
+\makeatletter
+\renewenvironment{thebibliography}[1]{%
+    \section*{References and Notes}%
+    \NINE
+    \list{\@biblabel{\@arabic\c@enumiv}}%
+    {\settowidth\labelwidth{\@biblabel{#1}}%
+     \leftmargin\labelwidth
+     \advance\leftmargin\labelsep
+     \itemsep 5pt
+     \usecounter{enumiv}%
+     \let\p@enumiv\@empty
+     \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+    \def\newblock{\hskip .11em plus .33em minus .07em}%
+    \sloppy\clubpenalty4000\widowpenalty4000
+    \sfcode`\.=1000\relax
+}{%
+    \endlist
+}
+\makeatother
+% Bibliography styling (if not handled by class)
+% The class file seems to handle basic natbib or similar. 
+% We'll leave specific bib settings to the main file or here if needed.
+
+% Custom commands
+\newcommand{\note}[1]{\textcolor{red}{#1}}

@@ -1,0 +1,74 @@
+\section{Theoretical Reference}
+\label{sec:literature}
+
+\tresumo{Fundamentação Teórica: Conceitos essenciais que suportam a arquitetura de Big Data e IaC.}
+
+This chapter presents the main theoretical concepts that underpin the architecture proposed in this paper. It begins with a review of Cloud Computing and Big Data challenges, then moves on to differentiating between Data Lakes and Data Warehouses and to hybrid architecture proposals. Next, it discusses the principles of Infrastructure as Code (IaC), which ensure the solution’s reproducibility, as well as an analysis of the characteristics of ARM processor architecture and a presentation of the fundamental principles that shape the context of a Hadoop cluster implementation. \bnote{Revise este parágrafo inicial após finalizar o capítulo, ajustando o texto para que a transição entre as seções flua naturalmente com a sua escrita.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Cloud Computing}
+\tresumo{Cloud Computing: Fundamentos de IaaS/PaaS e escalabilidade.}
+\bnote{Conceituar Cloud Computing focando principalmente no modelo IaaS. Citar as vantagens da elasticidade e o papel de provedores como a Oracle (OCI) na redução de custos para pesquisa.}
+
+
+A distributed system is a collection of independent computers that, from the user’s point of view, presents itself as a single coherent system \cite{tanenbaum2017distributed}. One of the central goals of such systems is to make remote resources accessible and shareable in a controlled manner, while also pursuing distribution transparency---that is, hiding from the user aspects such as differences in access, location, and (when possible) the existence of replication, concurrency, and failures \cite{tanenbaum2017distributed}. In this context, the distributed-computing paradigm has evolved so that, in cloud computing, this “single-system view” can be offered as a service and provisioned on demand to end consumers, as in the IaaS (Infrastructure as a Service) model.
+
+In addition, \cite{tanenbaum2017distributed} emphasize that distributed systems are designed to meet \emph{scalability} requirements (in size, geographic distribution, and administrative domains), and that this imposes specific architectural choices. More specifically, the authors point to general techniques for scaling distributed systems, such as \emph{hiding communication latencies}, \emph{distributing} components, and \emph{replicating} resources to improve performance and availability, at the cost of added complexity and potential consistency challenges. This set of principles helps frame cloud computing as a modern realization of large-scale distributed systems, in which on-demand resource provisioning depends directly on these classic strategies.
+
+The shift toward cloud-based analytics architectures can be interpreted as a practical response to scalability and data-management challenges in distributed environments. In particular, contemporary \emph{data lakehouse} approaches seek to combine features of \emph{data lakes} and \emph{data warehouses} to support analytics and governance workloads in scenarios with large data volumes and high variety, typically deployed on cloud infrastructures that leverage distribution and replication \cite{nuthalapati2024architecting}.
+
+Along the same lines, enterprise adoption strategies---and the same applies to academic deployments---for \emph{cloud lakehouse} solutions stress the need for a systematic approach to ensure scalability, interoperability, and data governance throughout the analytics lifecycle \cite{sundar2022comprehensive}. This perspective aligns with the argument that, as distributed systems expand across different domains and user populations, coordination, policy, and security challenges emerge that cannot be ignored \cite{tanenbaum2017distributed}. Consequently, adopting cloud lakehouses can be seen as applying distributed-systems principles to structure scalable data platforms and preserve their foundation in order to prevent \emph{data swamp} scenarios.
+
+In the \emph{Infrastructure as a Service} (IaaS) model, the cloud provides fundamental infrastructure resources (for example, compute, networking, and storage) as services that can be provisioned on demand, on top of which consumers build and operate their own software stacks. In the context of Oracle Cloud Infrastructure (OCI), this offering is documented and organized into services and guides that support building and operating cloud infrastructure environments, including access to compute, networking, storage, and governance services through the console and developer tools \cite{oci_docs}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Big Data and Hadoop Cluster Architecture}
+\tresumo{Big Data: Processamento distribuído e o ecossistema Hadoop.}
+\bnote{Explicar o volume, velocidade e variedade. Descrever de forma coesa a necessidade do processamento distribuído (MapReduce/Spark) sobre um sistema de arquivos como o HDFS.}
+
+Big Data is characterized by the axes of \emph{volume}, \emph{velocity}, and \emph{variety}, which simultaneously configure data storage, processing, and governance in environments where failures and heterogeneity are anticipated conditions. From this perspective, the theory presented by \cite{marz2015bigdata} emphasizes the need for scalable and fault-tolerant architectures, capable of sustaining both analytical workloads and operational needs, which directs the solution toward horizontal scaling models based on distributed processing and on data partitioned and replicated across $N$ nodes.
+
+The architecture of a Hadoop \emph{cluster} materializes these principles by combining a distributed file system, HDFS, with distributed processing engines, such as MapReduce and Spark, in order to bring computation closer to the data and reduce data movement costs on the network. According to the HDFS design specification, storage is organized into blocks distributed and replicated among \emph{DataNodes}, while a \emph{NameNode} maintains metadata and coordinates access to files, favoring \emph{streaming} reads and persistence on hardware \cite{hadoop_hdfs_design_2025}. Thus, the relationship between Big Data and Hadoop can be understood as a logical chain: the scale and robustness requirements discussed by \cite{marz2015bigdata} demand a foundation of distributed storage and execution, and Hadoop fulfills this role by offering mechanisms of distribution, replication, and parallelism over a \emph{cluster}; in contrast, \cite{marz2015bigdata} also highlights that, especially in the \emph{batch} paradigm, this ecosystem tends to operate with higher latency when compared to alternatives aimed at real-time processing.
+
+In the context of software distribution for Big Data in the Apache Hadoop ecosystem, Clemlab's OpenSource Data Platform (ODP) stands out, which is an installation package that provides and distributes Apache applications for use in \emph{cluster} environments. In this approach, a distributed system design with centralized control is also observed: although the components are deployed homogeneously across the nodes, the operational model remains strictly fixed on \emph{master} and \emph{worker} roles, and the centralization of control, with a certain degree of observability and management, is enabled by Apache Ambari, included in the installation bundle \cite{clemlab_odp_docs_intro_1310}.
+
+However, even with initiatives that reduce deployment and operational friction, the adoption of Big Data Analytics (BDA) in public institutions involves barriers that go beyond the technical dimension. Based on a \emph{Systematic Literature Review Analysis} (SLRA), \cite{didas} shows that many BDA projects in public institutions do not meet expectations, especially due to high capital investments and limited organizational and technical maturity to sustain infrastructure, management, integration technology, data quality, security, and privacy throughout the life cycle. The same study demonstrates that a substantial portion of the data generated may have limited value (with projections of up to 90\%), which reinforces the need for selection, curation, and governance criteria to avoid indiscriminate accumulation of data and the risk of a \emph{data swamp} \cite{didas}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data Lake and Data Warehouse}
+\tresumo{Data Lake vs DW: Estruturação de dados vs Armazenamento bruto.}
+\bnote{Criar um paralelo entre as duas abordagens (schema-on-read vs schema-on-write). Ligar este conceito à nossa solução: nós estamos propondo um Data Lake devido ao uso do HDFS/Hadoop para ingestão de múltiplas fontes.}
+
+
+\cite{nuthalapati2024architecting}, \cite{sundar2022comprehensive}
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Infrastructure As Code (IaC)}
+\tresumo{IaC: Terraform e Ansible na automação de infraestrutura.}
+\bnote{Trazer a base teórica de IaC. Por que usar código em vez de configurar via console (ClickOps)? Focar na idempotência e na reprodutibilidade do cluster.}
+\bnote{Explicar como IaC possibilita a reprodutibilidade descrita na introdução e as vantagens/desafios da arquitetura ARM.}
+
+
+\cite{Bollineni2022IaCDataEngineering}, \cite{morris2016infrastructure}
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ARM Architecture Family}
+\tresumo{Arquitetura ARM: Eficiência energética e computação de baixo custo.}
+\bnote{Explicar a arquitetura ARM (RISC) vs x86 (CISC). Qual é o impacto de rodar ferramentas de Big Data nessa arquitetura? Citar possíveis dificuldades de compatibilidade e ganhos de custo-benefício.}
+
+
+\cite{hennessy2019computer}

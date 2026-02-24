@@ -1,0 +1,68 @@
+flowchart TD
+    %% View 03 — Cluster Deployment & Recovery
+    %% Follows: View 02 — OS-Level Configuration (provisioning-02-os.mmd)
+
+    START(["▶ cluster_deploy.yml begins\n(Follows View 02: OS-Level Config)"])
+
+    START --> DT1
+
+    subgraph DT["deploy_tasks.yml — Happy Path"]
+        DT1["Wait: Ambari REST API /check → HTTP 200\n(30 retries · 10s interval)"]
+        DT2["Wait: 4 hosts registered at /api/v1/hosts\n(60 retries · 10s interval)"]
+        DT3["DELETE /api/v1/clusters/cdp-cluster\n(idempotent · accept 200 / 202 / 404)"]
+        DT4["Wait: cluster gone → 404\n(60 retries · 5s interval)"]
+        DT5["POST /api/v1/version_definitions\n(Register ODP-VDF.xml)"]
+        DT6["DELETE + POST /api/v1/blueprints/odp-blueprint\n(Upload blueprint.json · validate_topology=false)"]
+        DT7["POST /api/v1/clusters/cdp-cluster\n(Apply cluster-template.json) → 202 Accepted"]
+        DT8["Poll request status URL\n(100 retries · 30s · until COMPLETED or FAILED)"]
+        DT1 --> DT2 --> DT3 --> DT4 --> DT5 --> DT6 --> DT7 --> DT8
+    end
+
+    DT8 --> Q1{Status?}
+    Q1 -->|COMPLETED| SUCCESS
+
+    Q1 -->|FAILED — Attempt 1| R1
+
+    subgraph RESCUE1["Recovery — Attempt 2"]
+        R1["ambari-server stop"]
+        R2["ambari-server reset --silent"]
+        R3["rm phoenix-hbase-queryserver.pid"]
+        R4["exec /root/hdfscorrections.sh\n(Fix HBase HDFS paths · Hive ACLs)"]
+        R5["exec /root/hivesetup.sh\n(Recreate Hive/Ranger DBs · JDBC setup)"]
+        R6["ambari-server start"]
+        R7["deploy_tasks.yml\n(Retry · 120 retries)"]
+        R1 --> R2 --> R3 --> R4 --> R5 --> R6 --> R7
+    end
+
+    R7 --> Q2{Status?}
+    Q2 -->|COMPLETED| SUCCESS
+
+    Q2 -->|FAILED — Attempt 2| R8
+
+    subgraph RESCUE2["Recovery — Attempt 3 (Final)"]
+        R8["ambari-server stop"]
+        R9["ambari-server reset --silent"]
+        R10["rm phoenix-hbase-queryserver.pid"]
+        R11["exec /root/hdfscorrections.sh"]
+        R12["exec /root/hivesetup.sh"]
+        R13["ambari-server start"]
+        R14["deploy_tasks.yml\n(Final retry · 120 retries)"]
+        R8 --> R9 --> R10 --> R11 --> R12 --> R13 --> R14
+    end
+
+    R14 --> Q3{Status?}
+    Q3 -->|COMPLETED| SUCCESS
+
+    Q3 -->|FAILED — All attempts exhausted| MANUAL
+
+    subgraph FALLBACK["Manual Fallback"]
+        MANUAL["exec /root/manual_service_init.sh\n(Manual NiFi + Hive initialization)\nLog stdout / stderr"]
+        MQ{Init script\nexit code?}
+        MANUAL --> MQ
+    end
+
+    MQ -->|rc = 0| SUCCESS
+    MQ -->|rc ≠ 0| FAIL
+
+    SUCCESS(["✅ Cluster Ready\nAmbari Web UI: http://master.cdp:8080\nHDFS · YARN · Hive · Ranger · Spark · NiFi\nAll services managed via Ambari"])
+    FAIL(["❌ Deployment Failed\nCheck /var/log/ansible/ansible.log\nand Ambari server logs on master.cdp"])

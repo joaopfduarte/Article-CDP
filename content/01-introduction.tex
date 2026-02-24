@@ -1,0 +1,28 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\tresumo{Contextualização: O paradigma de computação distribuída e a relação custo/performance (ARM vs x86).}
+
+Distributed computing, as a paradigm, constantly addresses the intrinsic relationship between cost analysis and process performance, striving to achieve sustainable application efficiency. Much of this discussion focuses on microarchitectural comparative analysis, such as between x86 and ARM \cite{8287751}, as well as best practices associated with cost optimization methods \cite{deochake2026cloudaiinfrastructurecost}. Together, these approaches aim for an optimal combination of performance requirements, infrastructure architecture, and financial management practices. 
+
+\tresumo{Problema e Justificativa: Limitações de custo em Big Data e o uso do FinOps com Oracle Free Tier.}
+
+In the context of large-scale data analysis, specifically Big Data, distributed processing often faces scaling limitations imposed by cost constraints. Consequently, the utilization of hardware with more modest specifications, combined with the ARM microarchitecture, has emerged as a justifiable practice for many use cases \cite{loghin2015performance}. This work demonstrates that, driven by the necessity to create a deployment and configuration framework for a Hadoop cluster that aligns with FinOps cost efficiency principles—specifically strictly leveraging Free Tier resources \cite{vo2025finopsagentusecase}—the optimal architectural choice was a cluster of four machines, each equipped with an ARM processor (1 CPU) and 6 GB of RAM.
+
+Cost optimization has become a concern of significant importance for organizations consuming cloud computing resources. According to the \textit{Flexera 2025 State of the Cloud Report}, cited in \cite{deochake2026cloudaiinfrastructurecost}, 84\% of surveyed organizations still struggle with reducing operational costs. For organizations with limited budgets, this challenge has an even more profound impact. \bnote{Atualizar/verificar a referência e o impacto da otimização de custos para justificar a necessidade do framework.}
+
+\tresumo{Solução Tecnológica: O papel da Infraestrutura como Código (IaC - Terraform e Ansible) na padronização.}
+
+In the pursuit of more effective ways to standardize best practices for cloud infrastructure creation and configuration within data engineering, there is a concerted effort to develop frameworks capable of effectively automating processes \cite{Bollineni2022IaCDataEngineering}. This encompasses architectural and project design contexts, leveraging infrastructure-agnostic Infrastructure as Code (IaC) tools such as Ansible and Terraform.
+
+\tresumo{Objetivos: Entrega do framework, documentação e simulação de caso de uso prático (DataSus).}
+
+Driven by the need to standardize software engineering and cloud computing processes for cost optimization, implementation speed, architectural component definition, and process reproducibility, this work aims to practically implement an optimized framework. This framework supports comprehensive deployment profiles—covering data engineering and software engineering needs—making it simpler and more accessible for research purposes and low-budget organizations to create their Big Data applications. 
+
+In this context, the final objectives of this project are: \bnote{Verificar se os objetivos listados aqui estão 100\% alinhados com o que será entregue na Conclusão.}
+
+\begin{enumerate}
+    \item Deliver a framework that automates the infrastructure creation and configuration of a Hadoop Cluster using Terraform and Ansible.
+    \item Document the automated installation processes of the final product to serve as a reference.
+    \item Simulate real-world usage of the framework in the context of DataSus, validating its applicability.
+\end{enumerate}

@@ -1,0 +1,21 @@
+graph TB
+    subgraph OCI_VCN [Oracle Cloud VCN]
+        subgraph Public_Subnet [Public Subnet 10.0.0.0/24]
+            direction TB
+            Master[Master Node<br>10.0.0.2<br>Ambari Server + Services]
+            Node1[Worker 1<br>10.0.0.3<br>DataNode + NodeManager]
+            Node2[Worker 2<br>10.0.0.4<br>DataNode + NodeManager]
+            Node3[Worker 3<br>10.0.0.5<br>DataNode + NodeManager]
+        end
+        IGW[Internet Gateway]
+    end
+    
+    User[Admin PC] -->|SSH/HTTP 8080| IGW
+    IGW --> Master
+    IGW --> Node1
+    IGW --> Node2
+    IGW --> Node3
+    
+    Master <-->|Internal Traffic| Node1
+    Master <-->|Internal Traffic| Node2
+    Master <-->|Internal Traffic| Node3

@@ -1,0 +1,41 @@
+\section{Architecture Design}
+\label{sec:arch}
+
+\tresumo{Arquitetura e Processo: Apresentação da topologia e do fluxo automatizado de deploy do cluster (Terraform -> Cloud-Init -> Ansible).}
+
+\bnote{ATENÇÃO: As referências para as figuras fig:prov-terraform, fig:prov-os e fig:prov-cluster constam no texto mas as imagens não estão no arquivo latex inseridas com \texttt{\textbackslash begin\{figure\}}.}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{content/assets/topology.png}
+    \caption{Topology of Cloud Config on OCI.}
+     \label{fig:topology}
+\end{figure}
+
+Figure~\ref{fig:prov-terraform} depicts the Terraform execution
+perspective of the provisioning workflow. It covers RSA key-pair
+generation, network resource creation (VCN, Internet Gateway, DRG,
+Route Table, Security List), IPSec VPN configuration, compute
+instance provisioning with cloud-init \texttt{user\_data}, and
+the upload of Ansible playbooks and cluster assets to the master
+node via SSH file provisioner.
+
+Figure~\ref{fig:prov-os} details the OS-level configuration phase,
+triggered by cloud-init on all VMs immediately after boot. It
+covers the concurrent execution on the master (Python/Ansible
+installation, SSH key injection, Ansible inventory setup) and
+workers (SELinux and firewall disabling, chrony), followed by
+the full \texttt{site.yml} Ansible playbook: base package
+installation, PostgreSQL initialisation, Ambari Server setup,
+ODP repository configuration, and Ambari Agent deployment across
+all cluster nodes.
+
+Figure~\ref{fig:prov-cluster} shows the cluster deployment and
+recovery flow, orchestrated by Ansible calling the Ambari REST
+API (\texttt{cluster\_deploy.yml} and \texttt{deploy\_tasks.yml}).
+The diagram covers the happy-path deployment (VDF registration,
+blueprint upload, cluster creation, and progress polling) and the
+automated recovery logic supporting up to three sequential retry
+attempts, each preceded by HDFS corrections and Hive database
+reconfiguration, with a final fallback to manual service
+initialisation (\texttt{manual\_service\_init.sh}).

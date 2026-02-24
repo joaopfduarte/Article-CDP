@@ -1,0 +1,13 @@
+\section{Use-Case–Driven Performance Evaluation}
+\label{sec:use-case}
+
+\tresumo{Avaliação e Resultados: Teste da infraestrutura provisionada através do caso prático utilizando dados do DataSus.}
+
+Este capítulo foca na validação da infraestrutura proposta sob um cenário de uso real. Para orientar a avaliação técnica, a análise será conduzida com base em hipóteses—proposições ou expectativas testáveis a respeito do comportamento e desempenho do cluster ARM ao processar a carga de dados. Formular hipóteses é essencial para estruturar os testes, pois permite que os resultados obtidos sejam diretamente comparados com as predições iniciais.
+
+\bnote{Elabore o texto do capítulo guiando-se pelas seguintes hipóteses de avaliação:
+1. \textbf{Hipótese de Ingestão:} Espera-se que o Apache NiFi consiga ingerir e rotear o dataset do DataSus para o HDFS sem saturação prolongada de CPU no Master Node.
+2. \textbf{Hipótese de Processamento:} Espera-se que o processamento distribuído (Spark/Hive) opere com um tempo de resposta aceitável para o volume de dados, provando que os 24GB de RAM fragmentados nos nodes ARM são suficientes para não ocorrer falha por \textit{Out of Memory} (OOM).
+3. \textbf{Hipótese de Custo-Benefício:} Espera-se que as métricas de uso de recursos demonstrem que a execução de um pipeline completo Open Source é viável na camada OCI Free Tier, sem degradação arquitetural.}
+
+\bnote{Criar roteiro de avaliação prática para comprovar as hipóteses: 1. Descrição do dataset do DataSus / 2. Fluxo de ingestão (NiFi) / 3. Processamento/Análise (Spark/Hive) / 4. Coleta de tempos e métricas de uso (CPU/RAM).}

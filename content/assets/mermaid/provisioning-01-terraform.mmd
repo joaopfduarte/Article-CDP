@@ -1,0 +1,56 @@
+sequenceDiagram
+    %% View 01 — Terraform Execution
+    %% Continues in: View 02 — OS-Level Configuration (provisioning-02-os.mmd)
+
+    participant Dev  as Developer
+    participant TF   as Terraform (local)
+    participant OCI  as Oracle Cloud API
+    participant RSA  as TLS RSA Key Pair
+    participant Net  as OCI Network Resources
+    participant VPN  as OCI VPN / DRG
+    participant VMs  as OCI Compute Instances
+    participant SSH  as SSH File Provisioner
+
+    Note over Dev,TF: terraform init / terraform apply
+
+    TF->>RSA: Generate RSA-2048 key pair<br/>(compute_ssh_key)
+    RSA-->>TF: private_key_pem · public_key_openssh
+
+    TF->>OCI: Create VCN vcn-data-lake (10.0.0.0/24)
+    OCI-->>Net: VCN ready
+
+    TF->>Net: Create Internet Gateway
+    TF->>Net: Create Route Table<br/>0.0.0.0/0 → IGW<br/>StaticRoute → DRG
+    TF->>Net: Create Security List<br/>(SSH:22 · mgmt ports · VPN UDP)
+    TF->>Net: Create Subnet data-lake-subnet (10.0.0.0/24)
+
+    TF->>VPN: Create Dynamic Routing Gateway (DRG)
+    TF->>VPN: Attach DRG to VCN
+    TF->>VPN: Create CPE (on-prem peer)
+    TF->>VPN: Create IPSec Connection (2 tunnels · IKEv2 · NAT-T)
+
+    Note over TF,OCI: Provision compute instances
+
+    TF->>OCI: Create master.cdp (10.0.0.2)<br/>shape=var.instance_shape<br/>user_data=cloud-init/master.yaml<br/>[encoded with private_key + hostnames]
+    OCI-->>VMs: master.cdp provisioned (public IP assigned)
+
+    TF->>OCI: Create node1.cdp (10.0.0.3)<br/>user_data=cloud-init/worker.yaml
+    TF->>OCI: Create node2.cdp (10.0.0.4)<br/>user_data=cloud-init/worker.yaml
+    TF->>OCI: Create node3.cdp (10.0.0.5)<br/>user_data=cloud-init/worker.yaml
+    OCI-->>VMs: node1–3.cdp provisioned
+
+    Note over TF,SSH: null_resource upload_assets<br/>(depends_on master.cdp · SSH opc@master_public_ip)
+
+    TF->>SSH: Connect via SSH (10m timeout)
+    SSH->>VMs: Upload blueprint.json        → /root/blueprint.json
+    SSH->>VMs: Upload ODP-VDF.xml           → /root/ODP-VDF.xml
+    SSH->>VMs: Upload cluster-template.json → /root/cluster-template.json
+    SSH->>VMs: Upload cluster_deploy.yml    → /root/cluster_deploy.yml
+    SSH->>VMs: Upload site.yml              → /root/site.yml
+    SSH->>VMs: Upload deploy_tasks.yml      → /root/deploy_tasks.yml
+    SSH->>VMs: Upload manual_service_init.sh → /root/manual_service_init.sh
+    SSH->>VMs: remote-exec: chmod +x · chown root:root all files
+
+    TF-->>Dev: terraform apply complete<br/>Output: master_public_ip
+
+    Note over TF,VMs: Cloud-Init user_data begins executing asynchronously on all VMs<br/>→ Continues in View 02: OS-Level Configuration (provisioning-02-os.mmd)
