@@ -40,7 +40,7 @@
 *.fdb_latexmk
 
 # PDF gerado — não versionar o artefato final compilado
-
+*.pdf
 
 # Arquivos temporários de editores
 *.swp
