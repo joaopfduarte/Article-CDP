@@ -1,4 +1,4 @@
-%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1a2e", "primaryTextColor": "#e0e0e0", "primaryBorderColor": "#4a90e2", "lineColor": "#4a90e2", "secondaryColor": "#16213e", "tertiaryColor": "#0f3460", "clusterBkg": "#0d1117", "clusterBorder": "#4a90e2", "edgeLabelBackground": "#1a1a2e", "fontFamily": "Segoe UI, sans-serif"}}}%%
+
 graph TD
     %% =========================================================
     %%  Data Lake Final Architecture (Default Profile)
@@ -63,13 +63,4 @@ graph TD
     GOVERN -.->|"enforces policies on"| STORE
     GOVERN -.->|"enforces policies on"| PROCESS
 
-    %% Styling
-    classDef ingestStyle  fill:#0f3460,stroke:#e94560,color:#fff,rx:6
-    classDef storeStyle   fill:#16213e,stroke:#4a90e2,color:#fff,rx:6
-    classDef processStyle fill:#0d1117,stroke:#00d2d3,color:#fff,rx:6
-    classDef governStyle  fill:#1a1a2e,stroke:#f9ca24,color:#fff,rx:6
 
-    class KAFKA,NIFI,NFS ingestStyle
-    class HDFS,HBASE,HMETA storeStyle
-    class YARN,SPARK,TEZ,HIVE,PHOENIX processStyle
-    class RANGER,SOLR,ZK,AMBARI governStyle
