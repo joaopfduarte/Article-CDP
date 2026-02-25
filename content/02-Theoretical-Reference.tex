@@ -67,5 +67,32 @@ To create the decentralized \emph{cluster} that underpins the proposed research,
 \tresumo{Arquitetura ARM: Eficiência energética e computação de baixo custo.}
 \bnote{Explicar a arquitetura ARM (RISC) vs x86 (CISC). Qual é o impacto de rodar ferramentas de Big Data nessa arquitetura? Citar possíveis dificuldades de compatibilidade e ganhos de custo-benefício.}
 
+O paradigma da computação moderna divide as arquiteturas de processadores, de forma ampla, em duas principais filosofias:
+ Computadores com Conjunto Complexo de Instruções (Complex Instruction Set Computer - CISC) e Computadores com Conjunto 
+ Reduzido de Instruções (Reduced Instruction Set Computer - RISC). Enquanto os processadores baseados numa microarquitetura
+ x86 são capazes de oferecer instruções mais complexas e que realizam operações mais longevas devido ao número de etapas, 
+ a microarquitetura ARM foca em instruções mais simples e rápidas, o que resulta em maior eficiência energética e menor 
+ custo computacional. Isso faz com que consigamos ver, de maneira mais clara ao programador, que a semântica das instruções
+ x86 são mais largas por linha quando comparado às de ARM, em contrapartida, um programa otimizado para ARM tende a ser mais
+ longo textualmente, ou seja, ocupa mais linhas \cite{hennessy2019computer}.
+ %
 
-\cite{hennessy2019computer}
+ Conforme \cite{hennessy2019computer}, essa modelagem distinta de design, faz com que um processador ARM seja mais eficiente
+ energeticamente e termicamente, de forma que ao focar em instruções mais simples, o custo por Watt de uma instrução, tende
+ a ser menor quando comparado à microarquitetura x86. 
+ %
+
+ Historicamente moldado para interagir nativamente e de forma otimizada com a difusão hegemônica da arquitetura x86-64, 
+ os ecossistemas de dados em larga escala eram intrinsecamente amarrados à arquitetura CISC \cite{8287751}. Neste contexto,
+ a migração de cargas de processamento de componentes como HDFS, MapReduce ou Spark para um cluster baseado em nós ARM exige 
+ que desenvolvedores e pesquisadores contornem potenciais barreiras de compatibilidade cruzada, adaptação de componentes 
+ e limitação da amplitude do consumo de componentes em suas instalações.
+%
+
+Contudo, apesar das primitivas complexidades de compatibilidade das imagens e pacotes base, \cite{8287751} demonstra 
+através de testes de performance de Big Data que o uso de processadores ARM (commodity ARM64 servers) se mostra como 
+uma abordagem muito promissora no tocante à relação custo-benefício (\textit{cost-efficiency tradeoff}). Ao viabilizar 
+nós mais densos, consumindo menos energia e operando a um custo de aquisição fracionário na nuvem, ecossistemas como 
+Hadoop se tornam progressivamente mais viáveis de serem experimentados e implementados do ponto de vista econômico, 
+especialmente em setores públicos ou na esfera de projetos acadêmicos, onde as limitações financeiras exigem soluções 
+eficientes com restrição de recursos.
