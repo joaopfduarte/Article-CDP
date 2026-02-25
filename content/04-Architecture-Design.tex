@@ -20,6 +20,13 @@ instance provisioning with cloud-init \texttt{user\_data}, and
 the upload of Ansible playbooks and cluster assets to the master
 node via SSH file provisioner.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{content/assets/provisioning-01-terraform.png}
+  \caption{Provisioning workflow — View 1: Terraform execution sequence.}
+  \label{fig:prov-terraform}
+\end{figure}
+
 Figure~\ref{fig:prov-os} details the OS-level configuration phase,
 triggered by cloud-init on all VMs immediately after boot. It
 covers the concurrent execution on the master (Python/Ansible
@@ -30,6 +37,14 @@ installation, PostgreSQL initialisation, Ambari Server setup,
 ODP repository configuration, and Ambari Agent deployment across
 all cluster nodes.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{content/assets/provisioning-02-os.png}
+  \caption{Provisioning workflow — View 2: OS-level configuration
+           via cloud-init and Ansible.}
+  \label{fig:prov-os}
+\end{figure}
+
 Figure~\ref{fig:prov-cluster} shows the cluster deployment and
 recovery flow, orchestrated by Ansible calling the Ambari REST
 API (\texttt{cluster\_deploy.yml} and \texttt{deploy\_tasks.yml}).
@@ -39,3 +54,11 @@ automated recovery logic supporting up to three sequential retry
 attempts, each preceded by HDFS corrections and Hive database
 reconfiguration, with a final fallback to manual service
 initialisation (\texttt{manual\_service\_init.sh}).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{content/assets/provisioning-03-cluster.png}
+  \caption{Provisioning workflow — View 3: Ambari REST API cluster
+           deployment with automated recovery logic.}
+  \label{fig:prov-cluster}
+\end{figure}
