@@ -70,21 +70,17 @@ The cluster provisioning process supports different deployment profiles customis
   \caption{Component Mapping for the Default Profile}
   \label{tab:comp-default}
   \renewcommand{\arraystretch}{1.2}
-  \begin{tabular}{l p{8.5cm}}
+  \begin{tabular}{@{} p{0.38\linewidth} p{0.58\linewidth} @{}}
     \hline
     \textbf{Node \& Role} & \textbf{Installed Components} \\
     \hline
-    \textbf{master.cdp (10.0.0.2)} & Ambari Server, HBase Master, HistoryServer, NameNode, Phoenix Query Server, Ranger Admin, Ranger UserSync, ResourceManager, Secondary NameNode, Spark 3 JobHistoryServer, ZooKeeper Server \\
-    \textit{Master Node (Cluster Management, Core Masters)} & \\
+    \textbf{master.cdp (10.0.0.2)} \newline \textit{Master Node (Cluster Management, Core Masters)} & Ambari Server, HBase Master, HistoryServer, NameNode, Phoenix Query Server, Ranger Admin, Ranger UserSync, ResourceManager, Secondary NameNode, Spark 3 JobHistoryServer, ZooKeeper Server \\
     \hline
-    \textbf{node1.cdp (10.0.0.3)} & DataNode, Hive Metastore, Hive Server, Kafka Broker, NFS Gateway, NiFi CA, NiFi Master, NodeManager, ZooKeeper Server \\
-    \textit{Worker Node 1 (Data/Compute, specialized services)} & \\
+    \textbf{node1.cdp (10.0.0.3)} \newline \textit{Worker Node 1 (Data/Compute, specialized services)} & DataNode, Hive Metastore, Hive Server, Kafka Broker, NFS Gateway, NiFi CA, NiFi Master, NodeManager, ZooKeeper Server \\
     \hline
-    \textbf{node2.cdp (10.0.0.4)} & DataNode, Kafka Broker, NodeManager, Spark 3 ThriftServer, ZooKeeper Server \\
-    \textit{Worker Node 2 (Data/Compute, specialized services)} & \\
+    \textbf{node2.cdp (10.0.0.4)} \newline \textit{Worker Node 2 (Data/Compute, specialized services)} & DataNode, Kafka Broker, NodeManager, Spark 3 ThriftServer, ZooKeeper Server \\
     \hline
-    \textbf{node3.cdp (10.0.0.5)} & DataNode, HBase RegionServer, Kafka Broker, NodeManager, Ranger TagSync, Spark 3 Livy2 Server \\
-    \textit{Worker Node 3 (Data/Compute, specialized services)} & \\
+    \textbf{node3.cdp (10.0.0.5)} \newline \textit{Worker Node 3 (Data/Compute, specialized services)} & DataNode, HBase RegionServer, Kafka Broker, NodeManager, Ranger TagSync, Spark 3 Livy2 Server \\
     \hline
   \end{tabular}
 \end{table}
@@ -94,21 +90,17 @@ The cluster provisioning process supports different deployment profiles customis
   \caption{Component Mapping for the Data Science Profile}
   \label{tab:comp-data-science}
   \renewcommand{\arraystretch}{1.2}
-  \begin{tabular}{l p{8.5cm}}
+  \begin{tabular}{@{} p{0.38\linewidth} p{0.58\linewidth} @{}}
     \hline
     \textbf{Node \& Role} & \textbf{Installed Components} \\
     \hline
-    \textbf{master.cdp (10.0.0.2)} & HistoryServer, NameNode, Ranger Admin, Ranger UserSync, ResourceManager, Secondary NameNode, Spark 3 JobHistoryServer, ZooKeeper Server \\
-    \textit{Master Node (Cluster Management, Core Masters)} & \\
+    \textbf{master.cdp (10.0.0.2)} \newline \textit{Master Node (Cluster Management, Core Masters)} & HistoryServer, NameNode, Ranger Admin, Ranger UserSync, ResourceManager, Secondary NameNode, Spark 3 JobHistoryServer, ZooKeeper Server \\
     \hline
-    \textbf{node1.cdp (10.0.0.3)} & DataNode, Hive Metastore, Hive Server, Kafka Broker, NFS Gateway, NodeManager, ZooKeeper Server \\
-    \textit{Worker Node 1 (Data/Compute, specialized services)} & \\
+    \textbf{node1.cdp (10.0.0.3)} \newline \textit{Worker Node 1 (Data/Compute, specialized services)} & DataNode, Hive Metastore, Hive Server, Kafka Broker, NFS Gateway, NodeManager, ZooKeeper Server \\
     \hline
-    \textbf{node2.cdp (10.0.0.4)} & DataNode, Kafka Broker, NodeManager, Spark 3 ThriftServer, ZooKeeper Server \\
-    \textit{Worker Node 2 (Data/Compute, specialized services)} & \\
+    \textbf{node2.cdp (10.0.0.4)} \newline \textit{Worker Node 2 (Data/Compute, specialized services)} & DataNode, Kafka Broker, NodeManager, Spark 3 ThriftServer, ZooKeeper Server \\
     \hline
-    \textbf{node3.cdp (10.0.0.5)} & DataNode, Kafka Broker, NodeManager, Ranger TagSync, Spark 3 Livy2 Server \\
-    \textit{Worker Node 3 (Data/Compute, specialized services)} & \\
+    \textbf{node3.cdp (10.0.0.5)} \newline \textit{Worker Node 3 (Data/Compute, specialized services)} & DataNode, Kafka Broker, NodeManager, Ranger TagSync, Spark 3 Livy2 Server \\
     \hline
   \end{tabular}
 \end{table}
@@ -118,21 +110,17 @@ The cluster provisioning process supports different deployment profiles customis
   \caption{Component Mapping for the Software Engineering Profile}
   \label{tab:comp-software-engineering}
   \renewcommand{\arraystretch}{1.2}
-  \begin{tabular}{l p{8.5cm}}
+  \begin{tabular}{@{} p{0.38\linewidth} p{0.58\linewidth} @{}}
     \hline
     \textbf{Node \& Role} & \textbf{Installed Components} \\
     \hline
-    \textbf{master.cdp (10.0.0.2)} & HBase Master, HistoryServer, NameNode, Phoenix Query Server, ResourceManager, Secondary NameNode, ZooKeeper Server \\
-    \textit{Master Node (Cluster Management, Core Masters)} & \\
+    \textbf{master.cdp (10.0.0.2)} \newline \textit{Master Node (Cluster Management, Core Masters)} & HBase Master, HistoryServer, NameNode, Phoenix Query Server, ResourceManager, Secondary NameNode, ZooKeeper Server \\
     \hline
-    \textbf{node1.cdp (10.0.0.3)} & DataNode, NFS Gateway, NiFi CA, NodeManager, ZooKeeper Server \\
-    \textit{Worker Node 1 (Data/Compute, specialized services)} & \\
+    \textbf{node1.cdp (10.0.0.3)} \newline \textit{Worker Node 1 (Data/Compute, specialized services)} & DataNode, NFS Gateway, NiFi CA, NodeManager, ZooKeeper Server \\
     \hline
-    \textbf{node2.cdp (10.0.0.4)} & DataNode, NiFi Master, NodeManager, ZooKeeper Server \\
-    \textit{Worker Node 2 (Data/Compute, specialized services)} & \\
+    \textbf{node2.cdp (10.0.0.4)} \newline \textit{Worker Node 2 (Data/Compute, specialized services)} & DataNode, NiFi Master, NodeManager, ZooKeeper Server \\
     \hline
-    \textbf{node3.cdp (10.0.0.5)} & DataNode, HBase RegionServer, Kafka Broker, NodeManager \\
-    \textit{Worker Node 3 (Data/Compute, specialized services)} & \\
+    \textbf{node3.cdp (10.0.0.5)} \newline \textit{Worker Node 3 (Data/Compute, specialized services)} & DataNode, HBase RegionServer, Kafka Broker, NodeManager \\
     \hline
   \end{tabular}
 \end{table}
