@@ -1,0 +1,75 @@
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1a2e", "primaryTextColor": "#e0e0e0", "primaryBorderColor": "#4a90e2", "lineColor": "#4a90e2", "secondaryColor": "#16213e", "tertiaryColor": "#0f3460", "clusterBkg": "#0d1117", "clusterBorder": "#4a90e2", "edgeLabelBackground": "#1a1a2e", "fontFamily": "Segoe UI, sans-serif"}}}%%
+graph TD
+    %% =========================================================
+    %%  Data Lake Final Architecture (Default Profile)
+    %%  Focus: Functional capabilities, not infrastructure/provisioning
+    %% =========================================================
+
+    subgraph INGEST ["① Data Ingestion Layer"]
+        direction LR
+        KAFKA["Apache Kafka\nReal-time event streaming\n& message bus"]
+        NIFI["Apache NiFi\nEvent-driven data flows\n& ETL pipelines"]
+        NFS["NFS Gateway\nBatch file ingest\n(POSIX compliance)"]
+        
+        KAFKA -->|"topics/events"| NIFI
+    end
+
+    subgraph STORE ["② Data Storage Layer"]
+        direction LR
+        HDFS["HDFS\nDistributed File System\n(Raw & Parquet/ORC)"]
+        HBASE["Apache HBase\nColumnar NoSQL Database\n(Low-latency access)"]
+        HMETA["Hive Metastore\nCentralised schema registry\n(Tables & partitions)"]
+        
+        HDFS --> HBASE
+        HDFS -.-> HMETA
+    end
+
+    subgraph PROCESS ["③ Processing & Analytics Layer"]
+        direction LR
+        YARN["Apache YARN\nDistributed resource\nscheduler & queueing"]
+        SPARK["Apache Spark 3\nIn-memory compute\n(Batch & Streaming)"]
+        TEZ["Apache Tez\nDAG execution engine\n(Optimised for SQL)"]
+        
+        YARN --> SPARK
+        YARN --> TEZ
+        
+        HIVE["Hive Server 2\nSQL-on-Hadoop\n(BI tools & queries)"]
+        PHOENIX["Phoenix Query Server\nSQL layer over HBase\n(JDBC/ODBC)"]
+        
+        TEZ --> HIVE
+        SPARK -.-> HIVE
+    end
+
+    subgraph GOVERN ["④ Governance & Observability Layer"]
+        direction LR
+        RANGER["Apache Ranger\nCentralised RBAC policies\n& data masking"]
+        SOLR["Infra Solr\nAccess audit indexing\n(Full-text search)"]
+        ZK["Apache ZooKeeper\nDistributed coordination\n& leader election"]
+        AMBARI["Apache Ambari\nCluster lifecycle & health\nmonitoring UI"]
+        
+        RANGER --> SOLR
+        ZK --> RANGER
+        AMBARI -.-> ZK
+    end
+
+    %% Key relationships between layers
+    INGEST -->|"writes raw datasets to"| HDFS
+    INGEST -->|"streams fast data to"| HBASE
+    
+    STORE -->|"provides datasets to"| PROCESS
+    PHOENIX -.->|"queries"| HBASE
+    
+    GOVERN -.->|"enforces policies on"| INGEST
+    GOVERN -.->|"enforces policies on"| STORE
+    GOVERN -.->|"enforces policies on"| PROCESS
+
+    %% Styling
+    classDef ingestStyle  fill:#0f3460,stroke:#e94560,color:#fff,rx:6
+    classDef storeStyle   fill:#16213e,stroke:#4a90e2,color:#fff,rx:6
+    classDef processStyle fill:#0d1117,stroke:#00d2d3,color:#fff,rx:6
+    classDef governStyle  fill:#1a1a2e,stroke:#f9ca24,color:#fff,rx:6
+
+    class KAFKA,NIFI,NFS ingestStyle
+    class HDFS,HBASE,HMETA storeStyle
+    class YARN,SPARK,TEZ,HIVE,PHOENIX processStyle
+    class RANGER,SOLR,ZK,AMBARI governStyle

@@ -62,6 +62,16 @@ initialisation (\texttt{manual\_service\_init.sh}).
            deployment with automated recovery logic.}
   \label{fig:prov-cluster}
 \end{figure}
+
+The resulting architecture from the Default installation profile defines the core capabilities of the Data Lake, separating concerns into functional layers as illustrated in Figure~\ref{fig:arch-default}. This architecture establishes a robust foundation for high-volume data ingestion, distributed storage, and scalable processing engine orchestration, all underpinned by centralized governance and security protocols.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{content/assets/datalake-architecture.png}
+  \caption{Final Data Lake Architecture — Functional layers for the Default Profile.}
+  \label{fig:arch-default}
+\end{figure}
+
 \subsection{Data Lake Installation Profiles}
 The cluster provisioning process supports different deployment profiles customised for specific workloads. Based on the selected profile, Ambari will distribute the adequate components across the cluster nodes. The tables below detail the components present and the host responsibilities for each profile.
 
