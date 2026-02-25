@@ -1,4 +1,4 @@
-%%{init: {"flowchart": {"padding": 30}, "themeVariables": {"clusterBkg": "#fff9e6"}}}%%
+%%{init: {"flowchart": {"padding": 15}, "themeVariables": {"clusterBkg": "#fff9e6"}}}%%
 graph TD
     %% =========================================================
     %%  Data Lake Final Architecture (Default Profile)
@@ -24,7 +24,7 @@ graph TD
         HDFS -.-> HMETA
     end
 
-    subgraph PROCESS ["3. Processing & Analytics Layer"]
+    subgraph PROCESS ["3. Processing Layer"]
         direction LR
         YARN["Apache YARN<br/>Distributed resource<br/>scheduler & queueing"]
         SPARK["Apache Spark 3<br/>In-memory compute<br/>(Batch & Streaming)"]
@@ -40,7 +40,7 @@ graph TD
         SPARK -.-> HIVE
     end
 
-    subgraph GOVERN ["4. Governance & Observability Layer"]
+    subgraph GOVERN ["4. Governance Layer"]
         direction LR
         RANGER["Apache Ranger<br/>Centralised RBAC policies<br/>& data masking"]
         SOLR["Infra Solr<br/>Access audit indexing<br/>(Full-text search)"]
@@ -56,7 +56,9 @@ graph TD
     INGEST -->|"writes raw datasets to"| HDFS
     INGEST -->|"streams fast data to"| HBASE
     
-    STORE -->|"provides datasets to"| PROCESS
+    HDFS --->|"provides datasets to"| YARN
+    HBASE --->|"provides datasets to"| SPARK
+    HMETA -.->|"schema lookup"| HIVE
     PHOENIX -.->|"queries"| HBASE
     
     GOVERN -.->|"enforces policies on"| INGEST
