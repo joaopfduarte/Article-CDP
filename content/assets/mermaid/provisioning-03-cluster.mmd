@@ -1,10 +1,10 @@
-flowchart LR
+%%{init: {"flowchart": {"padding": 10}}}%%
+flowchart TD
     %% View 03 — Cluster Deployment & Recovery
     
     START([Begin cluster_deploy.yml]) --> INIT
     
     subgraph DEPLOY [Cluster Deployment]
-        direction TB
         INIT[Ambari REST API Availability] --> REG[Register VDF & App Blueprint]
         REG --> APPLY[Apply Cluster Template]
         APPLY --> WAIT[Poll Status]
@@ -16,8 +16,7 @@ flowchart LR
     
     STATUS -->|No| RETRY_ENGINE
     
-    subgraph RETRY_ENGINE [Automated Recovery Engine]
-        direction TB
+    subgraph RETRY_ENGINE [Recovery]
         STOP_AMBARI[Stop Ambari Server] --> CLEAN[Clean HDFS/HBase state]
         CLEAN --> DB_FIX[Reset & Recreate DB]
         DB_FIX --> RESTART[Start Server & Retry]
