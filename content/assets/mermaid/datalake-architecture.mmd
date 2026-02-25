@@ -1,51 +1,51 @@
-
+%%{init: {"flowchart": {"padding": 30}, "themeVariables": {"clusterBkg": "#fff9e6"}}}%%
 graph TD
     %% =========================================================
     %%  Data Lake Final Architecture (Default Profile)
     %%  Focus: Functional capabilities, not infrastructure/provisioning
     %% =========================================================
 
-    subgraph INGEST ["① Data Ingestion Layer"]
+    subgraph INGEST ["1. Data Ingestion Layer"]
         direction LR
-        KAFKA["Apache Kafka\nReal-time event streaming\n& message bus"]
-        NIFI["Apache NiFi\nEvent-driven data flows\n& ETL pipelines"]
-        NFS["NFS Gateway\nBatch file ingest\n(POSIX compliance)"]
+        KAFKA["Apache Kafka<br/>Real-time event streaming<br/>& message bus"]
+        NIFI["Apache NiFi<br/>Event-driven data flows<br/>& ETL pipelines"]
+        NFS["NFS Gateway<br/>Batch file ingest<br/>(POSIX compliance)"]
         
         KAFKA -->|"topics/events"| NIFI
     end
 
-    subgraph STORE ["② Data Storage Layer"]
+    subgraph STORE ["2. Data Storage Layer"]
         direction LR
-        HDFS["HDFS\nDistributed File System\n(Raw & Parquet/ORC)"]
-        HBASE["Apache HBase\nColumnar NoSQL Database\n(Low-latency access)"]
-        HMETA["Hive Metastore\nCentralised schema registry\n(Tables & partitions)"]
+        HDFS["HDFS<br/>Distributed File System<br/>(Raw & Parquet/ORC)"]
+        HBASE["Apache HBase<br/>Columnar NoSQL Database<br/>(Low-latency access)"]
+        HMETA["Hive Metastore<br/>Centralised schema registry<br/>(Tables & partitions)"]
         
         HDFS --> HBASE
         HDFS -.-> HMETA
     end
 
-    subgraph PROCESS ["③ Processing & Analytics Layer"]
+    subgraph PROCESS ["3. Processing & Analytics Layer"]
         direction LR
-        YARN["Apache YARN\nDistributed resource\nscheduler & queueing"]
-        SPARK["Apache Spark 3\nIn-memory compute\n(Batch & Streaming)"]
-        TEZ["Apache Tez\nDAG execution engine\n(Optimised for SQL)"]
+        YARN["Apache YARN<br/>Distributed resource<br/>scheduler & queueing"]
+        SPARK["Apache Spark 3<br/>In-memory compute<br/>(Batch & Streaming)"]
+        TEZ["Apache Tez<br/>DAG execution engine<br/>(Optimised for SQL)"]
         
         YARN --> SPARK
         YARN --> TEZ
         
-        HIVE["Hive Server 2\nSQL-on-Hadoop\n(BI tools & queries)"]
-        PHOENIX["Phoenix Query Server\nSQL layer over HBase\n(JDBC/ODBC)"]
+        HIVE["Hive Server 2<br/>SQL-on-Hadoop<br/>(BI tools & queries)"]
+        PHOENIX["Phoenix Query Server<br/>SQL layer over HBase<br/>(JDBC/ODBC)"]
         
         TEZ --> HIVE
         SPARK -.-> HIVE
     end
 
-    subgraph GOVERN ["④ Governance & Observability Layer"]
+    subgraph GOVERN ["4. Governance & Observability Layer"]
         direction LR
-        RANGER["Apache Ranger\nCentralised RBAC policies\n& data masking"]
-        SOLR["Infra Solr\nAccess audit indexing\n(Full-text search)"]
-        ZK["Apache ZooKeeper\nDistributed coordination\n& leader election"]
-        AMBARI["Apache Ambari\nCluster lifecycle & health\nmonitoring UI"]
+        RANGER["Apache Ranger<br/>Centralised RBAC policies<br/>& data masking"]
+        SOLR["Infra Solr<br/>Access audit indexing<br/>(Full-text search)"]
+        ZK["Apache ZooKeeper<br/>Distributed coordination<br/>& leader election"]
+        AMBARI["Apache Ambari<br/>Cluster lifecycle & health<br/>monitoring UI"]
         
         RANGER --> SOLR
         ZK --> RANGER
