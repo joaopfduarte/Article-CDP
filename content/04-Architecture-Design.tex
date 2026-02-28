@@ -47,7 +47,7 @@ The third and final stage of the workflow, shown in Figure~\ref{fig:prov-cluster
 \end{figure}
 
 \subsection{Functional Architecture and Layer Design}
-Upon successful deployment, the resulting architecture is organized into distinct, highly specialized functional layers. Figure~\ref{fig:arch-default} illustrates this conceptual design for the Default installation profile, demonstrating how the complex ecosystem of big data tools is structured to handle end-to-end data lifecycles.
+Upon successful deployment, the resulting architecture is organized into distinct, specialized functional layers. Figure~\ref{fig:arch-default} illustrates this conceptual design for the Default installation profile, demonstrating how the ecosystem of big data tools is structured to handle end-to-end data lifecycles.
 
 The architecture is founded upon four primary layers: Ingestion, Storage, Processing, and Governance. The Ingestion Layer utilizes Apache Kafka for real-time event streaming and Apache NiFi for managing complex, event-driven ETL pipelines, complemented by an NFS Gateway for traditional POSIX-compliant batch file transfers. Data collected by this layer is securely persisted in the Storage Layer, which relies on the Hadoop Distributed File System (HDFS) for scalable raw and columnar storage, and Apache HBase for low-latency NoSQL operations. The Hive Metastore serves as the central schema registry, ensuring metadata consistency.
 
@@ -61,7 +61,7 @@ The Processing Layer acts as the computational engine, leveraging Apache YARN fo
 \end{figure}
 
 \subsection{Data Lake Installation Profiles}
-Crucially, the architecture detailed above is highly adaptable, and its physical realization is dictated by the selected Data Lake Installation Profile. The logical layers are mapped to physical nodes based on precise workload requirements. Throughout all profiles, the \texttt{master.cdp} node serves as the control plane, exclusively hosting core management components such as the NameNode, ResourceManager, Ambari Server, and Ranger Admin to guarantee cluster stability and governance. 
+Crucially, the architecture detailed above is adaptable, and its physical realization is dictated by the selected Data Lake Installation Profile. The logical layers are mapped to physical nodes based on precise workload requirements. Throughout all profiles, the \texttt{master.cdp} node serves as the control plane, exclusively hosting core management components such as the NameNode, ResourceManager, Ambari Server, and Ranger Admin to guarantee cluster stability and governance. 
 
 Conversely, the worker nodes (\texttt{node1.cdp} to \texttt{node3.cdp}) are responsible for the heavy computational and storage lifting, hosting DataNodes and NodeManagers alongside specialized services. For example, in the Default and Software Engineering profiles, intensive data routing tools like NiFi are distributed among the worker nodes to accommodate heavy ingestion pipelines. In contrast, the Data Science profile omits these ingestion tools to maximize computational resources and memory for Apache Spark and analytical processing. 
 
