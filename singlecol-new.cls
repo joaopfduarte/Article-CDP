@@ -109,6 +109,16 @@
   \AtBeginDocument{\PagePositionCropYes
     {7pc}{5.3pc}{5.9pc}{7pt}
     {7in}{10in}{-1in}{-1in}}}
+\DeclareOption{nocrop}{\setlength\overfullrule{0pt}%
+  \setlength\paperwidth{6.3in}%
+  \setlength\paperheight{9.4in}%
+  \ifx\pdfpagewidth\undefined\else
+    \setlength{\pdfpagewidth}{\paperwidth}%
+    \setlength{\pdfpageheight}{\paperheight}%
+  \fi
+  \AtBeginDocument{\PagePositionCropNo
+    {4pc}{4pc}{3.77pc}{7pt}
+    {6.3in}{9.4in}{-1in}{-1in}}}
 \DeclareOption{titlepage}{\@titlepagetrue}
 \if@compatibility\else
 \DeclareOption{notitlepage}{\@titlepagefalse}
