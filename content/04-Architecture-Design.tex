@@ -5,6 +5,9 @@
 
 \bnote{ATENÇÃO: As referências para as figuras fig:prov-terraform, fig:prov-os e fig:prov-cluster constam no texto mas as imagens não estão no arquivo latex inseridas com \texttt{\textbackslash begin\{figure\}}.}
 
+\subsection{Automated Deployment Workflow}
+The establishment of the Data Lake relies on a sequential, three-stage automated workflow that seamlessly transitions from raw cloud resources to a fully operational cluster. This end-to-end provisioning process integrates Terraform, cloud-init, and Ansible, defining an Infrastructure-as-Code (IaC) pipeline.
+
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{content/assets/topology.png}
@@ -12,13 +15,9 @@
      \label{fig:topology}
 \end{figure}
 
-Figure~\ref{fig:prov-terraform} depicts the Terraform execution
-perspective of the provisioning workflow. It covers RSA key-pair
-generation, network resource creation (VCN, Internet Gateway, DRG,
-Route Table, Security List), IPSec VPN configuration, compute
-instance provisioning with cloud-init \texttt{user\_data}, and
-the upload of Ansible playbooks and cluster assets to the master
-node via SSH file provisioner.
+Before the deployment of software components, the physical network and compute infrastructure must be established. As illustrated in Figure~\ref{fig:topology}, the cluster is deployed within a single Oracle Cloud Infrastructure (OCI) Virtual Cloud Network (VCN). All four nodes---one master and three workers---reside in a shared Public Subnet (10.0.0.0/24). An Internet Gateway (IGW) facilitates external connectivity, allowing administrative access via SSH and HTTP (port 8080) directly to the nodes, notably the Ambari Server running on the master node (\texttt{10.0.0.2}). Internally, the nodes communicate via high-speed private networking, enabling secure and rapid data transfer between the master control plane and the distributed worker DataNodes.
+
+The initial stage, illustrated in Figure~\ref{fig:prov-terraform}, depicts the Terraform execution perspective of the provisioning workflow. Terraform is responsible for establishing the underlying cloud network topology on Oracle Cloud Infrastructure (OCI), configuring resources such as the Virtual Cloud Network (VCN), gateways, and security lists. Subsequently, it provisions the compute instances and injects the \texttt{user\_data} payload required for the next phase, while uploading the essential playbooks and blueprints to the master node via SSH.
 
 \begin{figure}[htbp]
   \centering
@@ -27,15 +26,7 @@ node via SSH file provisioner.
   \label{fig:prov-terraform}
 \end{figure}
 
-Figure~\ref{fig:prov-os} details the OS-level configuration phase,
-triggered by cloud-init on all VMs immediately after boot. It
-covers the concurrent execution on the master (Python/Ansible
-installation, SSH key injection, Ansible inventory setup) and
-workers (SELinux and firewall disabling, chrony), followed by
-the full \texttt{site.yml} Ansible playbook: base package
-installation, PostgreSQL initialisation, Ambari Server setup,
-ODP repository configuration, and Ambari Agent deployment across
-all cluster nodes.
+Immediately after the VMs are booted, control is handed over to the OS-level configuration phase, detailed in Figure~\ref{fig:prov-os}. Triggered asynchronously by cloud-init across all nodes, this second stage performs fundamental OS hardening, package updates, and SSH key distribution. Concurrently, Ansible assumes control on the master node to execute the comprehensive \texttt{site.yml} playbook. This playbook orchestrates the setup of necessary repositories, initializes the PostgreSQL database, installs the Ambari Server, and deploys Ambari Agents to all worker nodes, effectively preparing the cluster for software deployment.
 
 \begin{figure}[htbp]
   \centering
@@ -45,15 +36,7 @@ all cluster nodes.
   \label{fig:prov-os}
 \end{figure}
 
-Figure~\ref{fig:prov-cluster} shows the cluster deployment and
-recovery flow, orchestrated by Ansible calling the Ambari REST
-API (\texttt{cluster\_deploy.yml} and \texttt{deploy\_tasks.yml}).
-The diagram covers the happy-path deployment (VDF registration,
-blueprint upload, cluster creation, and progress polling) and the
-automated recovery logic supporting up to three sequential retry
-attempts, each preceded by HDFS corrections and Hive database
-reconfiguration, with a final fallback to manual service
-initialisation (\texttt{manual\_service\_init.sh}).
+The third and final stage of the workflow, shown in Figure~\ref{fig:prov-cluster}, encompasses the actual cluster deployment and configuration. Operating through the Ambari REST API, Ansible applies the selected cluster blueprint. A critical feature of this phase is its automated recovery mechanism: should a deployment task fail, the pipeline automatically triggers a sequence that stops the services, cleans the HDFS and HBase states, resets the databases, and retries the deployment up to three times. This resilience ensures a high success rate in provisioning complex distributed systems before requiring any manual intervention.
 
 \begin{figure}[htbp]
   \centering
@@ -63,7 +46,12 @@ initialisation (\texttt{manual\_service\_init.sh}).
   \label{fig:prov-cluster}
 \end{figure}
 
-The resulting architecture from the Default installation profile defines the core capabilities of the Data Lake, separating concerns into functional layers as illustrated in Figure~\ref{fig:arch-default}. This architecture establishes a robust foundation for high-volume data ingestion, distributed storage, and scalable processing engine orchestration, all underpinned by centralized governance and security protocols.
+\subsection{Functional Architecture and Layer Design}
+Upon successful deployment, the resulting architecture is organized into distinct, highly specialized functional layers. Figure~\ref{fig:arch-default} illustrates this conceptual design for the Default installation profile, demonstrating how the complex ecosystem of big data tools is structured to handle end-to-end data lifecycles.
+
+The architecture is founded upon four primary layers: Ingestion, Storage, Processing, and Governance. The Ingestion Layer utilizes Apache Kafka for real-time event streaming and Apache NiFi for managing complex, event-driven ETL pipelines, complemented by an NFS Gateway for traditional POSIX-compliant batch file transfers. Data collected by this layer is securely persisted in the Storage Layer, which relies on the Hadoop Distributed File System (HDFS) for scalable raw and columnar storage, and Apache HBase for low-latency NoSQL operations. The Hive Metastore serves as the central schema registry, ensuring metadata consistency.
+
+The Processing Layer acts as the computational engine, leveraging Apache YARN for distributed resource scheduling. YARN efficiently allocates cluster resources between Apache Spark, utilized for in-memory batch and micro-batch processing, and Apache Tez, which provides an optimized Directed Acyclic Graph (DAG) execution engine for SQL workloads via Hive Server and Phoenix Query Server. Overarching these components is the Governance Layer, which centrally enforces Role-Based Access Control (RBAC) and data masking policies through Apache Ranger, tracks access audits via Infra Solr, and ensures distributed coordination using Apache ZooKeeper, all monitored and managed seamlessly via Apache Ambari.
 
 \begin{figure}[htbp]
   \centering
@@ -73,7 +61,11 @@ The resulting architecture from the Default installation profile defines the cor
 \end{figure}
 
 \subsection{Data Lake Installation Profiles}
-The cluster provisioning process supports different deployment profiles customised for specific workloads. Based on the selected profile, Ambari will distribute the adequate components across the cluster nodes. The tables below detail the components present and the host responsibilities for each profile.
+Crucially, the architecture detailed above is highly adaptable, and its physical realization is dictated by the selected Data Lake Installation Profile. The logical layers are mapped to physical nodes based on precise workload requirements. Throughout all profiles, the \texttt{master.cdp} node serves as the control plane, exclusively hosting core management components such as the NameNode, ResourceManager, Ambari Server, and Ranger Admin to guarantee cluster stability and governance. 
+
+Conversely, the worker nodes (\texttt{node1.cdp} to \texttt{node3.cdp}) are responsible for the heavy computational and storage lifting, hosting DataNodes and NodeManagers alongside specialized services. For example, in the Default and Software Engineering profiles, intensive data routing tools like NiFi are distributed among the worker nodes to accommodate heavy ingestion pipelines. In contrast, the Data Science profile omits these ingestion tools to maximize computational resources and memory for Apache Spark and analytical processing. 
+
+Table components below detail the components present and the exact host responsibilities for each supported installation profile, providing a clear map of how the functional architecture is deployed in practice.
 
 \begin{table}[htbp]
   \centering
