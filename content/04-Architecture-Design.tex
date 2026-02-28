@@ -15,6 +15,8 @@ The establishment of the Data Lake relies on a sequential, three-stage automated
      \label{fig:topology}
 \end{figure}
 
+Before the deployment of software components, the physical network and compute infrastructure must be established. As illustrated in Figure~\ref{fig:topology}, the cluster is deployed within a single Oracle Cloud Infrastructure (OCI) Virtual Cloud Network (VCN). All four nodes---one master and three workers---reside in a shared Public Subnet (10.0.0.0/24). An Internet Gateway (IGW) facilitates external connectivity, allowing administrative access via SSH and HTTP (port 8080) directly to the nodes, notably the Ambari Server running on the master node (\texttt{10.0.0.2}). Internally, the nodes communicate via high-speed private networking, enabling secure and rapid data transfer between the master control plane and the distributed worker DataNodes.
+
 The initial stage, illustrated in Figure~\ref{fig:prov-terraform}, depicts the Terraform execution perspective of the provisioning workflow. Terraform is responsible for establishing the underlying cloud network topology on Oracle Cloud Infrastructure (OCI), configuring resources such as the Virtual Cloud Network (VCN), gateways, and security lists. Subsequently, it provisions the compute instances and injects the \texttt{user\_data} payload required for the next phase, while uploading the essential playbooks and blueprints to the master node via SSH.
 
 \begin{figure}[htbp]
