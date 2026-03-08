@@ -46,10 +46,13 @@ graph TD
         SOLR["Infra Solr<br/>Access audit indexing<br/>(Full-text search)"]
         ZK["Apache ZooKeeper<br/>Distributed coordination<br/>& leader election"]
         AMBARI["Apache Ambari<br/>Cluster lifecycle & health<br/>monitoring UI"]
+        ATLAS["Apache Atlas<br/>Data governance<br/>& metadata catalog"]
         
         RANGER --> SOLR
+        AMBARI --> SOLR
         ZK --> RANGER
         AMBARI -.-> ZK
+        ATLAS -.-> RANGER
     end
 
     %% Key relationships between layers
