@@ -21,7 +21,7 @@
 
 % --- DEBUG MODE FOR CITATION NOTES ---
 \newif\ifdebug
-\debugtrue % Set to \debugfalse to hide notes
+\debugfalse % Set to \debugfalse to hide notes
 
 \definecolor{lightgray}{gray}{0.9}
 
