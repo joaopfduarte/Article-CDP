@@ -49,3 +49,6 @@
 Thumbs.db
 
 !content/assets/**
+
+# Scripts locais
+compile.sh
