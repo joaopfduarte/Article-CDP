@@ -1,217 +1,280 @@
-# Artigo Científico Prático: Replicabilidade de Benchmarking Analítico em Data Lakes na OCI Free Tier
+# Guia Prático: Replicação do Benchmark de Data Lakes (OCI Free Tier)
 
-**Resumo:** Este documento apresenta a metodologia e o roteiro de replicação para a avaliação de desempenho de um Data Lake implantado via *Infrastructure as Code* (Terraform e Ansible) na Oracle Cloud Infrastructure (OCI). Baseado na arquitetura do Star Schema Benchmark (SSB), dividimos as atividades experimentais em duas frentes: (I) Comparativo de I/O de disco (Apache Hive) versus processamento em memória (Apache Spark) para uma tabela desnormalizada; (II) Estresse analítico com Modelagem Dimensional Completa (Múltiplos Joins) sob restrições de Hardware utilizando Apache Spark.
+Este documento foi criado para registrar o método exato de replicação do experimento proposto no artigo _"Implantação e Avaliação de Data Lakes em Clouds Free Tier"_, focado na infraestrutura Oracle Cloud Infrastructure (OCI) e ecossistemas Hadoop e Apache Spark utilizando a base de testes Star Schema Benchmark (SSB).
+
+O objetivo é atestar a hipótese de que, em ambientes de hardware extremamente restritos (como instâncias gratuitas com severas limitações de RAM e I/O de disco), o processamento _in-memory_ do Spark com Cache supera massivamente a execução Batch alocada em disco do Hive.
 
 ---
 
-## 1. Introdução e Metodologia
+## 1. Pré-Requisitos e Infraestrutura
 
-O objetivo desta prática é validar a capacidade de processamento analítico de um cluster Hadoop distribuído (1 Master, 3 Workers) operando em instâncias ARM Ampere A1 (Free Tier). O experimento foi modelado para fins acadêmicos e de pesquisa, permitindo que os discentes ou pesquisadores repitam os testes de estresse em seus próprios laboratórios de nuvem.
+A alocação de hardware e software deve utilizar os gabaritos pré-configurados (Blueprints) via Terraform, com foco no perfil `data-science`, que remove sobrecargas desnecessárias (como Atlas e Ranger) e libera RAM para os processos do Spark nos Workers.
 
-### 1.1 Preparação do Acesso
-O usuário deve possuir acesso aos nós de processamento via SSH a partir da máquina local.
+1. No arquivo `variables.tf` (ou `terraform.tfvars`), declare a seguinte variável de perfil:
+   ```hcl
+   cluster_profile = "data-science"
+   ```
+2. Após `terraform apply`, certifique-se de que o cluster gerou os 4 nós: `master`, `node1`, `node2`, e `node3`.
+   - **Hardware Alocado (Worker/Master):** `VM.Standard.A1.Flex` com _1 OCPU e 6 GB de RAM_.
+   - **Serviços Ativos de Foco:** HDFS, YARN, Hive Metastore, Spark3 ThriftServer/Livy2/Client.
+
+---
+
+## 2. Ingestão dos Dados e Transferência para o OCI
+
+Os dados em CSV (tabela Fato e Dimensões do SSB) precisam ser transferidos da sua máquina local para a máquina virtual `master.cdp` da OCI. Faremos o stage no disco secundário, que tem mais espaço (`/var/oled`).
+
+### No Terminal do Servidor (Master Node via SSH):
+
+Acesse o servidor (`ssh -i id_rsa_oci opc@<IP_MASTER>`) e prepare a pasta para receber os dados com permissão de escrita para o seu usuário OCI (`opc`):
 
 ```bash
-# Acesso ao Master Node
-ssh -i /caminho/para/id_rsa_oci opc@<IP_PUBLICO_MASTER>
+sudo mkdir -p /var/oled/ssb_stage/sample-schema-ssb
+sudo chown -R opc:opc /var/oled/ssb_stage
+```
+
+### No seu Terminal Local (Sua Máquina):
+
+Em uma **nova aba**, copie os CSVs e os scripts Bash utilitários que foram criados neste projeto para dentro do servidor:
+
+```bash
+# 1. Enviar os scripts resilientes (.sh) criados para o laboratório
+scp -i ~/.ssh/id_rsa_oci /home/duarte/Documents/cdp/infra-terraform/exp-utils/*.sh opc@<IP_MASTER>:/var/oled/ssb_stage/
+
+# 2. Enviar os arquivos CSV
+scp -i ~/.ssh/id_rsa_oci /home/duarte/.../seus_arquivos_csv/*.csv opc@<IP_MASTER>:/var/oled/ssb_stage/sample-schema-ssb/
 ```
 
 ---
 
-## 2. Experimento I: Avaliação Simples (Disco vs. Memória Distribuída)
+## 3. Configuração do Hadoop (Ambiente HDFS)
 
-Este primeiro experimento simula a leitura e agregação de uma grande massa de dados (1 milhão de linhas), submetendo a carga a dois paradigmas de computação: MapReduce (tradicional, orientado a armazenamento) e Spark (processamento em RAM).
+Com os dados de origem dentro do `master`, agora copiamos tudo para dentro do ecossistema HDFS para ficarem visíveis no modelo distribuído do Cluster. Durante este processo, vamos arrumar diretórios críticos de Staging para prevenir _Permission Denied_ da YARN.
 
-### 2.1 Geração e Ingestão do Dataset Base
-Criação de um arquivo CSV simulando uma *Fact Table* desnormalizada e submissão ao _Hadoop Distributed File System_ (HDFS).
+Volte para o terminal do Servidor (`master.cdp`) e execute:
 
 ```bash
-# 1. Geração do Dataset via Shell (Terminal opc)
-mkdir -p ~/ssb_test/data && cd ~/ssb_test/data
-echo "Gerando dados..."
-awk 'BEGIN {OFS=","; for(i=1;i<=1000000;i++) print i, int(rand()*10)+1992, int(rand()*5)+1, int(rand()*7)+1, int(rand()*1000)+1, int(rand()*10)+1}' > lineorder.csv
+# Entrar como superusuário HDFS
+sudo su hdfs
 
-# 2. Transferência para diretório temporário
-cp lineorder.csv /tmp/ && chmod 777 /tmp/lineorder.csv
+# 1. Criar e Popular Pastas
+hdfs dfs -mkdir -p /tmp/ssb_stage/{lineorder,dwdate,part,supplier,customer}
 
-# 3. Submissão ao HDFS (Terminal HDFS)
-sudo su - hdfs
-hdfs dfs -mkdir -p /user/admin/ssb/lineorder
-hdfs dfs -put /tmp/lineorder.csv /user/admin/ssb/lineorder/
-hdfs dfs -chmod -R 777 /user/admin/ssb
+hdfs dfs -put /var/oled/ssb_stage/sample-schema-ssb/LINEORDER.csv /tmp/ssb_stage/lineorder/
+hdfs dfs -put /var/oled/ssb_stage/sample-schema-ssb/DWDATE.csv    /tmp/ssb_stage/dwdate/
+hdfs dfs -put /var/oled/ssb_stage/sample-schema-ssb/PART.csv      /tmp/ssb_stage/part/
+hdfs dfs -put /var/oled/ssb_stage/sample-schema-ssb/SUPPLIER.csv  /tmp/ssb_stage/supplier/
+hdfs dfs -put /var/oled/ssb_stage/sample-schema-ssb/CUSTOMER.csv  /tmp/ssb_stage/customer/
+
+# Permissão global para a base de leitura das tabelas SSB
+hdfs dfs -chmod -R 777 /tmp/ssb_stage
+
+# 2. Criar Pastas Domiciliares (Staging Dir do Hive e do Spark)
+hdfs dfs -mkdir -p /user/opc
+hdfs dfs -chown opc:opc /user/opc
+hdfs dfs -mkdir -p /user/hive
+hdfs dfs -chown hive:hadoop /user/hive
+
 exit
 ```
 
-### 2.2 Execução via Motores Padrão de Disco (Apache Hive / MapReduce)
-Ao invés do obsoleto comando `hive`, a recomendação de arquitetura é se conectar diretamente ao *HiveServer2* utilizando JDBC via CLI do Beeline.
+---
+
+## 4. Registro dos Metadados (Hive/Beeline)
+
+A estrutura relacional será mapeada usando os utilitários OpenCSVSerde. Esses metadados serão compartilhados pelo Hive Metastore com o Spark para garantir homogeneidade na leitura.
+
+Conecte-se na CLI do Beeline (como usuário `hive` para evitar negações no Metastore):
 
 ```bash
-# 1. Conexão ao HiveServer2 no Worker 1 (Terminal hive)
-sudo su - hive
+sudo su hive
 beeline -u jdbc:hive2://node1.cdp:10000 -n hive
 ```
 
-> **[ATENÇÃO] Identificação de Falha no Acesso Hive (Connection Refused):**
-> * **O que ocorre:** O comando obsoleto `hive` ou o uso do `beeline` mirando o `master.cdp` falhará com erro de _Connect Exception_ ou _Permission Denied_.
-> * **Motivo:** O provisionamento Hadoop (ODP/Ambari) instala o componente **HiveServer2** no nó de trabalho subjacente (neste design de infraestrutura o *Worker Node 1*). O usuário de conexão nativo do Sistema Operacional também não possui os perfis de segurança Ranger; o dono dos _Metastores_ é o usuário `hive`.
-> * **Como Resolver:** Assuma estritamente a diretiva `sudo su - hive`. Após isso, acione a string JDBC roteando obrigatoriamente para a porta 10000 do nó instalado (`node1.cdp`).
+Execute o DDL (copie e cole bloco a bloco):
 
 ```sql
-/* 2. Criação do Warehouse e Mapeamento Externo (Console Beeline) */
-CREATE DATABASE IF NOT EXISTS ssb_test;
-USE ssb_test;
+CREATE DATABASE IF NOT EXISTS ssb;
+USE ssb;
 
+-- Tabela Fato
 CREATE EXTERNAL TABLE IF NOT EXISTS lineorder (
-    orderkey INT, order_year INT, custkey INT, suppkey INT, 
-    extendedprice DOUBLE, discount DOUBLE
-) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LOCATION '/user/admin/ssb/lineorder';
+    LO_ORDERKEY bigint, LO_LINENUMBER int, LO_CUSTKEY int, LO_PARTKEY int,
+    LO_SUPPKEY int, LO_ORDERDATE string, LO_ORDERPRIORITY string, LO_SHIPPRIORITY string,
+    LO_QUANTITY int, LO_EXTENDEDPRICE int, LO_ORDTOTALPRICE int, LO_DISCOUNT int,
+    LO_REVENUE int, LO_SUPPLYCOST int, LO_TAX int, LO_COMMITDATE int, LO_SHIPMODE string
+)
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+WITH SERDEPROPERTIES ("separatorChar" = ",", "quoteChar" = "\"", "escapeChar" = "\\")
+STORED AS TEXTFILE LOCATION '/tmp/ssb_stage/lineorder' tblproperties ("skip.header.line.count"="1");
 
-/* 3. Ajuste de Engine Executora (Troubleshooting) */
-set hive.execution.engine=mr;
+-- Dimensões
+CREATE EXTERNAL TABLE IF NOT EXISTS dwdate (
+    D_DATEKEY string, D_DATE string, D_DAYOFWEEK string, D_MONTH string,
+    D_YEAR int, D_YEARMONTHNUM int, D_YEARMONTH string, D_DAYNUMINWEEK int,
+    D_DAYNUMINMONTH int, D_DAYNUMINYEAR int, D_MONTHNUMINYEAR int,
+    D_WEEKNUMINYEAR int, D_SELLINGSEASON string, D_LASTDAYINWWFL int, D_LASTDAYINFL int, D_HOLIDAYFL int, D_WEEKDAYFL int
+)
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde' WITH SERDEPROPERTIES ("separatorChar" = ",", "quoteChar" = "\"", "escapeChar" = "\\")
+STORED AS TEXTFILE LOCATION '/tmp/ssb_stage/dwdate' tblproperties ("skip.header.line.count"="1");
+
+CREATE EXTERNAL TABLE IF NOT EXISTS part (
+    P_PARTKEY int, P_NAME string, P_MFGR string, P_CATEGORY string, P_BRAND string, P_COLOR string, P_TYPE string, P_SIZE int, P_CONTAINER string
+) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde' WITH SERDEPROPERTIES ("separatorChar" = ",", "quoteChar" = "\"", "escapeChar" = "\\")
+STORED AS TEXTFILE LOCATION '/tmp/ssb_stage/part' tblproperties ("skip.header.line.count"="1");
+
+CREATE EXTERNAL TABLE IF NOT EXISTS supplier (
+    S_SUPPKEY int, S_NAME string, S_ADDRESS string, S_CITY string, S_NATION string, S_REGION string, S_PHONE string
+) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde' WITH SERDEPROPERTIES ("separatorChar" = ",", "quoteChar" = "\"", "escapeChar" = "\\")
+STORED AS TEXTFILE LOCATION '/tmp/ssb_stage/supplier' tblproperties ("skip.header.line.count"="1");
+
+CREATE EXTERNAL TABLE IF NOT EXISTS customer (
+    C_CUSTKEY int, C_NAME string, C_ADDRESS string, C_CITY string, C_NATION string, C_REGION string, C_PHONE string, C_MKTSEGMENT string
+) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde' WITH SERDEPROPERTIES ("separatorChar" = ",", "quoteChar" = "\"", "escapeChar" = "\\")
+STORED AS TEXTFILE LOCATION '/tmp/ssb_stage/customer' tblproperties ("skip.header.line.count"="1");
+
+!quit
 ```
 
-> **[ATENÇÃO] Identificação de Falha de NullPointer no Join (Internal Error HIVE):**
-> * **O que ocorre:** Se o executor não for mitigado, ao enviar a Query analítica descrita abaixo o Beeline imprimirá o erro _"FAILED: Hive Internal Error: java.lang.NullPointerException nos FailureHooks"_.
-> * **Motivo:**  As distribuições ODP tentam otimizar o Hive via **Tez Engine**. Em instâncias _Free Tier_ (RAM escassa), os laços de pré-reserva desse plugin não conseguem contêineres suficientes e quebram no YARN sem relatar explicitamente a exaustão de memória na interface usuária JDBC.
-> * **Como Resolver:** Reverter à arquitetura resiliente original do Hadoop rodando o comando acima (`set hive.execution.engine=mr;`). O **MapReduce** opera lendo e escrevendo blocos sequenciais em disco, acomodando limites severos de memória.
+_(Digite `exit` novamente para voltar a ser o usuário `opc`)._
 
-```sql
-/* 4. Execução da Query Analítica */
-SELECT order_year, SUM(extendedprice * discount) AS revenue
-FROM lineorder WHERE discount BETWEEN 4 AND 6 AND order_year >= 1993
-GROUP BY order_year ORDER BY order_year;
-```
-> **Resultado do Hive:** O MapReduce serializou a varredura física pelo disco do HDFS, retornando o agrupamento logístico em um tempo médio de **191.95 segundos**.
+---
 
-### 2.3 Execução via Motor In-Memory (Apache Spark)
-Como contraprova da metodologia, a mesma carga foi processada injetando a tabela no *Cache* distribuído sobre o framework YARN.
+## 5. Bateria de Testes (Metodologia Adaptada para Free Tier)
+
+Devido às limitações de timeout e alocação de RAM (OOM - _Out of Memory_) das VMs do modo arm64 Free Tier, a recomendação é **executar os benchmarks via shell script resiliente** com `nohup`.
+
+Isso tem três benefícios:
+
+1. Imunidade à quebra de SSH por inatividade (queries longas do Hive).
+2. Parametrização dos limites de memória do Spark (`--driver-memory`, `--num-executors`) de forma engessada, fugindo dos Defaults do YARN que derrubam o NodeManager.
+3. Centralização da sessão. Abrir 1 sessão invés de 14.
+
+### 5.1 Teste Nativo em Disco (Apache Hive - Fase 1)
+
+O script automatizado gravará o tempo e o output contínuo de forma sequencial.
 
 ```bash
-# 1. Alocação do Motor Spark
-# O comando abaixo inicializa o Spark interativo forçando a adesão restrita dos limites de hardware (Ampere).
-sudo su - hive
-spark3-sql --master yarn --num-executors 3 --executor-memory 2G --executor-cores 1
+# Configure o arquivo de saída e inicie em Foreground ou em Background com nohup
+sudo touch /var/oled/ssb_stage/hive_benchmark.log
+sudo chown hive:hadoop /var/oled/ssb_stage/hive_benchmark.log
+sudo chmod 777 /var/oled/ssb_stage/hive_benchmark.log
+
+# Rodando o bloco
+sudo -u hive nohup bash /var/oled/ssb_stage/run_hive_benchmark.sh > /dev/null 2>&1 &
 ```
 
-> **[ATENÇÃO] Identificação de Falha de Permissão de Acesso Hive (AccessControlException):**
-> * **O que ocorre:** Executar o `spark3-sql` sob outros usuários do Sistema Operacional (ex: `spark` ou `opc`) estourará o erro _"Permission denied: user=spark_ _inode='/warehouse/tablespace/managed/hive'"_.
-> * **Motivo:** Como parte da integração do ecossistema, o Apache Spark SQL compartilha a leitura do _Hive Metastore_. O subsistema de armazenamento HDFS é trancado administrativamente. Se rodado com a identidade errada, o job será rejeitado pelas ACLs do *Namenode*.
-> * **Como Resolver:** Abandone shells comuns. Conforme o script demonstrado, sempre faça a elevação prévia para `sudo su - hive` garantindo a titularidade das pastas de Warehouse.
+_Acompanhe o painel executando:_ `tail -f /var/oled/ssb_stage/hive_benchmark.log`
 
-```sql
-/* 2. Aquecimento da Tabela e Execução (Console Spark SQL) */
-USE ssb_test;
+### 5.2 Teste Frio em Disco (Apache Spark - Fase 2)
+
+O benchmark utiliza o script isolado para uma **Única Sessão** (para suportar todo o workload sem morrer via limitação da YARN):
+
+```bash
+sudo touch /var/oled/ssb_stage/spark_benchmark.log
+sudo chown hive:hadoop /var/oled/ssb_stage/spark_benchmark.log
+sudo chmod 777 /var/oled/ssb_stage/spark_benchmark.log
+
+# Rodando o bloco com limites drásticos ativados (512MB)
+sudo -u hive nohup bash /var/oled/ssb_stage/run_spark_benchmark.sh > /dev/null 2>&1 &
+```
+
+_Acompanhe o painel executando:_ `tail -f /var/oled/ssb_stage/spark_benchmark.log`
+
+### 5.3 Teste Quente In-Memory (Apache Spark + Cache - Fase 3)
+
+A fase que atesta a hipótese do estudo pode ser emulada na sua melhor forma diretamente de forma manual no Terminal CLI. Usaremos o controle restrito de cluster nos executores do YARN.
+
+```bash
+sudo su hive
+
+# 1. Abrir a sessão do Spark-SQL domada para CPU Free Tier
+spark-sql --master yarn \
+  --driver-memory 512m \
+  --executor-memory 512m \
+  --num-executors 1 \
+  --executor-cores 1 \
+  --conf spark.executor.memoryOverhead=256m \
+  --conf spark.sql.shuffle.partitions=4
+
+# 2. Trazer a Data para a RAM (Submeta um de cada vez)
+USE ssb;
 CACHE TABLE lineorder;
-
-SELECT order_year, SUM(extendedprice * discount) AS revenue
-FROM lineorder WHERE discount BETWEEN 4 AND 6 AND order_year >= 1993
-GROUP BY order_year ORDER BY order_year;
+CACHE TABLE dwdate;
+CACHE TABLE part;
+CACHE TABLE supplier;
+CACHE TABLE customer;
 ```
-> **Resultado do Spark (Cache):** O cruzamento ocorreu majoritariamente na RAM dos nós operários (Ampere ARM), desabando o tempo de processamento analítico para **10.22 segundos**.
+
+**ATENÇÃO**: Neste cenário as tabelas estão retidas nativamente na RAM do executor do Spark e você não deve fechar ou encerrar (Ctrl+C). Envie (Copy-Paste) as 14 queries para o console do `spark-sql` neste momento e comece a observar milissegundos nas respostas ("Time taken").
 
 ---
 
-## 3. Experimento II: Avaliação do Star Schema Benchmark (Múltiplos Joins)
+## 6. Consultas Analíticas (Catálogo)
 
-Para classificar o ambiente dentro de rigores analíticos complexos (padrão TPC-H derivado), é imperativo aferir a resiliência do _scheduler_ do Hadoop lidando com o embaralhamento de rede (*Network Shuffle*) exigido por consultas entre uma *Fact Table* escalonável e *Dimension Tables* satélites periféricas interligadas por chaves estrangeiras lógicas. 
+Cansadas as correções semânticas de parsing e JOIN referenciado que existiam erradas na documentação original de SSB.
 
-### 3.1 Prototipagem da Malha Dimensional (Python)
-Para este experimento, formulamos dados dimensionais condizentes com o ambiente simulado (`dwdate`, `customer`, `supplier`, `part` e a tabela fato iterativa `lineorder_fato`).
+_(Copie em Bloco ou Individualmente se for usar no `spark-sql` interativo)_
 
-```bash
-# 1. Geração Automática das Matrizes Dimensionais e Fato
-cat << 'EOF' > /tmp/gen_ssb.py
-import random
-import os
-from datetime import datetime, timedelta
-
-out_dir = "/tmp/ssb_full/"
-os.makedirs(out_dir, exist_ok=True)
-
-with open(out_dir + "dwdate.csv", "w") as f:
-    start = datetime(1992, 1, 1)
-    for i in range(2556):
-        d = start + timedelta(days=i)
-        f.write(f"{int(d.strftime('%Y%m%d'))},{d.year},{d.month},{d.strftime('%Y-%m-%d')}\n")
-
-with open(out_dir + "customer.csv", "w") as f:
-    regions = ['AMERICA', 'ASIA', 'EUROPE', 'AFRICA']
-    for i in range(1, 10001): f.write(f"{i},Customer#{i},City{i},{random.choice(regions)}\n")
-
-with open(out_dir + "supplier.csv", "w") as f:
-    regions = ['AMERICA', 'ASIA', 'EUROPE', 'AFRICA']
-    for i in range(1, 1001): f.write(f"{i},Supplier#{i},City{i},{random.choice(regions)}\n")
-
-with open(out_dir + "part.csv", "w") as f:
-    categories = ['MFGR#12', 'MFGR#13', 'MFGR#14', 'MFGR#22']
-    brands = ['MFGR#2221', 'MFGR#2228', 'BrandX']
-    for i in range(1, 50001): f.write(f"{i},Part#{i},{random.choice(categories)},{random.choice(brands)}\n")
-
-with open(out_dir + "lineorder.csv", "w") as f:
-    date_keys = [int((start + timedelta(days=i)).strftime("%Y%m%d")) for i in range(2556)]
-    for i in range(1, 1000001):
-        disc, price = random.randint(1, 10), random.uniform(100.0, 1000.0)
-        f.write(f"{i},{random.randint(1, 10000)},{random.randint(1, 50000)},{random.randint(1, 1000)},{random.choice(date_keys)},{price:.2f},{disc},{price*disc:.2f}\n")
-EOF
-
-python3 /tmp/gen_ssb.py
-chmod -R 777 /tmp/ssb_full
-```
-
-### 3.2 Ingestão das Dimensões no Data Lake
-```bash
-# Submissão ao HDFS como usuário hdfs
-sudo su - hdfs
-for d in dwdate customer supplier part lineorder; do
-  hdfs dfs -mkdir -p /user/admin/ssb_star/$d
-  hdfs dfs -put /tmp/ssb_full/$d.csv /user/admin/ssb_star/$d/
-done
-hdfs dfs -chmod -R 777 /user/admin/ssb_star
-exit
-```
-
-### 3.3 Tratativa de Limitações de Memória do Cluster (Free Tier)
-Em virtude das rígidas demarcações dos OCI VMs Free-Tier (limitando em 2GB Ram/Node), solicitar o isolamento do *Spark Context* com prioridade in-memory (`CACHE TABLE` simultâneo para as 5 matrizes) induziu _Deadlocks_ transacionais por *OOM (Out Of Memory)* do container JVM.
-
-Para assegurar a completude da tarefa por intermédio da arquitetura *Catalyst Optimizer* do Spark, o modelo deve se apoiar no fracionamento dos *Resilient Distributed Datasets* via disco. O recurso foi submetido restringindo a demanda passiva global de memória YARN para contornar filas em modo *PENDING*, da seguinte forma:
-
-```bash
-sudo su - hive
-spark3-sql --master yarn --num-executors 1 --executor-memory 1G
-```
-
-> **[ATENÇÃO] Identificação de Falha no Shell do Spark (Console Congelado/Hang + OOM):**
-> * **O que ocorre:** O Terminal não avança após a mensagem *“falling back to uploading libraries”* ou imprime repetidas vezes *“Initial job has not accepted any resources”* antes de ter as Jobs canceladas à força pela JVM.
-> * **Motivo:** Ao testar um modelo distribuído forçando um excesso de processamento e cache (`CACHE TABLE` para dezenas de milhões de atributos) num ambiente _AArch64_ grátis, o alocador do YARN se depara com zero blocos de RAM satisfatórios. Como resultado, o *Job Scheduler* emite um estado _PENDING_ permanente congelando o prompt do experimentador num laço infinito (*Deadlock Resource*) até estourar a Heap nativa.
-> * **Como Resolver:**  Para testes com alta profundidade em _Free Tiers_, a CLI do spark (`spark3-sql`) deve ser invocada cortando sua taxa de *Memory Executor* (utilizando apenas `1G` em oposição aos `2G` padrão). Em sequência, o cientista de dados **deve abster-se** de tentar subir partições gigantescas na memória (*Cache*), submetendo a instrução diretamente, para que o Catalyst acione instâncias transientes particionando do disco gradativamente pelo YARN.
-
-### 3.4 Execução da Query SSB Complexa (Sem Cache)
 ```sql
-/* 1. Mapeamento Lógico Pelo Console Spark SQL */
-USE ssb_test;
+-- Query 01
+SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_yearmonthnum = 199401 AND lo_discount between 4 and 6 AND lo_quantity between 26 and 35;
 
-CREATE EXTERNAL TABLE IF NOT EXISTS dwdate (d_datekey INT, d_year INT, d_month INT, d_date STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LOCATION '/user/admin/ssb_star/dwdate';
-CREATE EXTERNAL TABLE IF NOT EXISTS customer (c_custkey INT, c_name STRING, c_city STRING, c_region STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LOCATION '/user/admin/ssb_star/customer';
-CREATE EXTERNAL TABLE IF NOT EXISTS supplier (s_suppkey INT, s_name STRING, s_city STRING, s_region STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LOCATION '/user/admin/ssb_star/supplier';
-CREATE EXTERNAL TABLE IF NOT EXISTS part (p_partkey INT, p_name STRING, p_category STRING, p_brand STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LOCATION '/user/admin/ssb_star/part';
-CREATE EXTERNAL TABLE IF NOT EXISTS lineorder_fato (lo_orderkey INT, lo_custkey INT, lo_partkey INT, lo_suppkey INT, lo_orderdate INT, lo_extendedprice DOUBLE, lo_discount DOUBLE, lo_revenue DOUBLE) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LOCATION '/user/admin/ssb_star/lineorder';
+-- Query 02
+SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_year = 1993 AND lo_discount between 1 and 3 AND lo_quantity < 25;
 
-/* 2. Execução da Amostra Complexa sem Aquecimento via RAM */
-SELECT sum(lo_revenue) AS lucro, d_year, p_brand
-FROM lineorder_fato
-JOIN dwdate ON lo_orderdate = d_datekey
-JOIN part ON lo_partkey = p_partkey
-JOIN supplier ON lo_suppkey = s_suppkey
-WHERE p_category = 'MFGR#12' 
-  AND s_region = 'AMERICA'
-GROUP BY d_year, p_brand
-ORDER BY d_year, p_brand;
+-- Query 03
+SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_yearmonthnum = 199401 AND lo_discount between 4 and 6 AND lo_quantity between 26 and 35;
+
+-- Query 04
+SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_weeknuminyear = 6 AND d_year = 1994 AND lo_discount between 5 and 7 AND lo_quantity between 26 and 35;
+
+-- Query 05
+SELECT sum(lo_revenue), d_year, p_brand FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.part ON lo_partkey = p_partkey JOIN ssb.supplier ON lo_suppkey = s_suppkey WHERE p_category LIKE '%MFGR#12%' AND s_region LIKE '%AMERICA%' GROUP BY d_year, p_brand ORDER BY d_year, p_brand;
+
+-- Query 06
+SELECT sum(lo_revenue), d_year, p_brand FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.part ON lo_partkey = p_partkey JOIN ssb.supplier ON lo_suppkey = s_suppkey WHERE p_brand between 'MFGR#2221' and 'MFGR#2228' AND s_region LIKE '%ASIA%' GROUP BY d_year, p_brand ORDER BY d_year, p_brand;
+
+-- Query 07
+SELECT sum(lo_revenue), d_year, p_brand FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.part ON lo_partkey = p_partkey JOIN ssb.supplier ON lo_suppkey = s_suppkey WHERE p_brand LIKE '%MFGR#2221%' AND s_region LIKE '%EUROPE%' GROUP BY d_year, p_brand ORDER BY d_year, p_brand;
+
+-- Query 08
+SELECT c_nation, s_nation, d_year, sum(lo_revenue) as revenue FROM ssb.lineorder JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE c_region LIKE '%ASIA%' AND s_region LIKE '%ASIA%' AND d_year >= 1992 AND d_year <= 1997 GROUP BY c_nation, s_nation, d_year ORDER BY d_year asc, revenue desc;
+
+-- Query 09
+SELECT c_city, s_city, d_year, sum(lo_revenue) as revenue FROM ssb.lineorder JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE c_nation LIKE '%UNITED STATES%' AND s_nation LIKE '%UNITED STATES%' AND d_year >= 1992 AND d_year <= 1997 GROUP BY c_city, s_city, d_year ORDER BY d_year asc, revenue desc;
+
+-- Query 10
+SELECT c_city, s_city, d_year, sum(lo_revenue) as revenue FROM ssb.lineorder JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE (c_city LIKE '%UNITED KI1%' or c_city LIKE '%UNITED KI5%') AND (s_city LIKE '%UNITED KI1%' or s_city LIKE '%UNITED KI5%') AND d_year >= 1992 AND d_year <= 1997 GROUP BY c_city, s_city, d_year ORDER BY d_year asc, revenue desc;
+
+-- Query 11
+SELECT c_city, s_city, d_year, sum(lo_revenue) as revenue FROM ssb.lineorder JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE (c_city LIKE '%UNITED KI1%' or c_city LIKE '%UNITED KI5%') AND (s_city LIKE '%UNITED KI1%' or s_city LIKE '%UNITED KI5%') AND d_yearmonth LIKE '%Dec1997%' GROUP BY c_city, s_city, d_year ORDER BY d_year asc, revenue desc;
+
+-- Query 12
+SELECT d_year, c_nation, sum(lo_revenue - lo_supplycost) as profit FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.part ON lo_partkey = p_partkey WHERE c_region LIKE '%AMERICA%' AND s_region LIKE '%AMERICA%' AND (p_mfgr LIKE '%MFGR#1%' or p_mfgr LIKE '%MFGR#2%') GROUP BY d_year, c_nation ORDER BY d_year, c_nation;
+
+-- Query 13
+SELECT d_year, s_nation, p_category, sum(lo_revenue - lo_supplycost) as profit FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.part ON lo_partkey = p_partkey WHERE c_region LIKE '%AMERICA%' AND s_region LIKE '%AMERICA%' AND (d_year = 1997 or d_year = 1998) AND (p_mfgr LIKE '%MFGR#1%' or p_mfgr LIKE '%MFGR#2%') GROUP BY d_year, s_nation, p_category ORDER BY d_year, s_nation, p_category;
+
+-- Query 14
+SELECT d_year, s_city, p_brand, sum(lo_revenue - lo_supplycost) as profit FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.part ON lo_partkey = p_partkey WHERE c_region LIKE '%AMERICA%' AND s_nation LIKE '%UNITED STATES%' AND (d_year = 1997 or d_year = 1998) AND p_category LIKE '%MFGR#14%' GROUP BY d_year, s_city, p_brand ORDER BY d_year, s_city, p_brand;
 ```
-
-> **Resultado do Experimento Complexo:** Mesmo extraindo os quadros relacionais cruamente sobre I/O do rígido sem valer-se da tolerância do Cache in-Memory (devido a contenções de hardware da infraestrutura *free tier* em tela), o modelo analítico performático do Spark conseguiu agrupar o relacionamento e reduzir os Hash Joins em meros **31.42 segundos**, retornando as instâncias aglutinadas em tela com notável integridade.
 
 ---
 
-## 4. Conclusões
+## 7. Troubleshooting e Limpeza
 
-Os experimentos solidificam a funcionalidade plena dos agrupamentos *HDFS/YARN* provisionados *as-a-code*. Verificou-se não só o amadurecimento das matrizes e conexões subjacentes (Networking interno, Permissões Hive Metastore e Engine JDBC em balanceamento nativo), como também comprovou-se matematicamente (31.4s *no-cache* multiview contra 191s *disk base* single-view e um ápice de 10.2s *RAM Cached* single-view) as latentes propriedades modernistas do formato Catalyst/DAG utilizado por *Apache Spark*, permitindo inferir um Data Lake funcional e pronto para exploração científica e produtiva dentro de restritos recursos públicos providos via free tiers nas nuvens corporativas contemporâneas.
+- **Stray YARN Apps e Falhas Fatais por Out of Memory:**
+  Se em algum instante anterior os benchmarks falharem (ou você abortar com CTRL+C na execução interativa do Spark sem matar corretamente o Master) o cluster ficará drenado com `ACCEPTED Apps`. Você pode matar todas de uma só vez:
+
+  ```bash
+  sudo su hive
+  for app in $(yarn application -list -appStates ACCEPTED,RUNNING | awk '{print $1}' | grep application_); do yarn application -kill $app; done
+  ```
+
+- **Limpando arquivos mortos nas pastas de Staging:**
+  É comum em instâncias lenticulares que processos zumbis mantenham arquivos `.sparkStaging` em peso impedindo futuras execuções. Para matar e higienizar:
+  ```bash
+  sudo su hdfs
+  hdfs dfs -rm -r -f /user/hive/.sparkStaging/*
+  ```
