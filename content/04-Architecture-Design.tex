@@ -5,6 +5,20 @@
 
 \bnote{ATENÇÃO: As referências para as figuras fig:prov-terraform, fig:prov-os e fig:prov-cluster constam no texto mas as imagens não estão no arquivo latex inseridas com \texttt{\textbackslash begin\{figure\}}.}
 
+Conforme as caraterísticas já mencionadas na seção anterior sobre os componentes e padrões tecnológicos usados, 
+verifica-se ainda que a arquitetura do cluster, inicialmente sua topologia, conforme o que pode ser visto na 
+figura \ref{fig:topology}, é composta por 4 máquinas virtuais, sendo uma master e três workers, isto dentro
+do contexto de um tenancy do Oracle Cloud Infrastructure (OCI). No contexto topologico deste proposto framework,
+há a presenção de uma subrede que agrupa todas as máquinas que fazem parte do ambiente servido para o data Lake.
+%
+
+Em observerção da subrede que agrupa as máquinas, a lista de segurança associada à subrede define regras muito específicas
+de acesso, isso devido às necessidades funcionais propostas, tal que apenas para uma lista de IP's já definidos, 
+conforme a listagem de componentes que estão presentes em todos os perfis de instalação do CDP, há abertura para acessos
+além do ambiente privado interno dessa subrede, através do Internet Gateway associado à subrede. Essa topologia 
+também é fundamental para mapeamento dos hosts que fazem parte do ambiente da instalação, já que o componente
+orquestrador deste ambiente, o Ambari, faz o mapeamento dos hosts e suas funcionalidades.
+
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{content/assets/topology.png}
@@ -12,14 +26,13 @@
      \label{fig:topology}
 \end{figure}
 
-Figure~\ref{fig:prov-terraform} depicts the Terraform execution
-perspective of the provisioning workflow. It covers RSA key-pair
-generation, network resource creation (VCN, Internet Gateway, DRG,
-Route Table, Security List), IPSec VPN configuration, compute
-instance provisioning with cloud-init \texttt{user\_data}, and
-the upload of Ansible playbooks and cluster assets to the master
-node via SSH file provisioner.
+Para melhor elucidação do processo de instalação, que conforme já mencionado, faz proveito de artifícios agnósticos
+de IaC, a seguir, conforme a figure~\ref{fig:prov-terraform}, do ponto de do usuário ao realizar a aplicação do script Terraform, até as ações que são executadas
+no contexto da instalação, abaixo é possível observer, em três fases, os processos que envolvem o total deploy da
+infraestrutura, como também, do cluster em si, através do componente orquestrador Ambari para os demais componentes
+que fazem parte da instalação.
 
+%
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\linewidth]{content/assets/provisioning-01-terraform.png}
@@ -27,15 +40,18 @@ node via SSH file provisioner.
   \label{fig:prov-terraform}
 \end{figure}
 
-Figure~\ref{fig:prov-os} details the OS-level configuration phase,
-triggered by cloud-init on all VMs immediately after boot. It
-covers the concurrent execution on the master (Python/Ansible
-installation, SSH key injection, Ansible inventory setup) and
-workers (SELinux and firewall disabling, chrony), followed by
-the full \texttt{site.yml} Ansible playbook: base package
-installation, PostgreSQL initialisation, Ambari Server setup,
-ODP repository configuration, and Ambari Agent deployment across
-all cluster nodes.
+A figure~\ref{fig:prov-os} demonstra a fase inicial desse processo, em que ao realizar as configurações base de
+através das variáveis do terraform, como a faixa permitida de IP's e o modelo de perfil de instalação a ser seguido,
+o que também na verdade define qual será o blueprint, arquivo responsável por definir toda a infraestrutura do cluster,
+será consumido para realizar a instalação. Ao final do breve processo de configuração ainda pela interface do IaaS escolhido, 
+já definido como o OCI, é realiza a aplicação do script, tal qual inicializa o processo de deploy. Isto posto, etapas
+como a configuração do par de chaves TLS RSA, criação da Virtual Cloud Netword, da subnet, Security LIst, Gateway INternet,
+e máquinas que fazem parte da infraestrutura é realizado de forma sequencial.
+%
+
+Um detalhe importante dessa etapa é o processo de upload de arquivos dentro do diretório temporário da máquina master
+da instalação, onde os arquivos usados para interação com a API do ambari são copiados, como também, os playbooks que 
+serão posteriormente usados pelo ansible para configuração interna das máquinas.
 
 \begin{figure}[htbp]
   \centering
@@ -45,15 +61,31 @@ all cluster nodes.
   \label{fig:prov-os}
 \end{figure}
 
-Figure~\ref{fig:prov-cluster} shows the cluster deployment and
-recovery flow, orchestrated by Ansible calling the Ambari REST
-API (\texttt{cluster\_deploy.yml} and \texttt{deploy\_tasks.yml}).
-The diagram covers the happy-path deployment (VDF registration,
-blueprint upload, cluster creation, and progress polling) and the
-automated recovery logic supporting up to three sequential retry
-attempts, each preceded by HDFS corrections and Hive database
-reconfiguration, with a final fallback to manual service
-initialisation (\texttt{manual\_service\_init.sh}).
+Já no contexto das máquinas, virtuais, a figura \ref{fig:prov-os} ilustra os processos referentes ao que é executado
+pelo cloud init das máquinas, em especial pelos processos que majoritariamente ocorrem na máquina master. Este contexto
+é observado e suportado por um arquivo shell inicial, que realize o upload de pacotes necessários para inicialização
+do ambiente para o ansible, ou seja, sua pré-configuração, que inclui também a configuração de regras básicas de segurança, 
+configuração dos hosts, atraveś de configurações em /etc/hosts, e instalação do python e ansible. É importante
+ressaltar que a instalação do ansible é feita na máquina master, pois é ela que será responsável por orquestrar
+o restante do cluster.
+%
+
+Após essa etapa inicial de configuração prévia num modelo de Click-ops com processos de cloud-init através de um
+executável shell, iniciamos então o processo de configuração pelo Ansible, que é cliente de três principais playbooks,
+cada um com uma responsabilidade separada. O primeiro playbook, chamado de site.yml, é responsável por toda a 
+configuração prévia do ambiente que antecede o deploy nominal com interação via API do Ambari. Este primeiro playbook, 
+realiza a instalação e consumo de pacotes e programas úteis à instalação, como o Java 8, o Chrony, criação de arquivos
+de correção que serão usados em etapas de recuperação posteriores, e instalação do Ambari Server na máquina master e Ambari Host em cada uma das
+quatro máquinas.
+%
+
+Após toda a configuração de ambiente, fontes e políticas feitas pelo playbook site.yml, inicia-se o processo de deploy
+nominal do cluster, que é realizado através da interação com a API do Ambari, conforme ilustrado na Figure~\ref{fig:prov-cluster}.
+Este processo inclui etapa de registro do arquivo xml manifesto que define as fontes e modelagem do ambiente, o cluster
+template, que como mencionado anteriormente, é o definidor da topologia do cluster quando do ponto de vista da instalação
+em si, e também do blueprint, que como o nome sugere, serve como uma espécie de planta ou guia de como o Ambari deve instalar
+cada componente e suas depedências, além da arquitetura definida para quais partes são por exemplo datanodes ou node managers.
+%
 
 \begin{figure}[htbp]
   \centering
@@ -63,7 +95,21 @@ initialisation (\texttt{manual\_service\_init.sh}).
   \label{fig:prov-cluster}
 \end{figure}
 
-The resulting architecture from the Default installation profile defines the core capabilities of the Data Lake, separating concerns into functional layers as illustrated in Figure~\ref{fig:arch-default}. This architecture establishes a robust foundation for high-volume data ingestion, distributed storage, and scalable processing engine orchestration, all underpinned by centralized governance and security protocols.
+
+Este processo como antes dito, passa por uma pequena série de etapas de correção de falhas, todas elas previstas, que por 
+sua vez levam ao redeploy da instalação, vista necessidadade de preservar o que já foi instalado e dar continuidade
+nos processos seguintes de instalação para conclusão do ambiente. Todas essas etapas, são executadas, de forma a, inicialmente, 
+realizar a correção de algumas dependências do HDFS que por motivo de falta de espaço em memória não são consumidos pelo ambari, e 
+posterior necessidade de inicialização manual do Nifi e por último do Hive. Para realizar essa correções, o ambiente realiza sempre o 
+mesmo conjunto de tarefas: para o ambari-server, faz a limpeza do estado do HDFS, recria a base de dados, e reinicializa o processo
+de deploy, que como já mencionado, ocorre em interação com a API do ambari-server.
+%
+
+Todo este processo é executado num tempo médio de até três horas de execução, devido às necessidades subsequentes de correção e configurações, além 
+das próprias etapas de consumo de componentes externos. 
+
+The resulting architecture from the Default installation profile defines the core capabilities of the Data Lake, separating concerns 
+into functional layers as illustrated in Figure~\ref{fig:arch-default}.
 
 \begin{figure}[htbp]
   \centering
