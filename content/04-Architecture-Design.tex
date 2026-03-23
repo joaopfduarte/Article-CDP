@@ -5,10 +5,10 @@
 
 \bnote{ATTENTION: References to figures fig:prov-terraform, fig:prov-os, and fig:prov-cluster are in the text but the images are not included in the LaTeX file with \texttt{\textbackslash begin\{figure\}}.}
 
-In accordance with the characteristics mentioned in the previous section regarding the technological components and patterns utilised, the architecture of the cluster—initially its topology as seen in Figure~\ref{fig:topology}—consists of four virtual machines: one master node and three worker nodes. This setup operates within the context of an Oracle Cloud Infrastructure (OCI) tenancy. In the topological context of this proposed framework, a subnet groups all the machines comprising the Data Lake environment.
+In accordance with the characteristics mentioned in the previous section regarding the technological components and patterns utilised, the architecture of the \emph{cluster}, initially its topology as seen in Figure~\ref{fig:topology}, consists of four virtual machines: one \emph{master} node and three \emph{worker} nodes. This setup operates within the context of an Oracle Cloud Infrastructure (OCI) tenancy. In the topological context of this proposed framework, a subnet groups all the machines comprising the \emph{Data Lake} environment.
 %
 
-Upon observing the subnet grouping the machines, the security list associated with it defines highly specific access rules to meet the proposed functional requirements. Access beyond the internal private environment of this subnet is opened exclusively for a pre-defined list of IPs, corresponding to the components present across all CDP installation profiles, through the Internet Gateway associated with the subnet. This topology is also fundamental for mapping the hosts that make up the installation environment, given that the environment's orchestration component, Ambari, actively maps these hosts and their functionalities.
+Upon observing the subnet grouping the machines, the security list associated with it defines specific access rules to meet the proposed functional requirements. Access beyond the internal private environment of this subnet is opened exclusively for a pre-defined list of IPs, corresponding to the components present across all CDP installation profiles, through the Internet Gateway associated with the subnet. This topology is also fundamental for mapping the hosts that make up the installation environment, given that the environment's orchestration component, Ambari, actively maps these hosts and their functionalities.
 
 \begin{figure}[htbp]
     \centering
@@ -17,7 +17,7 @@ Upon observing the subnet grouping the machines, the security list associated wi
      \label{fig:topology}
 \end{figure}
 
-To further elucidate the installation process—which, as previously mentioned, relies on infrastructure-agnostic IaC tools—Figure~\ref{fig:prov-terraform} traces the sequence from the user's application of the Terraform script through to the actions executed within the installation context. The subsections below illustrate, in three phases, the processes involved in fully deploying the infrastructure and the cluster itself via the Ambari orchestrator for the remaining components.
+To further elucidate the installation process, which, as previously mentioned, relies on infrastructure-agnostic IaC tools, Figure~\ref{fig:prov-terraform} traces the sequence from the user's application of the Terraform script through to the actions executed within the installation context. The subsections below illustrate, in three phases, the processes involved in deploying the infrastructure and the cluster itself via the Ambari orchestrator for the remaining components.
 
 %
 \begin{figure}[htbp]
@@ -27,10 +27,10 @@ To further elucidate the installation process—which, as previously mentioned, 
   \label{fig:prov-terraform}
 \end{figure}
 
-Figure~\ref{fig:prov-terraform} demonstrates the initial phase of this process. After configuring the baseline settings via Terraform variables—such as the permitted IP range and the installation profile model to be followed (which ultimately defines the blueprint or the architectural layout of the cluster)—the script is applied. This initiates the deployment process. Sequentially, steps such as generating the TLS RSA key pair, and provisioning the network layer (including the Virtual Cloud Network, Subnets, Security List, and Internet Gateway) as well as the compute nodes are executed.
+Figure~\ref{fig:prov-terraform} demonstrates the initial phase of this process. After configuring the baseline settings via Terraform variables, such as the permitted IP range and the installation profile model to be followed (which defines the blueprint or the architectural layout of the \emph{cluster}), the script is applied. This initiates the deployment process. Sequentially, steps such as generating the TLS RSA key pair, and provisioning the network layer (including the Virtual Cloud Network, Subnets, Security List, and Internet Gateway) as well as the compute nodes are executed.
 %
 
-An important detail in this stage is the file upload process to the master machine's temporary directory. Files used for interacting with the Ambari API, alongside the playbooks subsequently used by Ansible for the internal configuration of the machines, are securely copied over.
+An important detail in this stage is the file upload process to the \emph{master} machine's temporary directory. Files used for interacting with the Ambari API, alongside the playbooks subsequently used by Ansible for the internal configuration of the machines, are securely copied over.
 
 \begin{figure}[htbp]
   \centering
@@ -40,13 +40,13 @@ An important detail in this stage is the file upload process to the master machi
   \label{fig:prov-os}
 \end{figure}
 
-In the context of the virtual machines, Figure~\ref{fig:prov-os} illustrates the processes executed by \texttt{cloud-init}, focusing mainly on the tasks occurring on the master node. This context is supported by an initial shell script responsible for downloading the packages required for the Ansible environment's initialisation. This pre-configuration includes setting up base OS services, configuring hosts via \texttt{/etc/hosts}, establishing security rules, and installing Python and Ansible. It is important to note that Ansible is installed exclusively on the master machine, as it is responsible for orchestrating the remainder of the cluster.
+In the context of the virtual machines, Figure~\ref{fig:prov-os} illustrates the processes executed by \texttt{cloud-init}, focusing mainly on the tasks occurring on the \emph{master} node. This context is supported by an initial shell script responsible for downloading the packages required for the Ansible environment's initialisation. This pre-configuration includes setting up base OS services, configuring hosts via \texttt{/etc/hosts}, establishing security rules, and installing Python and Ansible. It is important to note that Ansible is installed exclusively on the \emph{master} machine, as it is responsible for orchestrating the remainder of the \emph{cluster}.
 %
 
-Following this preliminary setup via \texttt{cloud-init}, the configuration process driven by Ansible begins. Ansible acts as the client for several playbooks, starting with \texttt{site.yml}, which is responsible for the environment's configuration prior to the nominal deployment via the Ambari REST API. This playbook handles the installation of baseline packages such as Java 8 and chrony, the initialisation of schemas and databases, and the deployment of the Ambari Server on the master node and Ambari Agents on all four nodes.
+Following this preliminary setup via \texttt{cloud-init}, the configuration process driven by Ansible begins. Ansible acts as the client for several playbooks, starting with \texttt{site.yml}, which is responsible for the environment's configuration prior to the nominal deployment via the Ambari REST API. This playbook handles the installation of baseline packages such as Java 8 and chrony, the initialisation of schemas and databases, and the deployment of the Ambari Server on the \emph{master} node and Ambari Agents on all four nodes.
 %
 
-Once the environment, repositories, and policies have been configured by the \texttt{site.yml} playbook, the nominal cluster deployment process begins through interaction with the Ambari REST API, as illustrated in Figure~\ref{fig:prov-cluster}. This process includes registering the application blueprint—which dictates how Ambari should install each component and its dependencies based on the designated architecture (e.g., DataNodes or NodeManagers)—and applying the cluster template.
+Once the environment, repositories, and policies have been configured by the \texttt{site.yml} playbook, the nominal \emph{cluster} deployment process begins through interaction with the Ambari REST API, as illustrated in Figure~\ref{fig:prov-cluster}. This process includes registering the application blueprint, which dictates how Ambari should install each component and its dependencies based on the designated architecture (e.g., DataNodes or NodeManagers), and applying the \emph{cluster} template.
 %
 
 \begin{figure}[htbp]
@@ -58,10 +58,10 @@ Once the environment, repositories, and policies have been configured by the \te
 \end{figure}
 
 
-This deployment process, as shown, incorporates an automated recovery engine to address anticipated failures, leading to cluster redeployment while preserving previous progress. The cluster continuously polls for status success; if a failure occurs, the recovery engine triggers a sequence of actions: it stops the Ambari Server, cleans the HDFS/HBase state, resets and recreates the database, and then restarts the server to retry the deployment up to three times. If maximum retries are reached, a manual initialisation script is available as a fallback.
+This deployment process, as shown, incorporates an automated recovery engine to address anticipated failures, leading to \emph{cluster} redeployment while preserving previous progress. The \emph{cluster} continuously polls for status success; if a failure occurs, the recovery engine triggers a sequence of actions: it stops the Ambari Server, cleans the HDFS/HBase state, resets and recreates the database, and then restarts the server to retry the deployment up to three times. If maximum retries are reached, a manual initialisation script is available as a fallback.
 %
 
-This entire end-to-end process takes an average of three hours to execute, accounting for subsequent recovery corrections, configuration necessities, and the time required to retrieve external component binaries. 
+This end-to-end process takes an average of three hours to execute, accounting for subsequent recovery corrections, configuration necessities, and the time required to retrieve external component binaries. 
 
 \begin{figure}[htbp]
   \centering
