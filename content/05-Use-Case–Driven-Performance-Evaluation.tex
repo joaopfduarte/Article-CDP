@@ -19,7 +19,25 @@ Following the \texttt{terraform apply} execution, the \emph{cluster} instantiate
 
 \subsection{Data Ingestion and Hadoop Configuration}
 
-The ingestion phase commenced with the transfer of the SSB dataset, comprising a fact table and multiple dimension tables in CSV format, to the secondary disk of the \emph{master} node. Subsequently, the data was ingested into the Hadoop ecosystem to ensure visibility across the distributed model of the \emph{cluster}. 
+The ingestion phase commenced with the transfer of the SSB dataset, comprising a fact table and multiple dimension tables in CSV format, to the secondary disk of the \emph{master} node. Subsequently, the data was ingested into the Hadoop ecosystem to ensure visibility across the distributed model of the \emph{cluster}. The physical size of the flat files injected into the environment is detailed in Table~\ref{tab:ssb-dataset-sizes}, reflecting the storage baseline prior to the HDFS block distribution.
+
+\begin{table}[htbp]
+  \centering
+  \caption{SSB Dataset File Sizes}
+  \label{tab:ssb-dataset-sizes}
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{@{} l l @{}}
+    \hline
+    \textbf{File Name} & \textbf{Size} \\
+    \hline
+    \texttt{LINEORDER.csv} & 9.3 GB \\
+    \texttt{CUSTOMER.csv} & 3.3 GB \\
+    \texttt{SUPPLIER.csv} & 211.7 MB \\
+    \texttt{PART.csv} & 176.7 MB \\
+    \texttt{DWDATE.csv} & 272.4 KB \\
+    \hline
+  \end{tabular}
+\end{table}
 
 Operating as the HDFS superuser, the staging directories were created and populated using standard \texttt{hdfs dfs -put} commands. A critical step in this phase involved the configuration of appropriate ownership and permissions for the storage directories, preventing rejection by the YARN resource negotiator during the benchmark execution.
 
@@ -44,6 +62,20 @@ The evaluation was divided into three distinct phases to isolate the performance
 During each phase, the 14 analytical queries comprising the SSB catalogue were executed. These queries simulate complex analytical workloads, including multiple joins and aggregations, to stress-test the environment.
 
 \subsection{Performance Results and Analysis}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{content/assets/LINEORDER Data Flow Analysis-2026-03-23-174147.png}
+    \caption{LINEORDER Data Flow Analysis.}
+     \label{fig:lineorder-data-flow-analysis}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{content/assets/Query Execution Time Comparison_ Hive vs. Spark vs. Spark In-Memory.png}
+    \caption{Query Execution Time Comparison: Hive vs. Spark vs. Spark In-Memory.}
+     \label{fig:query-execution-time-comparison}
+\end{figure}
 
 \bnote{The performance metrics, query execution times, and resource utilisation data (CPU/RAM) are currently being collected and will be inserted in this section. The analysis will compare the results of the three benchmarking phases against the initial hypothesis.}
 
