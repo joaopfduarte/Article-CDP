@@ -3,11 +3,17 @@
 
 \tresumo{Avaliação e Resultados: Teste da infraestrutura provisionada através do caso prático utilizando o Star Schema Benchmark (SSB).}
 
-This chapter presents a practical test case designed to validate the provisioned infrastructure under a real-world analytical scenario. To guide the technical evaluation, the analysis is conducted based on a central hypothesis: in environments with severely restricted hardware, such as the free tier ARM instances utilised in this project, the \emph{in-memory} processing capabilities of Apache Spark with caching will significantly outperform the traditional disk-allocated batch execution of Apache Hive. Formulating this hypothesis is essential for structuring the benchmarking tests, allowing the obtained results to be directly compared against the initial architectural predictions.
+This chapter presents a practical test case designed to validate the provisioned infrastructure under a real-world 
+analytical scenario. To guide the technical evaluation, the analysis is conducted based on a central hypothesis: 
+in environments with severely restricted hardware, such as the free tier ARM instances utilised in this project, 
+the \emph{in-memory} processing capabilities of Apache Spark with caching will significantly outperform the traditional 
+disk-allocated batch execution of Apache Hive. Formulating this hypothesis is essential for structuring the 
+benchmarking tests, allowing the obtained results to be directly compared against the initial architectural 
+predictions.
 
 \subsection{Experimental Methodology and Infrastructure Setup}
 
-The experimental procedure was modelled using the Star Schema Benchmark (SSB), enabling researchers to reproduce the stress tests within their own cloud laboratories. The hardware allocation utilised the predefined Terraform blueprints, specifically targeting the \texttt{data-science} profile. This profile deliberately removes overhead components such as Apache Atlas and Ranger, thereby liberating memory for the processing engines across the \emph{worker} nodes.
+The experimental procedure was modelled using the Star Schema Benchmark (SSB), enabling researchers to reproduce the stress tests within their own cloud laboratories. The hardware allocation utilised the predefined Terraform blueprints, specifically targeting the \texttt{data-science} profile.
 
 Following the \texttt{terraform apply} execution, the \emph{cluster} instantiated four nodes: one \emph{master} and three \emph{worker} machines. Each node was provisioned as a \texttt{VM.Standard.A1.Flex} instance, strictly limited to 1 OCPU and 6 GB of RAM. The active services focused on the core components required for the benchmark: HDFS, YARN, Hive Metastore, and Spark 3.
 
