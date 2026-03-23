@@ -1,12 +1,44 @@
 \section{Use-Case–Driven Performance Evaluation}
 \label{sec:use-case}
 
-\tresumo{Avaliação e Resultados: Teste da infraestrutura provisionada através do caso prático utilizando dados do DataSus.}
-\bnote{Elabore o texto do capítulo guiando-se pelas seguintes hipóteses de avaliação:
-1. \textbf{Hipótese de Ingestão:} Espera-se que o Apache NiFi consiga ingerir e rotear o dataset do DataSus para o HDFS sem saturação prolongada de CPU no Master Node.
-2. \textbf{Hipótese de Processamento:} Espera-se que o processamento distribuído (Spark/Hive) opere com um tempo de resposta aceitável para o volume de dados, provando que os 24GB de RAM fragmentados nos nodes ARM são suficientes para não ocorrer falha por \textit{Out of Memory} (OOM).
-3. \textbf{Hipótese de Custo-Benefício:} Espera-se que as métricas de uso de recursos demonstrem que a execução de um pipeline completo Open Source é viável na camada OCI Free Tier, sem degradação arquitetural.}
+\tresumo{Avaliação e Resultados: Teste da infraestrutura provisionada através do caso prático utilizando o Star Schema Benchmark (SSB).}
 
-\bnote{Criar roteiro de avaliação prática para comprovar as hipóteses: 1. Descrição do dataset do DataSus / 2. Fluxo de ingestão (NiFi) / 3. Processamento/Análise (Spark/Hive) / 4. Coleta de tempos e métricas de uso (CPU/RAM).}
+This chapter presents a practical test case designed to validate the provisioned infrastructure under a real-world analytical scenario. To guide the technical evaluation, the analysis is conducted based on a central hypothesis: in environments with severely restricted hardware, such as the free tier ARM instances utilised in this project, the \emph{in-memory} processing capabilities of Apache Spark with caching will significantly outperform the traditional disk-allocated batch execution of Apache Hive. Formulating this hypothesis is essential for structuring the benchmarking tests, allowing the obtained results to be directly compared against the initial architectural predictions.
 
-Este capítulo apresenta um caso de teste
+\subsection{Experimental Methodology and Infrastructure Setup}
+
+The experimental procedure was modelled using the Star Schema Benchmark (SSB), enabling researchers to reproduce the stress tests within their own cloud laboratories. The hardware allocation utilised the predefined Terraform blueprints, specifically targeting the \texttt{data-science} profile. This profile deliberately removes overhead components such as Apache Atlas and Ranger, thereby liberating memory for the processing engines across the \emph{worker} nodes.
+
+Following the \texttt{terraform apply} execution, the \emph{cluster} instantiated four nodes: one \emph{master} and three \emph{worker} machines. Each node was provisioned as a \texttt{VM.Standard.A1.Flex} instance, strictly limited to 1 OCPU and 6 GB of RAM. The active services focused on the core components required for the benchmark: HDFS, YARN, Hive Metastore, and Spark 3.
+
+\subsection{Data Ingestion and Hadoop Configuration}
+
+The ingestion phase commenced with the transfer of the SSB dataset, comprising a fact table and multiple dimension tables in CSV format, to the secondary disk of the \emph{master} node. Subsequently, the data was ingested into the Hadoop ecosystem to ensure visibility across the distributed model of the \emph{cluster}. 
+
+Operating as the HDFS superuser, the staging directories were created and populated using standard \texttt{hdfs dfs -put} commands. A critical step in this phase involved the configuration of appropriate ownership and permissions for the storage directories, preventing rejection by the YARN resource negotiator during the benchmark execution.
+
+\subsection{Metadata Registration}
+
+To guarantee homogeneity in data reading across different computational engines, the relational structure was mapped using the Hive Metastore. The connection was established via the Beeline command-line interface, connecting directly to the HiveServer2 on a designated \emph{worker} node.
+
+The Data Definition Language (DDL) operations registered the fact and dimension tables as external tables. The schema interpretation relied on the \texttt{OpenCSVSerde} utility, ensuring that the comma-separated values were accurately mapped to their corresponding data types within the \emph{Data Lake} catalog.
+
+\subsection{Benchmarking Phases}
+
+Due to the inherent constraints of the free tier ARM virtual machines, specifically regarding timeout limits and the propensity for Out Of Memory (OOM) failures, the experimental design required a resilient execution strategy. 
+
+The evaluation was divided into three distinct phases to isolate the performance characteristics of each computational paradigm:
+
+\begin{enumerate}
+    \item \textbf{Native Disk Execution (Apache Hive)}: This initial phase tests the performance of traditional disk-bound batch processing. The Hive engine reads and writes sequential blocks to the HDFS, designed to accommodate severe memory limitations at the cost of processing speed.
+    \item \textbf{Cold Disk Execution (Apache Spark)}: The second phase assesses Apache Spark operating without the benefit of \emph{in-memory} caching. Spark reads the data directly from the distributed file system, providing a baseline comparison against Hive's disk operations.
+    \item \textbf{Hot In-Memory Execution (Apache Spark with Cache)}: The final phase evaluates the central hypothesis. The SSB tables are retained natively in the Random Access Memory (RAM) of the Spark executors prior to querying. The \emph{cluster} resources are strictly constrained via parameters such as \texttt{--driver-memory} and \texttt{--executor-memory} to prevent YARN container exhaustion.
+\end{enumerate}
+
+During each phase, the 14 analytical queries comprising the SSB catalogue were executed. These queries simulate complex analytical workloads, including multiple joins and aggregations, to stress-test the environment.
+
+\subsection{Performance Results and Analysis}
+
+\bnote{The performance metrics, query execution times, and resource utilisation data (CPU/RAM) are currently being collected and will be inserted in this section. The analysis will compare the results of the three benchmarking phases against the initial hypothesis.}
+
+% Placeholder for results tables, charts, and discussion.
