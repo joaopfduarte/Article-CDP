@@ -31,11 +31,20 @@ Figure~\ref{fig:prov-terraform} demonstrates the initial phase of this process. 
 An important detail in this stage is the file upload process to the \emph{master} machine's temporary directory. Files used for interacting with the Ambari API, alongside the playbooks subsequently used by Ansible for the internal configuration of the machines, are securely copied over.
 
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.8\linewidth]{content/assets/provisioning-02-os.pdf}
-  \caption{Provisioning workflow — View 2: OS-level configuration
-           via cloud-init and Ansible.}
-  \label{fig:prov-os}
+  \begin{minipage}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{content/assets/provisioning-02-os.pdf}
+    \caption{Provisioning workflow — View 2: OS-level configuration
+             via cloud-init and Ansible.}
+    \label{fig:prov-os}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{content/assets/provisioning-03-cluster.pdf}
+    \caption{Provisioning workflow — View 3: Ambari REST API cluster
+             deployment with automated recovery logic.}
+    \label{fig:prov-cluster}
+  \end{minipage}
 \end{figure}
 
 In the context of the virtual machines, Figure~\ref{fig:prov-os} illustrates the processes executed by \texttt{cloud-init}, focusing mainly on the tasks occurring on the \emph{master} node. This context is supported by an initial shell script responsible for downloading the packages required for the Ansible environment's initialisation. This pre-configuration includes setting up base OS services, configuring hosts via \texttt{/etc/hosts}, establishing security rules, and installing Python and Ansible. It is important to note that Ansible is installed exclusively on the \emph{master} machine, as it is responsible for orchestrating the remainder of the \emph{cluster}.
@@ -47,13 +56,6 @@ Following this preliminary setup via \texttt{cloud-init}, the configuration proc
 Once the environment, repositories, and policies have been configured by the \texttt{site.yml} playbook, the nominal \emph{cluster} deployment process begins through interaction with the Ambari REST API, as illustrated in Figure~\ref{fig:prov-cluster}. This process includes registering the application blueprint, which dictates how Ambari should install each component and its dependencies based on the designated architecture (e.g., DataNodes or NodeManagers), and applying the \emph{cluster} template.
 %
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\linewidth]{content/assets/provisioning-03-cluster.pdf}
-  \caption{Provisioning workflow — View 3: Ambari REST API cluster
-           deployment with automated recovery logic.}
-  \label{fig:prov-cluster}
-\end{figure}
 
 
 This deployment process, as shown, incorporates an automated recovery engine to address anticipated failures, leading to \emph{cluster} redeployment while preserving previous progress. The \emph{cluster} continuously polls for status success; if a failure occurs, the recovery engine triggers a sequence of actions: it stops the Ambari Server, cleans the HDFS/HBase state, resets and recreates the database, and then restarts the server to retry the deployment up to three times. If maximum retries are reached, a manual initialisation script is available as a fallback.
