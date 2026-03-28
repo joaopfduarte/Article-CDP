@@ -3,8 +3,6 @@
 
 \tresumo{Architecture and Process: Presentation of the topology and automated cluster deployment workflow (Terraform -> Cloud-Init -> Ansible).}
 
-\bnote{ATTENTION: References to figures fig:prov-terraform, fig:prov-os, and fig:prov-cluster are in the text but the images are not included in the LaTeX file with \texttt{\textbackslash begin\{figure\}}.}
-
 In accordance with the characteristics mentioned in the previous section regarding the technological components and patterns utilised, the architecture of the \emph{cluster}, initially its topology as seen in Figure~\ref{fig:topology}, consists of four virtual machines: one \emph{master} node and three \emph{worker} nodes. This setup operates within the context of an Oracle Cloud Infrastructure (OCI) tenancy. In the topological context of this proposed framework, a subnet groups all the machines comprising the \emph{Data Lake} environment.
 %
 
@@ -12,7 +10,7 @@ Upon observing the subnet grouping the machines, the security list associated wi
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.9\linewidth]{content/assets/topology.png}
+    \includegraphics[width=0.9\linewidth]{content/assets/topology.pdf}
     \caption{Topology of Cloud Config on OCI.}
      \label{fig:topology}
 \end{figure}
@@ -22,7 +20,7 @@ To further elucidate the installation process, which, as previously mentioned, r
 %
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\linewidth]{content/assets/provisioning-01-terraform.png}
+  \includegraphics[width=\linewidth]{content/assets/provisioning-01-terraform.pdf}
   \caption{Provisioning workflow — View 1: Terraform execution sequence.}
   \label{fig:prov-terraform}
 \end{figure}
@@ -34,7 +32,7 @@ An important detail in this stage is the file upload process to the \emph{master
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\linewidth]{content/assets/provisioning-02-os.png}
+  \includegraphics[width=\linewidth]{content/assets/provisioning-02-os.pdf}
   \caption{Provisioning workflow — View 2: OS-level configuration
            via cloud-init and Ansible.}
   \label{fig:prov-os}
@@ -51,7 +49,7 @@ Once the environment, repositories, and policies have been configured by the \te
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\linewidth]{content/assets/provisioning-03-cluster.png}
+  \includegraphics[width=\linewidth]{content/assets/provisioning-03-cluster.pdf}
   \caption{Provisioning workflow — View 3: Ambari REST API cluster
            deployment with automated recovery logic.}
   \label{fig:prov-cluster}
@@ -71,7 +69,7 @@ Finally, the Governance Layer ensures security, auditability, and coordination a
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\linewidth]{content/assets/datalake-architecture.png}
+  \includegraphics[width=\linewidth]{content/assets/datalake-architecture.pdf}
   \caption{Final Data Lake Architecture — Functional layers for the Default Profile.}
   \label{fig:arch-default}
 \end{figure}
@@ -82,9 +80,9 @@ To accommodate varying analytical needs and processing workloads, the proposed f
 
 As detailed in Table~\ref{tab:comp-default}, the \textbf{Default Profile} deploys the complete \emph{Data Lake} architecture. This profile encompasses the full spectrum of ingestion, storage, processing, and governance capabilities, including Apache NiFi, HBase, Spark, Hive, and Ranger. It serves as a comprehensive baseline for environments requiring end-to-end functionality without structural restrictions.
 
-Conversely, the \textbf{Data Science Profile}, outlined in Table~\ref{tab:comp-data-science}, is streamlined to focus on large-scale analytical processing and SQL-based workloads. This setup omits the event-driven ingestion pipelines of NiFi and the low-latency NoSQL database (HBase), prioritising computational resources for Apache Spark and Hive Server operations. This design choice provides an optimised environment for training machine learning models and parallel data analysis while maintaining centralised governance through Apache Ranger.
+Conversely, the \textbf{Data Science Profile}, is streamlined to focus on large-scale analytical processing and SQL-based workloads. This setup omits the event-driven ingestion pipelines of NiFi and the low-latency NoSQL database (HBase), prioritising computational resources for Apache Spark and Hive Server operations. This design choice provides an optimised environment for training machine learning models and parallel data analysis while maintaining centralised governance through Apache Ranger.
 
-Lastly, the \textbf{Software Engineering Profile}, presented in Table~\ref{tab:comp-software-engineering}, caters to transactional workloads and real-time data flow orchestration. Accordingly, it concentrates on data ingestion and fast-retrieval storage mechanisms by deploying Apache NiFi, Kafka, and Apache HBase along with Phoenix. Analytical engines such as Spark and Hive are excluded to ensure sufficient resources remain available for sustained data transport and event streaming operations.
+Lastly, the \textbf{Software Engineering Profile}, caters to transactional workloads and real-time data flow orchestration. Accordingly, it concentrates on data ingestion and fast-retrieval storage mechanisms by deploying Apache NiFi, Kafka, and Apache HBase along with Phoenix. Analytical engines such as Spark and Hive are excluded to ensure sufficient resources remain available for sustained data transport and event streaming operations.
 
 \begin{table}[htbp]
   \centering
@@ -106,43 +104,22 @@ Lastly, the \textbf{Software Engineering Profile}, presented in Table~\ref{tab:c
   \end{tabular}
 \end{table}
 
-\begin{table}[htbp]
-  \centering
-  \caption{Component Mapping for the Data Science Profile}
-  \label{tab:comp-data-science}
-  \renewcommand{\arraystretch}{1.2}
-  \begin{tabular}{@{} p{0.38\linewidth} p{0.58\linewidth} @{}}
-    \hline
-    \textbf{Node \& Role} & \textbf{Installed Components} \\
-    \hline
-    \textbf{master.cdp (10.0.0.2)} \newline \textit{Master Node (Cluster Management, Core Masters)} & HistoryServer, NameNode, Ranger Admin, Ranger UserSync, ResourceManager, Secondary NameNode, Spark 3 JobHistoryServer, ZooKeeper Server \\
-    \hline
-    \textbf{node1.cdp (10.0.0.3)} \newline \textit{Worker Node 1 (Data/Compute, specialized services)} & DataNode, Hive Metastore, Hive Server, Kafka Broker, NFS Gateway, NodeManager, ZooKeeper Server \\
-    \hline
-    \textbf{node2.cdp (10.0.0.4)} \newline \textit{Worker Node 2 (Data/Compute, specialized services)} & DataNode, Kafka Broker, NodeManager, Spark 3 ThriftServer, ZooKeeper Server \\
-    \hline
-    \textbf{node3.cdp (10.0.0.5)} \newline \textit{Worker Node 3 (Data/Compute, specialized services)} & DataNode, Kafka Broker, NodeManager, Ranger TagSync, Spark 3 Livy2 Server \\
-    \hline
-  \end{tabular}
-\end{table}
-
-\begin{table}[htbp]
-  \centering
-  \caption{Component Mapping for the Software Engineering Profile}
-  \label{tab:comp-software-engineering}
-  \renewcommand{\arraystretch}{1.2}
-  \begin{tabular}{@{} p{0.38\linewidth} p{0.58\linewidth} @{}}
-    \hline
-    \textbf{Node \& Role} & \textbf{Installed Components} \\
-    \hline
-    \textbf{master.cdp (10.0.0.2)} \newline \textit{Master Node (Cluster Management, Core Masters)} & HBase Master, HistoryServer, NameNode, Phoenix Query Server, ResourceManager, Secondary NameNode, ZooKeeper Server \\
-    \hline
-    \textbf{node1.cdp (10.0.0.3)} \newline \textit{Worker Node 1 (Data/Compute, specialized services)} & DataNode, NFS Gateway, NiFi CA, NodeManager, ZooKeeper Server \\
-    \hline
-    \textbf{node2.cdp (10.0.0.4)} \newline \textit{Worker Node 2 (Data/Compute, specialized services)} & DataNode, NiFi Master, NodeManager, ZooKeeper Server \\
-    \hline
-    \textbf{node3.cdp (10.0.0.5)} \newline \textit{Worker Node 3 (Data/Compute, specialized services)} & DataNode, HBase RegionServer, Kafka Broker, NodeManager \\
-    \hline
-  \end{tabular}
-\end{table}
-
+%\begin{table}[htbp]
+% \centering
+%  \caption{Component Mapping for the Data Science Profile}
+%  \label{tab:comp-data-science}
+%  \renewcommand{\arraystretch}{1.2}
+%  \begin{tabular}{@{} p{0.38\linewidth} p{0.58\linewidth} @{}}
+%    \hline
+%    \textbf{Node \& Role} & \textbf{Installed Components} \\
+%    \hline
+%    \textbf{master.cdp (10.0.0.2)} \newline \textit{Master Node (Cluster Management, Core Masters)} & HistoryServer, NameNode, Ranger Admin, Ranger UserSync, ResourceManager, Secondary NameNode, Spark 3 JobHistoryServer, ZooKeeper Server \\
+%    \hline
+%    \textbf{node1.cdp (10.0.0.3)} \newline \textit{Worker Node 1 (Data/Compute, specialized services)} & DataNode, Hive Metastore, Hive Server, Kafka Broker, NFS Gateway, NodeManager, ZooKeeper Server \\
+%    \hline
+%    \textbf{node2.cdp (10.0.0.4)} \newline \textit{Worker Node 2 (Data/Compute, specialized services)} & DataNode, Kafka Broker, NodeManager, Spark 3 ThriftServer, ZooKeeper Server \\
+%    \hline
+%    \textbf{node3.cdp (10.0.0.5)} \newline \textit{Worker Node 3 (Data/Compute, specialized services)} & DataNode, Kafka Broker, NodeManager, Ranger TagSync, Spark 3 Livy2 Server \\
+%    \hline
+%  \end{tabular}
+%\end{table}

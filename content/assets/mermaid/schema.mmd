@@ -1,0 +1,78 @@
+erDiagram
+    LINEORDER {
+        bigint LO_ORDERKEY "Composite PK"
+        int LO_LINENUMBER "Composite PK"
+        int LO_CUSTKEY FK
+        int LO_PARTKEY FK
+        int LO_SUPPKEY FK
+        string LO_ORDERDATE FK
+        string LO_ORDERPRIORITY
+        string LO_SHIPPRIORITY
+        int LO_QUANTITY
+        int LO_EXTENDEDPRICE
+        int LO_ORDTOTALPRICE
+        int LO_DISCOUNT
+        int LO_REVENUE
+        int LO_SUPPLYCOST
+        int LO_TAX
+        int LO_COMMITDATE
+        string LO_SHIPMODE
+    }
+    
+    DWDATE {
+        string D_DATEKEY PK
+        string D_DATE
+        string D_DAYOFWEEK
+        string D_MONTH
+        int D_YEAR
+        int D_YEARMONTHNUM
+        string D_YEARMONTH
+        int D_DAYNUMINWEEK
+        int D_DAYNUMINMONTH
+        int D_DAYNUMINYEAR
+        int D_MONTHNUMINYEAR
+        int D_WEEKNUMINYEAR
+        string D_SELLINGSEASON
+        int D_LASTDAYINWWFL
+        int D_LASTDAYINFL
+        int D_HOLIDAYFL
+        int D_WEEKDAYFL
+    }
+
+    PART {
+        int P_PARTKEY PK
+        string P_NAME
+        string P_MFGR
+        string P_CATEGORY
+        string P_BRAND
+        string P_COLOR
+        string P_TYPE
+        int P_SIZE
+        string P_CONTAINER
+    }
+
+    SUPPLIER {
+        int S_SUPPKEY PK
+        string S_NAME
+        string S_ADDRESS
+        string S_CITY
+        string S_NATION
+        string S_REGION
+        string S_PHONE
+    }
+
+    CUSTOMER {
+        int C_CUSTKEY PK
+        string C_NAME
+        string C_ADDRESS
+        string C_CITY
+        string C_NATION
+        string C_REGION
+        string C_PHONE
+        string C_MKTSEGMENT
+    }
+
+    CUSTOMER ||--o{ LINEORDER : "1:N (LO_CUSTKEY)"
+    PART ||--o{ LINEORDER : "1:N (LO_PARTKEY)"
+    SUPPLIER ||--o{ LINEORDER : "1:N (LO_SUPPKEY)"
+    DWDATE ||--o{ LINEORDER : "1:N (LO_ORDERDATE)"
