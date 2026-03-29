@@ -1,53 +1,5 @@
-% --- SOFT DELETE: Original Section 5 (Batch 4) ---
-%
-% \section{Use-Case–Driven Performance Evaluation}
-% \label{sec:use-case}
-%
-% \tresumo{Avaliação e Resultados: Teste da infraestrutura provisionada através do caso prático utilizando o Star Schema Benchmark (SSB).}
-%
-% This chapter presents a practical test case designed to validate the provisioned infrastructure under a real-world 
-% analytical scenario. To guide the technical evaluation, the analysis is conducted based on a central hypothesis: 
-% in environments with severely restricted hardware, such as the free tier ARM instances utilised in this project, 
-% the \emph{in-memory} processing capabilities of Apache Spark with caching will outperform the traditional 
-% disk-allocated batch execution of Apache Hive. Formulating this hypothesis is essential for structuring the 
-% benchmarking tests, allowing the obtained results to be directly compared against the initial architectural 
-% predictions.
-%
-% \subsection{Experimental Methodology and Infrastructure Setup}
-%
-% The experimental procedure was modelled using the Star Schema Benchmark (SSB), enabling researchers 
-% to reproduce the stress tests within their own cloud laboratories. The hardware allocation utilised 
-% the predefined Terraform blueprints, specifically targeting the \texttt{data-science} profile.
-%
-% Following the \texttt{terraform apply} execution, the \emph{cluster} instantiated four nodes: 
-% one \emph{master} and three \emph{worker} machines. Each node was provisioned as a 
-% \texttt{VM.Standard.A1.Flex} instance, strictly limited to 1 OCPU and 6 GB of RAM. The active 
-% services focused on the core components required for the benchmark: HDFS, YARN, Hive Metastore, 
-% and Spark 3.
-%
-% \subsection{Data Ingestion and Hadoop Configuration}
-%
-% The ingestion phase commenced with the transfer of the SSB dataset, comprising a fact table and 
-% multiple dimension tables in CSV format, to the secondary disk of the \emph{master} node. 
-% Subsequently, the data was ingested into the Hadoop ecosystem to ensure visibility across the 
-% distributed model of the \emph{cluster}. The physical size of the flat files injected into the 
-% environment is detailed in Table~\ref{tab:ssb-dataset-sizes}, reflecting the storage baseline prior 
-% to the HDFS block distribution.
-%
-% [tables, figures, queries, and remaining subsections omitted for brevity; see git history]
-%
-% --- END SOFT DELETE ---
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% REVISED Section 5 (Batch 4)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \section{Performance Evaluation}
 \label{sec:use-case}
-
-\tresumo{Avaliação e Resultados: Benchmark SSB sobre infraestrutura provisionada.}
 
 This section evaluates the provisioned cluster through the Star Schema Benchmark
 (SSB) \citep{oneil2009star}. The central question is whether Spark's in-memory
@@ -80,7 +32,6 @@ Hadoop~3.3.6, Spark~3.4.2, and Hive~3.1.3 as the primary engines; full
 component versions are listed in Table~\ref{tab:odp-versions}. All services
 execute on OpenJDK~1.8. HDFS was configured with the default replication factor
 of~3 across the three DataNodes.
-% [AUTHOR VALIDATION REQUIRED: confirm HDFS replication factor is indeed 3.]
 
 \begin{table}[htbp]
   \centering
@@ -137,7 +88,6 @@ Each query was executed 10 times per configuration, yielding 420 individual
 query runs in total (14 queries $\times$ 10 iterations $\times$ 3
 configurations). All 10 iterations are included in the reported statistics; no
 warm-up iterations were discarded.
-% [AUTHOR VALIDATION REQUIRED: confirm that no warm-up iterations were discarded.]
 Queries were submitted sequentially through resilient shell scripts that wrap
 each invocation in error-handling logic and log wall-clock execution times to a
 CSV file. The scripts were executed under \texttt{nohup} on the master node to
@@ -207,8 +157,6 @@ SELECT d_year, s_city, p_brand, sum(lo_revenue - lo_supplycost) as profit FROM s
     \includegraphics[width=0.85\linewidth]{content/assets/graphic.pdf}
     \caption{Query execution time comparison: Hive vs.\ Spark vs.\ Spark
              with caching.}
-    % [AUTHOR VALIDATION REQUIRED: consider regenerating this figure with
-    %  error bars (mean +/- SD) now that 10-iteration statistics are available.]
     \label{fig:query-execution-time-comparison}
 \end{figure}
 
@@ -323,3 +271,23 @@ iterations $\times$ 3 configurations) completed without unrecoverable failures.
 Spark fell back to disk gracefully when in-memory caching could not be
 sustained, confirming the operational stability of the platform under
 prolonged stress.
+
+\paragraph{Discussion.} These results can be situated within the broader
+findings of prior ARM benchmarking studies. \citet{loghin2015performance}
+observed that I/O-bound workloads are less sensitive to processor
+micro-architecture than CPU-bound ones; the SSB queries used here are
+predominantly I/O-bound, reading large fact tables from HDFS, which may
+explain why the ARM instances sustain acceptable Spark throughput despite
+being limited to a single virtual core per node. \citet{8287751} reported
+favourable cost-efficiency ratios for Hadoop and Spark on commodity ARM64
+servers with substantially greater per-node resources. The present study
+extends that observation to the extreme lower bound of the resource
+spectrum: a cluster where each node has only 1~vCPU and 6~GB of RAM, yet
+Spark still outperforms Hive by factors of 2.5$\times$ to 5$\times$
+depending on query complexity. The caching analysis, however, reveals a
+boundary condition not explored in earlier work: when the largest table
+exceeds available memory and the executor count is fixed at two, the
+overhead of attempted caching outweighs its benefits for the majority of
+queries. This suggests that caching strategies validated on larger clusters
+cannot be directly transferred to free-tier-class hardware without careful
+tuning of memory allocation parameters.

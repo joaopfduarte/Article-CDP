@@ -24,18 +24,11 @@
 
 % Hyperlinks
 \usepackage[hidelinks]{hyperref}
-% --- SOFT DELETE: numeric natbib options (Batch 5) ---
-%\usepackage[numbers,sort&compress]{natbib}
-% --- END SOFT DELETE ---
 \usepackage[authoryear,round]{natbib}
 \usepackage{enumitem} % For compact lists
 \setlist[enumerate]{leftmargin=*, topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=0pt}
 \setlist[itemize]{leftmargin=*, topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=0pt}
 
-% --- SOFT DELETE: numeric thebibliography override (Batch 5) ---
-% The old override used numeric labels (\@biblabel{\@arabic\c@enumiv}).
-% Replaced by an author-date compatible version below.
-% --- END SOFT DELETE ---
 % Bibliography override: author-date compatible, with class heading and font
 \makeatletter
 \renewenvironment{thebibliography}[1]{%
