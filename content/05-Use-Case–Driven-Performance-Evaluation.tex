@@ -95,9 +95,7 @@ each computational paradigm:
 
 During each phase, the 14 analytical queries comprising the SSB catalogue were executed. These 
 queries simulate complex analytical workloads, including multiple joins and aggregations, to 
-stress-test the environment. Em referência às consultas executadas no schema em estrela da figura
-\ref{fig:ssb-schema}, essas podem ser encontradas 
-abaixo:
+stress-test the environment. In relation to the star schema illustrated in Figure~\ref{fig:ssb-schema}, the executed queries are presented below:
 
 \begin{lstlisting}[language=SQL, caption={SSB Benchmark Analytical Queries}, label={lst:ssb-queries}, frame=single, basicstyle=\ttfamily\scriptsize]
 -- Query 01
@@ -158,35 +156,21 @@ SELECT d_year, s_city, p_brand, sum(lo_revenue - lo_supplycost) as profit FROM s
     \label{fig:query-execution-time-comparison}
 \end{figure}
 
-Conforme pode ser verificado na figura \ref{fig:query-execution-time-comparison}, como método de execução
-das consultas, todas as 14 consultas foram executadas 10 vezes, para cada um dos processadores, estes, o Hive, 
-Spark, e Spark com cache. No contexto do que foi explorado, é possível verificar uma significativa diferença
-entre os tempos de execução quando da comparação das execuções pelo Hiv
-e pelo Spark, de forma que em grande parte das ocasiões, a mínima diferença foi próxima de 200 segundos. 
+As illustrated in Figure~\ref{fig:query-execution-time-comparison}, the methodology required executing each of the 14 queries 10 iterations per processing configuration: Apache Hive, Apache Spark, and Spark with caching. The empirical data reveals a substantial disparity in execution times between Hive and Spark. In the majority of instances, the minimum performance delta was approximately 200 seconds in favour of Spark.
 %
 
-Quando na análise das execuções em ambas ocasiões com Spark, devido à limitações de memória da infraestrutura do Data
-Lake houve pouca diferença relativa entre as execuções das consultas, em função, de não ter siod possível, também
-colocar em cache, através do Spark, a tabela Lineorder, a maior tabela do schema em estrela. Isso posto, para execução
-das consultas com Spark, foram adotadas as execuções abaixo:
+When comparing both Spark configurations, the relative performance improvement was marginal due to infrastructural memory constraints inherent to the provisioned \emph{Data Lake}. Specifically, it was unfeasible to cache \texttt{lineorder}, the largest fact table within the star schema, fully into memory. Consequently, the Spark query executions were formally configured as follows:
 
 \begin{lstlisting}[language=SQL, caption={Spark configuration}, label={lst:spark-configuration}]
--- execucao normal
+-- standard execution
 spark-sql --master yarn
--- execucao com cache
+-- cached execution
 spark-sql --master yarn   --num-executors 2   --executor-cores 1   --driver-memory 512m   --executor-memory 1g   --conf spark.executor.memoryOverhead=256m   --conf spark.memory.fraction=0.8   --conf spark.sql.shuffle.partitions=48
 \end{lstlisting}
 %
 
-Como consideração final sobre esse caso de teste com o schema em estrela, conforme implicações, pricipalmente, 
-de limitações de hardware, houve muito proveito da capacidade do componente Spark de consumir memória RAM, como
-também, conseguir realizar alocações em disco, quando necessário. Entretanto, em função da limitação clara do hardware
-usado, ficou claro mesmo com o uso de cache, e principalmente pela inviabilidade de colocar em cache a tabela lineorder, 
-o desempenho do caso de teste poderia sim ser melhorado, caso houvesse mais memória RAM disponível para o Spark.
+It is critical to note that the restriction to two executors (\texttt{--num-executors 2}) is dictated by a strict physical CPU constraint established within the YARN configuration, rather than mere memory limitations. With four nodes provisioned, only three act as NodeManagers capable of running YARN containers. As the blueprint configures exactly one virtual core (\texttt{vCore}) per node, the cluster is capped at three concurrent containers. Given that the Spark Application Master inherently reserves one container, a maximum of two containers remain available for Spark executors. Any attempt to allocate three or more executors would result in a resource deadlock.
 
-
-\bnote{The performance metrics, query execution times, and resource utilisation data (CPU/RAM) are 
-currently being collected and will be inserted in this section. The analysis will compare the results 
-of the three benchmarking phases against the initial hypothesis.}
+As a concluding remark on this test case, despite the severe hardware constraints, Spark demonstrated a flexible capability to consume available RAM effectively whilst falling back to disk allocations when necessary. However, owing to the strict infrastructural limits---primarily preventing the complete caching of the fact table---it is evident that the benchmark's performance could be substantially improved by provisioning greater RAM resources to the Spark engine.
 
 % Placeholder for results tables, charts, and discussion.
