@@ -1,20 +1,41 @@
 \begin{abstract}
-The high cost of proprietary Big Data infrastructure and software licenses presents a significant 
-barrier to entry for academic research and small organisations. This paper proposes a cost-effective, 
-open-source Data Lake solution deployed entirely on the Oracle Cloud Infrastructure (OCI) Free Tier. 
-The methodology leverages a cluster of ARM compute instances, autonomously orchestrated by Apache 
-Ambari within the Open Source Data Platform (ODP) ecosystem. The proposed architecture establishes a 
-comprehensive data pipeline, integrating ingestion via Apache NiFi and Kafka, distributed storage 
-with HDFS, and computational analysis using Apache Spark and Hive. To validate the 
-viability and resilience of the provisioned environment, stress-testing was conducted 
-utilising the Star Schema Benchmark (SSB) catalog. Analytical evaluations compared traditional 
-disk-bound batch processing in Hive against distributed execution in Spark. Performance metrics 
-revealed that, despite severe infrastructural constraints, the Spark engine consistently yielded 
-a performance edge, frequently outperforming Hive operations by margins exceeding 200 
-seconds per query. The empirical results validate the feasibility of this constraint-driven, 
-Infrastructure-as-Code (IaC) model as a fully reproducible and functional multi-node distributed 
-system, democratising access to Big Data technologies for research and educational 
-purposes.
+% --- SOFT DELETE: Original abstract (Batch 1) ---
+% The high cost of proprietary Big Data infrastructure and software licenses presents a significant 
+% barrier to entry for academic research and small organisations. This paper proposes a cost-effective, 
+% open-source Data Lake solution deployed entirely on the Oracle Cloud Infrastructure (OCI) Free Tier. 
+% The methodology leverages a cluster of ARM compute instances, autonomously orchestrated by Apache 
+% Ambari within the Open Source Data Platform (ODP) ecosystem. The proposed architecture establishes a 
+% comprehensive data pipeline, integrating ingestion via Apache NiFi and Kafka, distributed storage 
+% with HDFS, and computational analysis using Apache Spark and Hive. To validate the 
+% viability and resilience of the provisioned environment, stress-testing was conducted 
+% utilising the Star Schema Benchmark (SSB) catalog. Analytical evaluations compared traditional 
+% disk-bound batch processing in Hive against distributed execution in Spark. Performance metrics 
+% revealed that, despite infrastructural constraints, the Spark engine consistently yielded 
+% a performance edge, frequently outperforming Hive operations by margins exceeding 200 
+% seconds per query. The empirical results validate the feasibility of this constraint-driven, 
+% Infrastructure-as-Code (IaC) model as a fully reproducible and functional multi-node distributed 
+% system, democratising access to Big Data technologies for research and educational 
+% purposes.
+% --- END SOFT DELETE ---
+The high cost of Big Data infrastructure limits access for academic and
+resource-constrained organisations. This paper presents an open-source
+Infrastructure-as-Code framework that automates the deployment of a Hadoop-based
+Data Lake on Oracle Cloud Infrastructure Free Tier ARM instances. Using Terraform
+and Ansible, the framework provisions a four-node ARM cluster and installs the
+OpenSource Data Platform stack via Apache Ambari, supporting multiple installation
+profiles for different workload types. The architecture provides distributed
+storage on the Hadoop Distributed File System and analytical processing through
+Apache Spark and Hive. The Star Schema Benchmark was executed under three
+configurations---Hive, Spark, and Spark with caching---to evaluate query
+performance on constrained hardware. Spark consistently outperformed Hive by
+margins exceeding 200~seconds per query, whereas in-memory caching offered only
+marginal gains owing to insufficient memory for the largest fact table. These
+results confirm the viability of zero-cost, reproducible distributed analytics
+for research and education.
 \end{abstract}
 
-\KEYWORD{Big Data; Data Lake; Apache Ambari; Cost-effective Computing; Hadoop Cluster; Free Tier; Infrastructure as Code; Cloud Computing; ARM Architecture; Data Governance; Distributed Systems.}
+% --- SOFT DELETE: Original keywords (Batch 1) ---
+% \KEYWORD{Big Data; Data Lake; Infrastructure as Code; Apache Hadoop; Apache Spark; Cloud Computing; ARM Architecture; Distributed Systems; Star Schema Benchmark; Cost Optimisation.}
+% --- END SOFT DELETE ---
+
+\KEYWORD{Big Data, Data Lake, Infrastructure as Code, Apache Hadoop, Apache Spark, Cloud Computing, ARM Architecture, Distributed Systems, Star Schema Benchmark, Cost Optimisation, Free Tier, Oracle Cloud Infrastructure, Apache Ambari, Reproducibility.}
