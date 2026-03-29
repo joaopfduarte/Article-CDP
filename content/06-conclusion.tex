@@ -3,14 +3,52 @@
 
 \tresumo{Conclusão: Síntese dos resultados, validação das hipóteses levantadas e trabalhos futuros.}
 
-\bnote{Retomar os três objetivos elencados na introdução e discutir de forma concisa como cada um foi solucionado.}
+This work set out to address the high cost barrier that limits access to Big Data infrastructure 
+for academic institutions and resource-constrained organisations. The three objectives established 
+in Section~\ref{sec:introduction} have been fulfilled as follows. Firstly, the proposed framework 
+successfully automates the end-to-end creation and configuration of a Hadoop \emph{cluster} on the 
+Oracle Cloud Infrastructure (OCI) Free Tier, leveraging Terraform for declarative infrastructure 
+provisioning and Ansible for idempotent configuration management. As documented in 
+Section~\ref{sec:arch}, the pipeline progresses through three automated phases, resource 
+provisioning, operating system bootstrapping via \texttt{cloud-init}, and nominal \emph{cluster} 
+deployment through the Ambari REST API, incorporating an automated recovery procedure to address 
+anticipated deployment failures. Secondly, the installation processes have been 
+documented across three provisioning workflow views and a component mapping table, providing a 
+reproducible reference for future deployments. Thirdly, the framework's applicability was 
+validated through a practical simulation utilising the Star Schema Benchmark (SSB), as detailed in 
+Section~\ref{sec:use-case}.
 
-\bnote{Validar as hipóteses estruturadas no Capítulo 5: 
-A arquitetura ARM aguentou o NiFi? (Hipótese 1). 
-Ocorreram erros de OOM no Spark/Hive? (Hipótese 2). 
-A plataforma provou-se viável a custo zero no OCI Free Tier? (Hipótese 3). Resuma os acertos e as eventuais limitações técnicas encontradas.}
-\bnote{Apontar também a viabilidade dessa infraestrutura para fins de ensino e pesquisa e aplicação em pequenas
-organizações.}
+The empirical evaluation yielded results that partially corroborate the central hypothesis. 
+Apache Spark consistently outperformed Apache Hive across all 14 analytical queries, 
+with performance deltas frequently exceeding 200 seconds per query iteration. However, the 
+anticipated advantage of \emph{in-memory} caching over standard Spark execution proved marginal 
+under the tested conditions. This outcome is attributed to the inability to cache the 
+\texttt{lineorder} fact table, the largest entity in the star schema at 9.3~GB, within the 
+constrained memory envelope of the \emph{cluster}. Furthermore, the physical CPU allocation 
+established in the YARN configuration restricted Spark to a strict maximum of two concurrent 
+executors per job, as each of the three NodeManagers provides exactly one virtual core, and the 
+Spark Application Master inherently reserves one container. Despite these constraints, 
+the platform remained operationally stable throughout every benchmark iteration, completing all 
+scheduled workloads without unrecoverable failures.
 
+Nevertheless, the limitations imposed by the OCI Free Tier must be acknowledged. The hard ceiling of 
+4~OCPUs and 24~GB of RAM across the entire \emph{cluster} fundamentally restricts both processing 
+parallelism and caching capacity. Additionally, whilst the Open Source Data Platform stack executed on 
+the ARM microarchitecture, potential behavioural differences compared to x86 
+deployments, particularly regarding JVM optimisations and the availability of pre-compiled 
+packages, warrant consideration in production-grade environments. Notwithstanding these constraints, 
+the results demonstrate that a fully functional, multi-node \emph{Data Lake} encompassing ingestion, 
+distributed storage, analytical processing, and governance layers can be sustained at zero monetary 
+cost. This finding validates the framework's suitability as a reproducible platform for academic 
+laboratories and teaching environments.
 
-Isso aqui é a conclusão do artigo
+Future work should explore several avenues to extend the contributions presented herein. The benchmark evaluation could 
+be expanded to encompass real-time ingestion pipelines, utilising NiFi and Kafka in conjunction with 
+Spark Structured Streaming, to validate the Default installation profile under sustained 
+streaming workloads. Performance improvements may be investigated through the adoption of columnar 
+storage formats such as ORC or Parquet, combined with predicate pushdown optimisations, to reduce 
+the I/O overhead observed in the disk-bound phases. Horizontal scalability could be assessed by 
+federating multiple Free Tier tenancies or by migrating to paid ARM instances with higher virtual 
+core allocations, thereby alleviating the executor bottleneck identified in this study. Finally, 
+the integration of Apache Atlas for automated metadata cataloguing would strengthen the governance 
+layer, mitigating the risk of \emph{data swamp} scenarios as discussed in Section~\ref{sec:literature}.
