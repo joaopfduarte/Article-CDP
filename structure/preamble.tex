@@ -24,24 +24,27 @@
 
 % Hyperlinks
 \usepackage[hidelinks]{hyperref}
-\usepackage[numbers,sort&compress]{natbib}
+% --- SOFT DELETE: numeric natbib options (Batch 5) ---
+%\usepackage[numbers,sort&compress]{natbib}
+% --- END SOFT DELETE ---
+\usepackage[authoryear,round]{natbib}
 \usepackage{enumitem} % For compact lists
 \setlist[enumerate]{leftmargin=*, topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=0pt}
 \setlist[itemize]{leftmargin=*, topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=0pt}
 
-% Redefine thebibliography to be compatible with natbib and fix the class's broken definition
+% --- SOFT DELETE: numeric thebibliography override (Batch 5) ---
+% The old override used numeric labels (\@biblabel{\@arabic\c@enumiv}).
+% Replaced by an author-date compatible version below.
+% --- END SOFT DELETE ---
+% Bibliography override: author-date compatible, with class heading and font
 \makeatletter
 \renewenvironment{thebibliography}[1]{%
     \section*{References and Notes}%
     \NINE
-    \list{\@biblabel{\@arabic\c@enumiv}}%
-    {\settowidth\labelwidth{\@biblabel{#1}}%
-     \leftmargin\labelwidth
-     \advance\leftmargin\labelsep
-     \itemsep 5pt
-     \usecounter{enumiv}%
-     \let\p@enumiv\@empty
-     \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+    \list{}%
+    {\leftmargin 1.5em
+     \itemindent -1.5em
+     \itemsep 5pt}%
     \def\newblock{\hskip .11em plus .33em minus .07em}%
     \sloppy\clubpenalty4000\widowpenalty4000
     \sfcode`\.=1000\relax
@@ -49,9 +52,6 @@
     \endlist
 }
 \makeatother
-% Bibliography styling (if not handled by class)
-% The class file seems to handle basic natbib or similar. 
-% We'll leave specific bib settings to the main file or here if needed.
 
 % Custom commands
 \newcommand{\note}[1]{\textcolor{red}{#1}}

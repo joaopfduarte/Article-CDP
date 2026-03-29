@@ -18,9 +18,9 @@ Big Data analytics platforms typically demand substantial computational resource
 costly software licences, posing a significant barrier for academic laboratories and 
 small organisations. Although cloud computing has reduced capital expenditure through 
 pay-as-you-go models, recurring charges for multi-node clusters remain prohibitive for 
-many research groups \cite{deochake2026cloudaiinfrastructurecost}. The Flexera 2025 State 
+many research groups \citep{deochake2026cloudaiinfrastructurecost}. The Flexera 2025 State 
 of the Cloud Report found that 84\% of surveyed organisations still prioritise cost 
-reduction \cite{flexera2025stateofcloud}, a challenge that is amplified for institutions 
+reduction \citep{flexera2025stateofcloud}, a challenge that is amplified for institutions 
 with limited budgets.
 
 \tresumo{Problema e Justificativa: Limitações de custo em Big Data e o uso do FinOps com Oracle Free 
@@ -47,10 +47,10 @@ Tier.}
 One avenue for reducing this barrier is the combination of free-tier cloud offerings with 
 energy-efficient processor architectures. Oracle Cloud Infrastructure (OCI) provides 
 perpetual access to ARM-based Ampere A1 instances at no charge, within defined resource 
-limits \cite{oci_docs}. Prior work has shown that commodity ARM64 servers can sustain Big 
+limits \citep{oci_docs}. Prior work has shown that commodity ARM64 servers can sustain Big 
 Data workloads at a fraction of the energy and acquisition cost of x86 hardware 
-\cite{8287751, loghin2015performance}, and FinOps practices formalise the discipline of 
-aligning cloud spending with actual resource needs \cite{vo2025finopsagentusecase}. 
+\citep{8287751, loghin2015performance}, and FinOps practices formalise the discipline of 
+aligning cloud spending with actual resource needs \citep{vo2025finopsagentusecase}. 
 However, deploying a complete Hadoop ecosystem on constrained, free-tier ARM instances 
 remains underexplored, particularly regarding automated, end-to-end provisioning.
 
@@ -67,7 +67,7 @@ remains underexplored, particularly regarding automated, end-to-end provisioning
 Infrastructure as Code (IaC) offers a path toward reproducible, version-controlled 
 cluster deployment. Declarative tools such as Terraform codify the desired cloud state, 
 while task-oriented tools such as Ansible automate operating-system and application 
-configuration \cite{morris2016infrastructure, Bollineni2022IaCDataEngineering}. Applying 
+configuration \citep{morris2016infrastructure, Bollineni2022IaCDataEngineering}. Applying 
 IaC to free-tier ARM infrastructure would enable researchers to instantiate a functional 
 Data Lake without manual intervention or financial outlay, yet no published framework 
 integrates these elements end to end.
@@ -100,8 +100,6 @@ framework provisions a four-node ARM cluster and installs the OpenSource Data Pl
 Benchmark (SSB) is executed under three processing configurations, comparing query 
 execution times on severely constrained hardware.
 
-\bnote{Verificar se os objetivos listados aqui estão 100\% alinhados com o que será entregue na Conclusão.}
-
 The research objectives are threefold:
 
 \begin{enumerate}
@@ -121,19 +119,20 @@ The principal contributions are:
     multi-node Hadoop Data Lake on the OCI Free Tier, supporting multiple installation 
     profiles tailored to different workload types.
     \item Empirical evidence that Apache Spark consistently outperforms Apache Hive on 
-    ARM-constrained clusters, with performance margins exceeding 200~seconds per query 
-    in SSB workloads.
-    \item A documented analysis of the practical limits of in-memory caching under severe 
-    resource constraints, showing that marginal gains result when the largest fact table 
-    cannot be fully cached.
+    ARM-constrained clusters, with mean performance margins of 282 to 2\,112~seconds 
+    per query in SSB workloads at scale factor~10.
+    \item A documented analysis of in-memory caching under severe resource constraints, 
+    showing that caching is counterproductive for simpler queries when the largest fact 
+    table cannot be fully cached, and yields net gains only for complex multi-join 
+    workloads.
     \item A reproducible experimental protocol and deployment artefacts that other 
     researchers can replicate at zero monetary cost.
 \end{enumerate}
 
-The remainder of this paper is organised as follows. Section~\ref{sec:literature} reviews 
-related work on cloud-based data platforms, ARM-based Big Data processing, and 
-Infrastructure as Code. Section~\ref{sec:technology_patterns} describes the technology 
-stack and cloud infrastructure. Section~\ref{sec:arch} presents the architecture design 
-and automated deployment workflow. Section~\ref{sec:use-case} details the experimental 
-evaluation, and Section~\ref{sec:conclusion} concludes with a discussion of limitations 
-and future work.
+The remainder of this paper is organised as follows.
+Section~\ref{sec:literature} reviews related work on cloud-based data platforms,
+ARM-based Big Data processing, and Infrastructure as Code.
+Section~\ref{sec:arch} presents the system design, automated deployment
+workflow, and installation profiles. Section~\ref{sec:use-case} details the
+experimental evaluation, and Section~\ref{sec:conclusion} concludes with a
+discussion of limitations and future work.

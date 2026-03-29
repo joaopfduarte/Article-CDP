@@ -1,110 +1,150 @@
-\section{Use-Case–Driven Performance Evaluation}
+% --- SOFT DELETE: Original Section 5 (Batch 4) ---
+%
+% \section{Use-Case–Driven Performance Evaluation}
+% \label{sec:use-case}
+%
+% \tresumo{Avaliação e Resultados: Teste da infraestrutura provisionada através do caso prático utilizando o Star Schema Benchmark (SSB).}
+%
+% This chapter presents a practical test case designed to validate the provisioned infrastructure under a real-world 
+% analytical scenario. To guide the technical evaluation, the analysis is conducted based on a central hypothesis: 
+% in environments with severely restricted hardware, such as the free tier ARM instances utilised in this project, 
+% the \emph{in-memory} processing capabilities of Apache Spark with caching will outperform the traditional 
+% disk-allocated batch execution of Apache Hive. Formulating this hypothesis is essential for structuring the 
+% benchmarking tests, allowing the obtained results to be directly compared against the initial architectural 
+% predictions.
+%
+% \subsection{Experimental Methodology and Infrastructure Setup}
+%
+% The experimental procedure was modelled using the Star Schema Benchmark (SSB), enabling researchers 
+% to reproduce the stress tests within their own cloud laboratories. The hardware allocation utilised 
+% the predefined Terraform blueprints, specifically targeting the \texttt{data-science} profile.
+%
+% Following the \texttt{terraform apply} execution, the \emph{cluster} instantiated four nodes: 
+% one \emph{master} and three \emph{worker} machines. Each node was provisioned as a 
+% \texttt{VM.Standard.A1.Flex} instance, strictly limited to 1 OCPU and 6 GB of RAM. The active 
+% services focused on the core components required for the benchmark: HDFS, YARN, Hive Metastore, 
+% and Spark 3.
+%
+% \subsection{Data Ingestion and Hadoop Configuration}
+%
+% The ingestion phase commenced with the transfer of the SSB dataset, comprising a fact table and 
+% multiple dimension tables in CSV format, to the secondary disk of the \emph{master} node. 
+% Subsequently, the data was ingested into the Hadoop ecosystem to ensure visibility across the 
+% distributed model of the \emph{cluster}. The physical size of the flat files injected into the 
+% environment is detailed in Table~\ref{tab:ssb-dataset-sizes}, reflecting the storage baseline prior 
+% to the HDFS block distribution.
+%
+% [tables, figures, queries, and remaining subsections omitted for brevity; see git history]
+%
+% --- END SOFT DELETE ---
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% REVISED Section 5 (Batch 4)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Performance Evaluation}
 \label{sec:use-case}
 
-\tresumo{Avaliação e Resultados: Teste da infraestrutura provisionada através do caso prático utilizando o Star Schema Benchmark (SSB).}
+\tresumo{Avaliação e Resultados: Benchmark SSB sobre infraestrutura provisionada.}
 
-This chapter presents a practical test case designed to validate the provisioned infrastructure under a real-world 
-analytical scenario. To guide the technical evaluation, the analysis is conducted based on a central hypothesis: 
-in environments with severely restricted hardware, such as the free tier ARM instances utilised in this project, 
-the \emph{in-memory} processing capabilities of Apache Spark with caching will outperform the traditional 
-disk-allocated batch execution of Apache Hive. Formulating this hypothesis is essential for structuring the 
-benchmarking tests, allowing the obtained results to be directly compared against the initial architectural 
-predictions.
+This section evaluates the provisioned cluster through the Star Schema Benchmark
+(SSB) \citep{oneil2009star}. The central question is whether Spark's in-memory
+processing outperforms Hive's disk-bound execution on the severely constrained
+ARM hardware described in Section~\ref{sec:arch}, and whether explicit caching
+yields further gains.
 
-\subsection{Experimental Methodology and Infrastructure Setup}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Experimental Setup}
 
-The experimental procedure was modelled using the Star Schema Benchmark (SSB), enabling researchers 
-to reproduce the stress tests within their own cloud laboratories. The hardware allocation utilised 
-the predefined Terraform blueprints, specifically targeting the \texttt{data-science} profile.
+The benchmark was conducted on the cluster deployed under the
+\texttt{data-science} installation profile
+(Table~\ref{tab:comp-data-science}). Each of the four nodes is a
+\texttt{VM.Standard.A1.Flex} instance with 1~OCPU and 6~GB of RAM. The active
+services comprised HDFS, YARN, Hive Metastore, Hive Server~2, and Spark~3.
 
-Following the \texttt{terraform apply} execution, the \emph{cluster} instantiated four nodes: 
-one \emph{master} and three \emph{worker} machines. Each node was provisioned as a 
-\texttt{VM.Standard.A1.Flex} instance, strictly limited to 1 OCPU and 6 GB of RAM. The active 
-services focused on the core components required for the benchmark: HDFS, YARN, Hive Metastore, 
-and Spark 3.
+The SSB dataset was generated at scale factor~10 (SF\,=\,10). The flat-file
+sizes are listed in Table~\ref{tab:ssb-dataset-sizes}; the largest file,
+\texttt{lineorder.csv}, occupies 9.3~GB. After transfer to the master node's
+secondary block volume, the CSV files were ingested into HDFS using
+\texttt{hdfs dfs~-put} as the HDFS superuser, and staging directories were
+assigned YARN-compatible ownership and permissions.
 
-\subsection{Data Ingestion and Hadoop Configuration}
+% [AUTHOR VALIDATION REQUIRED: provide exact software versions bundled in ODP 1.3.1.0
+%  (Hadoop, Spark, Hive, Java, Ambari). Insert a sentence such as:
+%  "The ODP 1.3.1.0 distribution bundles Hadoop X.Y.Z, Spark 3.X.Y, Hive X.Y.Z,
+%   and runs on OpenJDK 1.8."]
 
-The ingestion phase commenced with the transfer of the SSB dataset, comprising a fact table and 
-multiple dimension tables in CSV format, to the secondary disk of the \emph{master} node. 
-Subsequently, the data was ingested into the Hadoop ecosystem to ensure visibility across the 
-distributed model of the \emph{cluster}. The physical size of the flat files injected into the 
-environment is detailed in Table~\ref{tab:ssb-dataset-sizes}, reflecting the storage baseline prior 
-to the HDFS block distribution.
+% [AUTHOR VALIDATION REQUIRED: confirm HDFS replication factor (expected: 3).]
 
 \begin{table}[htbp]
   \centering
-  \caption{SSB Dataset File Sizes}
+  \caption{SSB dataset file sizes (SF\,=\,10).}
   \label{tab:ssb-dataset-sizes}
   \renewcommand{\arraystretch}{1.2}
   \begin{tabular}{ p{0.25\linewidth} p{0.15\linewidth} }
     \hline
-    \textbf{File Name} & \textbf{Size} \\
+    \textbf{File} & \textbf{Size} \\
     \hline
-    \textbf{lineorder.csv} & 9.3 GB \\
+    lineorder.csv & 9.3 GB \\
     \hline
-    \textbf{customer.csv} & 3.3 GB \\
+    customer.csv  & 3.3 GB \\
     \hline
-    \textbf{supplier.csv} & 211.7 MB \\
+    supplier.csv  & 211.7 MB \\
     \hline
-    \textbf{part.csv} & 176.7 MB \\
+    part.csv      & 176.7 MB \\
     \hline
-    \textbf{dwdate.csv} & 272.4 KB \\
+    dwdate.csv    & 272.4 KB \\
     \hline
   \end{tabular}
 \end{table}
 
-Operating as the HDFS superuser, the staging directories were created and populated using standard 
-\texttt{hdfs dfs -put} commands. A critical step in this phase involved the configuration of 
-appropriate ownership and permissions for the storage directories, preventing rejection by the YARN 
-resource negotiator during the benchmark execution.
+The relational structure was registered in the Hive Metastore via the Beeline
+CLI, connecting to HiveServer2 on a designated worker node. The fact and
+dimension tables were created as external tables using the
+\texttt{OpenCSVSerde} deserialiser, enabling both Hive and Spark to share a
+consistent schema definition.
 
-\subsection{Metadata Registration}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Benchmark Protocol}
 
-To guarantee homogeneity in data reading across different computational engines, the relational 
-structure was mapped using the Hive Metastore. The connection was established via the Beeline 
-command-line interface, connecting directly to the HiveServer2 on a designated \emph{worker} node.
-
-The Data Definition Language (DDL) operations registered the fact and dimension tables as external 
-tables. The schema interpretation relied on the \texttt{OpenCSVSerde} utility, ensuring that the 
-comma-separated values were accurately mapped to their corresponding data types within the 
-\emph{Data Lake} catalog.
-
-\subsection{Benchmarking Phases}
-
-Due to the inherent constraints of the free tier ARM virtual machines, specifically regarding timeout 
-limits and the propensity for Out Of Memory (OOM) failures, the experimental design required a 
-resilient execution strategy. 
-
-The evaluation was divided into three distinct phases to isolate the performance characteristics of 
-each computational paradigm:
+The evaluation comprised three processing configurations, each applied to the
+full SSB query catalogue of 14 analytical queries (Listing~\ref{lst:ssb-queries}):
 
 \begin{enumerate}
-    \item \textbf{Native Disk Execution (Apache Hive)}: This initial phase tests the performance of 
-    traditional disk-bound batch processing. The Hive engine reads and writes sequential blocks to 
-    the HDFS, designed to accommodate severe memory limitations at the cost of processing speed.
-    \item \textbf{Cold Disk Execution (Apache Spark)}: The second phase assesses Apache Spark 
-    operating without the benefit of \emph{in-memory} caching. Spark reads the data directly from the 
-    distributed file system, providing a baseline comparison against Hive's disk operations.
-    \item \textbf{Hot In-Memory Execution (Apache Spark with Cache)}: The final phase evaluates the 
-    central hypothesis. The SSB tables are retained natively in the Random Access Memory (RAM) of the 
-    Spark executors prior to querying. The \emph{cluster} resources are strictly constrained via 
-    parameters such as \texttt{--driver-memory} and \texttt{--executor-memory} to prevent YARN 
-    container exhaustion.
+    \item \textbf{Hive (disk-bound):} Hive reads and writes sequential blocks
+    to HDFS, operating within its native MapReduce-like execution model. This
+    configuration tolerates severe memory limitations at the cost of processing
+    speed.
+    \item \textbf{Spark (cold, no caching):} Spark reads data directly from
+    HDFS without retaining any table in memory. This provides a baseline for
+    Spark's performance under the same storage back-end as Hive.
+    \item \textbf{Spark with caching:} Prior to querying, all SSB tables are
+    cached in the Spark executors' memory. The cluster resources are explicitly
+    constrained via \texttt{-{}-driver-memory} and \texttt{-{}-executor-memory}
+    to prevent YARN container exhaustion.
 \end{enumerate}
 
-During each phase, the 14 analytical queries comprising the SSB catalogue were executed. These 
-queries simulate complex analytical workloads, including multiple joins and aggregations, to 
-stress-test the environment. In relation to the star schema illustrated in Figure~\ref{fig:ssb-schema}, the executed queries are presented below:
+Each query was executed 10 times per configuration, and all 10 iterations are
+included in the reported statistics.
+% [AUTHOR VALIDATION REQUIRED: confirm that no warm-up iterations were discarded.]
+Queries were run sequentially through resilient shell scripts executed under
+\texttt{nohup} to avoid SSH timeout interruptions on the free-tier instances.
+Query~03 intentionally repeats Query~01 to assess execution-time stability
+across benchmark phases.
 
-\begin{lstlisting}[language=SQL, caption={SSB Benchmark Analytical Queries}, label={lst:ssb-queries}, frame=single, basicstyle=\ttfamily\scriptsize]
+The star schema and the 14 analytical queries are shown in
+Figure~\ref{fig:ssb-schema} and Listing~\ref{lst:ssb-queries}, respectively.
+
+\begin{lstlisting}[language=SQL, caption={SSB benchmark analytical queries.}, label={lst:ssb-queries}, frame=single, basicstyle=\ttfamily\scriptsize]
 -- Query 01
 SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_yearmonthnum = 199401 AND lo_discount between 4 and 6 AND lo_quantity between 26 and 35;
 
 -- Query 02
 SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_year = 1993 AND lo_discount between 1 and 3 AND lo_quantity < 25;
 
--- Query 03
+-- Query 03 (intentional repeat of Query 01)
 SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_yearmonthnum = 199401 AND lo_discount between 4 and 6 AND lo_quantity between 26 and 35;
 
 -- Query 04
@@ -141,40 +181,98 @@ SELECT d_year, s_nation, p_category, sum(lo_revenue - lo_supplycost) as profit F
 SELECT d_year, s_city, p_brand, sum(lo_revenue - lo_supplycost) as profit FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.part ON lo_partkey = p_partkey WHERE c_region LIKE '%AMERICA%' AND s_nation LIKE '%UNITED STATES%' AND (d_year = 1997 or d_year = 1998) AND p_category LIKE '%MFGR#14%' GROUP BY d_year, s_city, p_brand ORDER BY d_year, s_city, p_brand;
 \end{lstlisting}
 
-\subsection{Performance Results and Analysis}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Results and Analysis}
 
 \begin{figure}[p]
     \centering
     \includegraphics[width=0.85\linewidth]{content/assets/schema.pdf}
-    \caption{SSB schema entity-relationship diagram.}
+    \caption{SSB star schema entity-relationship diagram.}
     \label{fig:ssb-schema}
     
     \vspace{2em}
     
     \includegraphics[width=0.85\linewidth]{content/assets/graphic.pdf}
-    \caption{Query Execution Time Comparison: Hive vs. Spark vs. Spark In-Memory.}
+    \caption{Query execution time comparison: Hive vs.\ Spark vs.\ Spark
+             with caching.}
+    % [AUTHOR VALIDATION REQUIRED: consider regenerating this figure with
+    %  error bars (mean +/- SD) now that 10-iteration statistics are available.]
     \label{fig:query-execution-time-comparison}
 \end{figure}
 
-As illustrated in Figure~\ref{fig:query-execution-time-comparison}, the methodology required executing each of the 14 queries 10 iterations per processing configuration: Apache Hive, Apache Spark, and Spark with caching. The empirical data reveals a substantial disparity in execution times between Hive and Spark. In the majority of instances, the minimum performance delta was approximately 200 seconds in favour of Spark.
-%
+Table~\ref{tab:benchmark-results} reports the mean execution time and standard
+deviation for each query across the three configurations
+(Figure~\ref{fig:query-execution-time-comparison}).
 
-When comparing both Spark configurations, the relative performance improvement was marginal due to infrastructural memory constraints inherent to the provisioned \emph{Data Lake}. Specifically, it was unfeasible to cache \texttt{lineorder}, the largest fact table within the star schema, fully into memory. Consequently, the Spark query executions were formally configured as follows:
+\begin{table}[htbp]
+  \centering
+  \caption{Mean query execution time in seconds, with standard deviation in
+           parentheses, over 10 iterations per configuration.}
+  \label{tab:benchmark-results}
+  \renewcommand{\arraystretch}{1.15}
+  \small
+  \begin{tabular}{@{} l c c c @{}}
+    \hline
+    \textbf{Query} & \textbf{Hive} & \textbf{Spark} & \textbf{Spark+Cache} \\
+    \hline
+    Q1  &  541.5\,(14.9) & 259.9\,(11.1) & 311.0\,(11.9) \\
+    Q2  &  561.1\,(23.0) & 203.0\,\phantom{0}(9.7) & 298.7\,(11.7) \\
+    Q3  &  518.8\,(21.9) & 213.0\,\phantom{0}(7.9) & 299.4\,(14.1) \\
+    Q4  &  557.0\,(42.8) & 204.9\,(12.4) & 295.3\,(11.7) \\
+    Q5  & 1120.2\,(44.0) & 257.8\,\phantom{0}(6.1) & 354.2\,(14.4) \\
+    Q6  & 1519.3\,(65.3) & 238.2\,(10.8) & 334.0\,(20.6) \\
+    Q7  &  959.4\,(59.9) & 252.5\,(13.1) & 336.2\,(22.9) \\
+    Q8  & 1175.1\,(62.2) & 318.3\,(20.3) & 290.0\,\phantom{0}(9.2) \\
+    Q9  & 1871.5\,(87.3) & 574.8\,(27.5) & 277.7\,(14.4) \\
+    Q10 & 1785.5\,(77.8) & 288.2\,(17.1) & 338.1\,(15.2) \\
+    Q11 &  884.4\,(26.7) & 278.3\,(16.7) & 268.0\,(14.8) \\
+    Q12 & 2459.1\,(77.9) & 347.2\,(21.1) & 339.4\,(14.6) \\
+    Q13 & 1326.0\,(75.7) & 279.0\,(10.3) & 258.2\,(12.1) \\
+    Q14 &  881.0\,(45.1) & 288.1\,\phantom{0}(6.2) & 253.8\,(16.5) \\
+    \hline
+  \end{tabular}
+\end{table}
 
-\begin{lstlisting}[language=SQL, caption={Spark configuration}, label={lst:spark-configuration}]
+\paragraph{Hive versus Spark.} Across all 14 queries, Spark outperformed Hive
+by a mean margin of 868~seconds, with per-query differences ranging from
+282~seconds (Q1) to 2\,112~seconds (Q12). The improvement is most pronounced
+for multi-join queries that operate on the full \texttt{lineorder} fact table.
+All differences are consistent across the 10 iterations, as indicated by the
+relatively low standard deviations.
+
+\paragraph{Spark versus Spark with caching.} The comparison between the two
+Spark configurations is less straightforward. For the simpler two-join queries
+(Q1--Q4) and several four-join queries (Q5--Q7, Q10), the cached configuration
+was 50--97~seconds \emph{slower} than the uncached baseline. This penalty
+stems from the overhead of attempting to cache the 9.3~GB \texttt{lineorder}
+table into the cluster's limited memory: the table cannot be fully cached, but
+the associated shuffle and spill costs still penalise execution. For the more
+complex queries (Q8, Q9, Q11--Q14), partial caching of the smaller dimension
+tables yielded a net benefit, with Q9 showing the largest gain (297~seconds).
+Averaged across all 14 queries, the cached configuration was 18~seconds slower
+than uncached Spark, indicating that caching is counterproductive under these
+memory constraints unless the query complexity is sufficient to amortise the
+overhead.
+
+\paragraph{Resource constraints.} The Spark configurations were as follows:
+
+\begin{lstlisting}[language=SQL, caption={Spark launch parameters.}, label={lst:spark-configuration}, frame=single, basicstyle=\ttfamily\scriptsize]
 -- standard execution
 spark-sql --master yarn
 -- cached execution
 spark-sql --master yarn   --num-executors 2   --executor-cores 1   --driver-memory 512m   --executor-memory 1g   --conf spark.executor.memoryOverhead=256m   --conf spark.memory.fraction=0.8   --conf spark.sql.shuffle.partitions=48
 \end{lstlisting}
-%
 
-It is critical to note that the restriction to two executors (\texttt{--num-executors 2}) is dictated by a strict physical CPU constraint established within the YARN configuration, rather than mere memory limitations. With four nodes provisioned, only three act as NodeManagers capable of running YARN containers. As the blueprint configures exactly one virtual core (\texttt{vCore}) per node, the cluster is capped at three concurrent containers. Given that the Spark Application Master inherently reserves one container, a maximum of two containers remain available for Spark executors. Any attempt to allocate three or more executors would result in a resource deadlock.
+The restriction to two executors (\texttt{-{}-num-executors\,2}) reflects a
+hard CPU constraint, not merely a memory limitation. The blueprint configures
+one virtual core per NodeManager, and three of the four nodes act as
+NodeManagers, yielding three YARN containers in total. Because the Spark
+Application Master claims one container, at most two remain available for
+executors. Any attempt to allocate a third executor would cause a resource
+deadlock.
 
-As a concluding remark on this test case, despite the severe hardware constraints, 
-Spark demonstrated a flexible capability to consume available RAM effectively whilst falling back 
-to disk allocations when necessary. However, owing to the strict infrastructural limits, primarily 
-preventing the complete caching of the fact table, it is evident that the benchmark's performance 
-could be substantially improved by provisioning greater RAM resources to the Spark engine.
-
-% Placeholder for results tables, charts, and discussion.
+Despite these constraints, all 420 query executions (14 queries $\times$ 10
+iterations $\times$ 3 configurations) completed without unrecoverable failures.
+Spark fell back to disk gracefully when in-memory caching could not be
+sustained, confirming the operational stability of the platform under
+prolonged stress.

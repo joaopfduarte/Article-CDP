@@ -167,7 +167,7 @@ existing results are summarised and open gaps identified.
 Cloud computing extends the distributed-systems paradigm into an on-demand service 
 model. In the Infrastructure as a Service (IaaS) layer, providers supply compute, 
 storage, and networking resources that consumers assemble into custom application 
-stacks \cite{tanenbaum2017distributed}. For data-intensive workloads, this model has 
+stacks \citep{tanenbaum2017distributed}. For data-intensive workloads, this model has 
 given rise to two dominant storage paradigms. The \emph{Data Warehouse} enforces a 
 \emph{schema-on-write} discipline, requiring data to be cleaned, transformed, and 
 modelled before ingestion --- reliable, but rigid and costly to extend. The 
@@ -175,13 +175,11 @@ modelled before ingestion --- reliable, but rigid and costly to extend. The
 offering ingestion flexibility at the risk of poor governance if cataloguing is 
 neglected.
 
-Hybrid approaches have attracted growing attention. Nuthalapati 
-\cite{nuthalapati2024architecting} and Sundar et al. \cite{sundar2022comprehensive} 
+Hybrid approaches have attracted growing attention. \citet{nuthalapati2024architecting} and \citet{sundar2022comprehensive} 
 propose cloud-based \emph{lakehouse} architectures that combine scalable raw storage 
 with structured governance layers, arguing that systematic organisation is necessary 
 to prevent \emph{data-swamp} scenarios. In the public sector, however, adoption faces 
-barriers beyond technical design. Through a systematic literature review, Didas 
-\cite{didas} finds that many Big Data analytics projects in public institutions fall 
+barriers beyond technical design. Through a systematic literature review, \citet{didas} finds that many Big Data analytics projects in public institutions fall 
 short of expectations, largely because of high capital investment requirements and 
 limited organisational maturity to sustain infrastructure, data quality, and security 
 throughout the lifecycle. These barriers motivate the search for entry-level platforms 
@@ -190,11 +188,11 @@ processing capabilities that analytical workloads require.
 
 The Hadoop ecosystem addresses the distributed-processing requirement by coupling HDFS 
 for block-based, replicated storage with parallel execution engines such as MapReduce 
-and Spark \cite{hadoop_hdfs_design_2025, marz2015bigdata}. Clemlab's OpenSource Data 
+and Spark \citep{hadoop_hdfs_design_2025, marz2015bigdata}. Clemlab's OpenSource Data 
 Platform (ODP) packages these components for streamlined cluster deployment, with 
 Apache Ambari providing centralised orchestration and monitoring 
-\cite{clemlab_odp_docs_intro_1310}. Oracle Cloud Infrastructure (OCI) documents its 
-IaaS offerings through publicly accessible guides \cite{oci_docs}, and its perpetual 
+\citep{clemlab_odp_docs_intro_1310}. Oracle Cloud Infrastructure (OCI) documents its 
+IaaS offerings through publicly accessible guides \citep{oci_docs}, and its perpetual 
 Free Tier includes ARM-based Ampere A1 instances --- an opportunity to assemble a 
 multi-node Hadoop cluster at zero monetary cost that remains largely unexplored in 
 the literature.
@@ -243,16 +241,16 @@ Processor architectures for data-centre workloads fall broadly into two families
 Complex Instruction Set Computer (CISC) tradition, represented by x86-64, and the 
 Reduced Instruction Set Computer (RISC) tradition, exemplified by ARM. ARM processors 
 execute simpler instructions at lower energy cost per operation, yielding higher power 
-efficiency and lower acquisition cost \cite{hennessy2019computer}. The Hadoop ecosystem, 
+efficiency and lower acquisition cost \citep{hennessy2019computer}. The Hadoop ecosystem, 
 however, was historically developed for and tested on x86-64 hardware, creating 
 potential compatibility barriers for ARM deployments --- particularly in the 
-availability of pre-compiled packages and JVM optimisations \cite{8287751}.
+availability of pre-compiled packages and JVM optimisations \citep{8287751}.
 
-Two empirical studies are directly relevant. Loghin et al. 
-\cite{loghin2015performance} benchmarked Big Data workloads on clusters of small nodes, 
-including ARM-based boards, and found that such configurations can be competitive for 
-specific workloads despite lower per-node throughput. Kalyanasundaram and Simmhan 
-\cite{8287751} evaluated Hadoop and Spark on commodity ARM64 servers, reporting 
+Two empirical studies are directly relevant. \citet{loghin2015performance} benchmarked 
+Big Data workloads on clusters of small nodes, including ARM-based boards, and found 
+that such configurations can be competitive for specific workloads despite lower 
+per-node throughput. \citet{8287751} evaluated Hadoop and Spark on commodity ARM64 
+servers, reporting 
 favourable cost-efficiency ratios and concluding that ARM-based clusters represent a 
 promising direction for budget-sensitive deployments. Both studies, however, tested 
 benchmark execution on manually provisioned clusters. Neither addressed the automated, 
@@ -306,13 +304,13 @@ per node).
 
 Infrastructure as Code (IaC) replaces manual, console-driven server configuration --- 
 often termed \emph{ClickOps} --- with codified, version-controlled artefacts that 
-define the desired state of an environment \cite{morris2016infrastructure}. Two 
+define the desired state of an environment \citep{morris2016infrastructure}. Two 
 properties make IaC particularly attractive for research reproducibility: 
 \emph{idempotency}, whereby repeated execution converges to the same infrastructure 
 state, and \emph{reproducibility}, whereby a third party can recreate the environment 
 from the code alone.
 
-Bollineni \cite{Bollineni2022IaCDataEngineering} examines IaC adoption in data 
+\citet{Bollineni2022IaCDataEngineering} examines IaC adoption in data 
 engineering and argues that it mitigates configuration drift, reduces operational risk, 
 and improves pipeline predictability. The analysis, however, remains at the level of 
 general principles; it does not report on a specific, end-to-end deployment validated 

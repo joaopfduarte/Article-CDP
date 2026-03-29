@@ -17,21 +17,24 @@
 % system, democratising access to Big Data technologies for research and educational 
 % purposes.
 % --- END SOFT DELETE ---
-The high cost of Big Data infrastructure limits access for academic and
-resource-constrained organisations. This paper presents an open-source
-Infrastructure-as-Code framework that automates the deployment of a Hadoop-based
-Data Lake on Oracle Cloud Infrastructure Free Tier ARM instances. Using Terraform
-and Ansible, the framework provisions a four-node ARM cluster and installs the
-OpenSource Data Platform stack via Apache Ambari, supporting multiple installation
-profiles for different workload types. The architecture provides distributed
-storage on the Hadoop Distributed File System and analytical processing through
-Apache Spark and Hive. The Star Schema Benchmark was executed under three
+% --- SOFT DELETE: Revised abstract v1 (Batch 5) ---
+% [see git diff for previous version; trimmed to <150 words and aligned caching
+% claim with actual benchmark findings]
+% --- END SOFT DELETE ---
+The high cost of Big Data infrastructure limits access for academic and smaller
+organisations. This paper presents an open-source Infrastructure-as-Code
+framework that automates the deployment of a Hadoop-based Data Lake on Oracle
+Cloud Infrastructure Free Tier ARM instances. Using Terraform and Ansible, the
+framework provisions a four-node ARM cluster and installs the OpenSource Data
+Platform stack via Apache Ambari, supporting multiple installation profiles. The
+Star Schema Benchmark (SF\,=\,10) was executed under three
 configurations---Hive, Spark, and Spark with caching---to evaluate query
-performance on constrained hardware. Spark consistently outperformed Hive by
-margins exceeding 200~seconds per query, whereas in-memory caching offered only
-marginal gains owing to insufficient memory for the largest fact table. These
-results confirm the viability of zero-cost, reproducible distributed analytics
-for research and education.
+performance on constrained hardware. Spark outperformed Hive by mean margins of
+282 to 2\,112~seconds per query. In-memory caching degraded performance for
+simpler queries owing to insufficient memory for the largest fact table, and
+yielded improvements only for complex multi-join workloads. These results confirm
+the viability of zero-cost, reproducible distributed analytics for research and
+education.
 \end{abstract}
 
 % --- SOFT DELETE: Original keywords (Batch 1) ---

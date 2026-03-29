@@ -1,127 +1,295 @@
-\section{Architecture Design}
+% --- SOFT DELETE: Original "Architecture Design" section (Batch 3) ---
+% Merged with former Section 3 ("Technology Patterns and Tools") into a single
+% "System Design and Deployment Methodology" section below.
+%
+% \section{Architecture Design}
+% \label{sec:arch}
+%
+% \tresumo{Architecture and Process: Presentation of the topology and automated cluster deployment workflow (Terraform -> Cloud-Init -> Ansible).}
+%
+% In accordance with the characteristics mentioned in the previous section regarding the technological components and patterns utilised, the architecture of the \emph{cluster}, initially its topology as seen in Figure~\ref{fig:topology}, consists of four virtual machines: one \emph{master} node and three \emph{worker} nodes. This setup operates within the context of an Oracle Cloud Infrastructure (OCI) tenancy. In the topological context of this proposed framework, a subnet groups all the machines comprising the \emph{Data Lake} environment.
+%
+% Upon observing the subnet grouping the machines, the security list associated with it defines specific access rules to meet the proposed functional requirements. Access beyond the internal private environment of this subnet is opened exclusively for a pre-defined list of IPs, corresponding to the components present across all CDP installation profiles, through the Internet Gateway associated with the subnet. This topology is also fundamental for mapping the hosts that make up the installation environment, given that the environment's orchestration component, Ambari, actively maps these hosts and their functionalities.
+%
+% \begin{figure}[htbp]
+%     \centering
+%     \includegraphics[width=0.9\linewidth]{content/assets/topology.pdf}
+%     \caption{Topology of Cloud Config on OCI.}
+%      \label{fig:topology}
+% \end{figure}
+%
+% To further elucidate the installation process, which, as previously mentioned, relies on infrastructure-agnostic IaC tools, Figure~\ref{fig:prov-terraform} traces the sequence from the user's application of the Terraform script through to the actions executed within the installation context. The subsections below illustrate, in three phases, the processes involved in deploying the infrastructure and the cluster itself via the Ambari orchestrator for the remaining components.
+%
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=\linewidth]{content/assets/provisioning-01-terraform.pdf}
+%   \caption{Provisioning workflow — View 1: Terraform execution sequence.}
+%   \label{fig:prov-terraform}
+% \end{figure}
+%
+% Figure~\ref{fig:prov-terraform} demonstrates the initial phase of this process. After configuring the baseline settings via Terraform variables, such as the permitted IP range and the installation profile model to be followed (which defines the blueprint or the architectural layout of the \emph{cluster}), the script is applied. This initiates the deployment process. Sequentially, steps such as generating the TLS RSA key pair, and provisioning the network layer (including the Virtual Cloud Network, Subnets, Security List, and Internet Gateway) as well as the compute nodes are executed.
+%
+% An important detail in this stage is the file upload process to the \emph{master} machine's temporary directory. Files used for interacting with the Ambari API, alongside the playbooks subsequently used by Ansible for the internal configuration of the machines, are securely copied over.
+%
+% \begin{figure}[htbp]
+%   \begin{minipage}[t]{0.48\linewidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{content/assets/provisioning-02-os.pdf}
+%     \caption{Provisioning workflow — View 2: OS-level configuration
+%              via cloud-init and Ansible.}
+%     \label{fig:prov-os}
+%   \end{minipage}\hfill
+%   \begin{minipage}[t]{0.48\linewidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{content/assets/provisioning-03-cluster.pdf}
+%     \caption{Provisioning workflow — View 3: Ambari REST API cluster
+%              deployment with automated recovery logic.}
+%     \label{fig:prov-cluster}
+%   \end{minipage}
+% \end{figure}
+%
+% In the context of the virtual machines, Figure~\ref{fig:prov-os} illustrates the processes executed by \texttt{cloud-init}, focusing mainly on the tasks occurring on the \emph{master} node. This context is supported by an initial shell script responsible for downloading the packages required for the Ansible environment's initialisation. This pre-configuration includes setting up base OS services, configuring hosts via \texttt{/etc/hosts}, establishing security rules, and installing Python and Ansible. It is important to note that Ansible is installed exclusively on the \emph{master} machine, as it is responsible for orchestrating the remainder of the \emph{cluster}.
+%
+% Following this preliminary setup via \texttt{cloud-init}, the configuration process driven by Ansible begins. Ansible acts as the client for several playbooks, starting with \texttt{site.yml}, which is responsible for the environment's configuration prior to the nominal deployment via the Ambari REST API. This playbook handles the installation of baseline packages such as Java 8 and chrony, the initialisation of schemas and databases, and the deployment of the Ambari Server on the \emph{master} node and Ambari Agents on all four nodes.
+%
+% Once the environment, repositories, and policies have been configured by the \texttt{site.yml} playbook, the nominal \emph{cluster} deployment process begins through interaction with the Ambari REST API, as illustrated in Figure~\ref{fig:prov-cluster}. This process includes registering the application blueprint, which dictates how Ambari should install each component and its dependencies based on the designated architecture (e.g., DataNodes or NodeManagers), and applying the \emph{cluster} template.
+%
+% This deployment process, as shown, incorporates an automated recovery engine to address anticipated failures, leading to \emph{cluster} redeployment while preserving previous progress. The \emph{cluster} continuously polls for status success; if a failure occurs, the recovery engine triggers a sequence of actions: it stops the Ambari Server, cleans the HDFS/HBase state, resets and recreates the database, and then restarts the server to retry the deployment up to three times. If maximum retries are reached, a manual initialisation script is available as a fallback.
+%
+% This end-to-end process takes an average of three hours to execute, accounting for subsequent recovery corrections, configuration necessities, and the time required to retrieve external component binaries. 
+%
+% Following the infrastructure provisioning and the automated installation processes, the resulting environment establishes the foundational \emph{Data Lake} architecture, depicted in Figure~\ref{fig:arch-default}. This architecture is structurally organised into four functional layers: Ingestion, Storage, Processing, and Governance. The Data Ingestion Layer acts as the entry point for diverse data workloads, accommodating real-time event streaming via Apache Kafka, event-driven data flows managed by Apache NiFi, and batch file ingestions facilitated by an NFS Gateway. Subsequently, the data flows into the Data Storage Layer, which provides the persistence backbone. This layer relies on the Hadoop Distributed File System (HDFS) for scalable raw and columnar storage, while Apache HBase offers a low-latency NoSQL database approach. For schema registry and structural metadata management, the Hive Metastore operates alongside the core storage mechanisms.
+%
+% Situated above the storage infrastructure, the Processing Layer is responsible for executing analytical workloads and distributing computing resources. Apache YARN serves as the central resource scheduler, allocating capabilities to in-memory engines such as Apache Spark 3 and Directed Acyclic Graph (DAG) execution environments like Apache Tez. To support structured querying and Business Intelligence operations, Hive Server 2 processes SQL workloads over the Hadoop ecosystem, while the Phoenix Query Server abstracts SQL interactions directly over HBase.
+%
+% Finally, the Governance Layer ensures security, auditability, and coordination across the \emph{cluster}. Apache Ranger centralises role-based access control (RBAC) policies and data masking, enforcing them across the ingestion, storage, and processing layers. The audit logs generated by these policies are indexed by Infra Solr, enabling structured search capabilities. Additionally, Apache Atlas provides metadata cataloguing, and Apache ZooKeeper ensures distributed coordination and leader election among the components. The lifecycle and health of these services are continuously monitored through the Apache Ambari interface, offering a cohesive operational view of the \emph{Data Lake}.
+%
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=\linewidth]{content/assets/datalake-architecture.pdf}
+%   \caption{Final Data Lake Architecture — Functional layers for the Default Profile.}
+%   \label{fig:arch-default}
+% \end{figure}
+%
+% \subsection{Data Lake Installation Profiles}
+%
+% To accommodate varying analytical needs and processing workloads, the proposed framework supports three distinct installation profiles, each defining a specific subset of the architecture previously detailed. The selection of a profile dictates which components are distributed across the \emph{master} and \emph{worker} nodes during the automated provisioning stage.
+%
+% As detailed in Table~\ref{tab:comp-default}, the \textbf{Default Profile} deploys the complete \emph{Data Lake} architecture. This profile encompasses the full spectrum of ingestion, storage, processing, and governance capabilities, including Apache NiFi, HBase, Spark, Hive, and Ranger. It serves as a comprehensive baseline for environments requiring end-to-end functionality without structural restrictions.
+%
+% Conversely, the \textbf{Data Science Profile}, is streamlined to focus on large-scale analytical processing and SQL-based workloads. This setup omits the event-driven ingestion pipelines of NiFi and the low-latency NoSQL database (HBase), prioritising computational resources for Apache Spark and Hive Server operations. This design choice provides an optimised environment for training machine learning models and parallel data analysis while maintaining centralised governance through Apache Ranger.
+%
+% Lastly, the \textbf{Software Engineering Profile}, caters to transactional workloads and real-time data flow orchestration. Accordingly, it concentrates on data ingestion and fast-retrieval storage mechanisms by deploying Apache NiFi, Kafka, and Apache HBase along with Phoenix. Analytical engines such as Spark and Hive are excluded to ensure sufficient resources remain available for sustained data transport and event streaming operations.
+%
+% \begin{table}[htbp]
+%   \centering
+%   \caption{Component Mapping for the Default Profile}
+%   \label{tab:comp-default}
+%   ... (see git history for full table)
+% \end{table}
+%
+% [Data Science and Software Engineering profile tables were commented out in the original]
+% --- END SOFT DELETE ---
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% NEW MERGED SECTION (Batch 3) — combines former Section 3 and Section 4
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{System Design and Deployment Methodology}
 \label{sec:arch}
 
-\tresumo{Architecture and Process: Presentation of the topology and automated cluster deployment workflow (Terraform -> Cloud-Init -> Ansible).}
+\tresumo{System design: cloud infrastructure, software stack, automated deployment workflow, and installation profiles.}
 
-In accordance with the characteristics mentioned in the previous section regarding the technological components and patterns utilised, the architecture of the \emph{cluster}, initially its topology as seen in Figure~\ref{fig:topology}, consists of four virtual machines: one \emph{master} node and three \emph{worker} nodes. This setup operates within the context of an Oracle Cloud Infrastructure (OCI) tenancy. In the topological context of this proposed framework, a subnet groups all the machines comprising the \emph{Data Lake} environment.
-%
+This section describes the proposed Data Platform: its cloud infrastructure, the
+open-source software stack it deploys, the three-phase automated provisioning
+workflow, and the configurable installation profiles that tailor the platform to
+different workload types.
 
-Upon observing the subnet grouping the machines, the security list associated with it defines specific access rules to meet the proposed functional requirements. Access beyond the internal private environment of this subnet is opened exclusively for a pre-defined list of IPs, corresponding to the components present across all CDP installation profiles, through the Internet Gateway associated with the subnet. This topology is also fundamental for mapping the hosts that make up the installation environment, given that the environment's orchestration component, Ambari, actively maps these hosts and their functionalities.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Cloud Infrastructure and Network Topology}
+
+The infrastructure runs on Oracle Cloud Infrastructure (OCI), using ARM-based
+Ampere A1 Flex instances available through the OCI Free Tier. The cluster
+consists of four virtual machines---one master node and three worker
+nodes---hosted within a single subnet of an OCI tenancy
+(Figure~\ref{fig:topology}). Each node is a \texttt{VM.Standard.A1.Flex}
+instance with 1~OCPU (ARMv8) and 6~GB of RAM, yielding a total cluster capacity
+of 4~OCPUs and 24~GB of RAM. Persistent block volumes are attached to each
+instance for HDFS data and log storage.
+
+A security list associated with the subnet restricts external access to a
+pre-defined set of IP addresses, opened through the tenancy's Internet Gateway
+for the ports required by the active installation profile. Within the subnet,
+all four nodes communicate over private addresses, which Apache Ambari maps
+during the cluster bootstrap to assign service roles.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{content/assets/topology.pdf}
-    \caption{Topology of Cloud Config on OCI.}
-     \label{fig:topology}
+    \caption{Network topology of the four-node cluster on OCI.}
+    \label{fig:topology}
 \end{figure}
 
-To further elucidate the installation process, which, as previously mentioned, relies on infrastructure-agnostic IaC tools, Figure~\ref{fig:prov-terraform} traces the sequence from the user's application of the Terraform script through to the actions executed within the installation context. The subsections below illustrate, in three phases, the processes involved in deploying the infrastructure and the cluster itself via the Ambari orchestrator for the remaining components.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Automated Deployment Workflow}
 
-%
+Deployment is fully automated through Infrastructure as Code and proceeds in
+three sequential phases, illustrated in
+Figures~\ref{fig:prov-terraform}--\ref{fig:prov-cluster}.
+
+\paragraph{Phase~1: Terraform provisioning.}
+The user configures a small set of Terraform variables---the permitted IP range
+and the desired installation profile---and executes \texttt{terraform apply}.
+Terraform then generates a TLS RSA key pair, provisions the network layer
+(Virtual Cloud Network, subnet, security list, and Internet Gateway), and
+creates the four compute instances. Ansible playbooks and Ambari API interaction
+scripts are uploaded to the master node's temporary directory as part of this
+phase (Figure~\ref{fig:prov-terraform}).
+
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\linewidth]{content/assets/provisioning-01-terraform.pdf}
-  \caption{Provisioning workflow — View 1: Terraform execution sequence.}
+  \caption{Provisioning workflow---Phase~1: Terraform execution sequence.}
   \label{fig:prov-terraform}
 \end{figure}
 
-Figure~\ref{fig:prov-terraform} demonstrates the initial phase of this process. After configuring the baseline settings via Terraform variables, such as the permitted IP range and the installation profile model to be followed (which defines the blueprint or the architectural layout of the \emph{cluster}), the script is applied. This initiates the deployment process. Sequentially, steps such as generating the TLS RSA key pair, and provisioning the network layer (including the Virtual Cloud Network, Subnets, Security List, and Internet Gateway) as well as the compute nodes are executed.
-%
+\paragraph{Phase~2: OS-level configuration.}
+On first boot, a \texttt{cloud-init} script on the master node installs Python
+and Ansible, configures host resolution via \texttt{/etc/hosts} on all nodes,
+and applies baseline OS security rules (Figure~\ref{fig:prov-os}). Ansible is
+installed only on the master, which orchestrates the remaining configuration.
+The \texttt{site.yml} playbook installs prerequisite packages (Java~8, chrony),
+initialises the Ambari database schemas, and deploys the Ambari Server on the
+master and Ambari Agents on all four nodes.
 
-An important detail in this stage is the file upload process to the \emph{master} machine's temporary directory. Files used for interacting with the Ambari API, alongside the playbooks subsequently used by Ansible for the internal configuration of the machines, are securely copied over.
+\paragraph{Phase~3: Ambari-driven cluster deployment.}
+Once the Ambari infrastructure is running, a script registers the application
+blueprint---which maps each Hadoop component to its designated node role
+(e.g.\ DataNode, NodeManager)---and submits the cluster template via the Ambari
+REST API (Figure~\ref{fig:prov-cluster}). The deployment incorporates an
+automated recovery engine: on failure, the engine stops the Ambari Server,
+clears the HDFS and HBase state, resets the database, and restarts the server,
+retrying up to three times. If all retries are exhausted, a manual
+initialisation script is available as a fallback. The end-to-end process,
+including recovery cycles and the retrieval of external component binaries,
+takes approximately three hours.
 
 \begin{figure}[htbp]
   \begin{minipage}[t]{0.48\linewidth}
     \centering
     \includegraphics[width=\linewidth]{content/assets/provisioning-02-os.pdf}
-    \caption{Provisioning workflow — View 2: OS-level configuration
+    \caption{Provisioning workflow---Phase~2: OS-level configuration
              via cloud-init and Ansible.}
     \label{fig:prov-os}
   \end{minipage}\hfill
   \begin{minipage}[t]{0.48\linewidth}
     \centering
     \includegraphics[width=\linewidth]{content/assets/provisioning-03-cluster.pdf}
-    \caption{Provisioning workflow — View 3: Ambari REST API cluster
+    \caption{Provisioning workflow---Phase~3: Ambari REST API cluster
              deployment with automated recovery logic.}
     \label{fig:prov-cluster}
   \end{minipage}
 \end{figure}
 
-In the context of the virtual machines, Figure~\ref{fig:prov-os} illustrates the processes executed by \texttt{cloud-init}, focusing mainly on the tasks occurring on the \emph{master} node. This context is supported by an initial shell script responsible for downloading the packages required for the Ansible environment's initialisation. This pre-configuration includes setting up base OS services, configuring hosts via \texttt{/etc/hosts}, establishing security rules, and installing Python and Ansible. It is important to note that Ansible is installed exclusively on the \emph{master} machine, as it is responsible for orchestrating the remainder of the \emph{cluster}.
-%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data Lake Architecture}
 
-Following this preliminary setup via \texttt{cloud-init}, the configuration process driven by Ansible begins. Ansible acts as the client for several playbooks, starting with \texttt{site.yml}, which is responsible for the environment's configuration prior to the nominal deployment via the Ambari REST API. This playbook handles the installation of baseline packages such as Java 8 and chrony, the initialisation of schemas and databases, and the deployment of the Ambari Server on the \emph{master} node and Ambari Agents on all four nodes.
-%
+The resulting environment is organised into four functional layers, depicted in
+Figure~\ref{fig:arch-default}. The software stack is built on the OpenSource
+Data Platform (ODP) \citep{clemlab_odp_docs_intro_1310}, managed by Apache
+Ambari.
 
-Once the environment, repositories, and policies have been configured by the \texttt{site.yml} playbook, the nominal \emph{cluster} deployment process begins through interaction with the Ambari REST API, as illustrated in Figure~\ref{fig:prov-cluster}. This process includes registering the application blueprint, which dictates how Ambari should install each component and its dependencies based on the designated architecture (e.g., DataNodes or NodeManagers), and applying the \emph{cluster} template.
-%
+\paragraph{Ingestion.} Apache Kafka handles real-time event streaming, Apache
+NiFi manages flow-based data routing with back-pressure control, and an NFS
+Gateway supports batch file ingestion.
 
+\paragraph{Storage.} HDFS provides block-based, replicated storage for raw and
+columnar data. Apache HBase offers low-latency NoSQL access, and the Hive
+Metastore maintains schema and structural metadata for tables registered across
+the platform.
 
+\paragraph{Processing.} Apache YARN schedules cluster resources, allocating
+containers to Apache Spark~3 for in-memory analytics, Apache Tez for DAG-based
+execution, and Hive Server~2 for SQL workloads. The Phoenix Query Server enables
+SQL access over HBase. Spark~3 includes Livy for REST-based remote job
+submission.
 
-This deployment process, as shown, incorporates an automated recovery engine to address anticipated failures, leading to \emph{cluster} redeployment while preserving previous progress. The \emph{cluster} continuously polls for status success; if a failure occurs, the recovery engine triggers a sequence of actions: it stops the Ambari Server, cleans the HDFS/HBase state, resets and recreates the database, and then restarts the server to retry the deployment up to three times. If maximum retries are reached, a manual initialisation script is available as a fallback.
-%
-
-This end-to-end process takes an average of three hours to execute, accounting for subsequent recovery corrections, configuration necessities, and the time required to retrieve external component binaries. 
-
-Following the infrastructure provisioning and the automated installation processes, the resulting environment establishes the foundational \emph{Data Lake} architecture, depicted in Figure~\ref{fig:arch-default}. This architecture is structurally organised into four functional layers: Ingestion, Storage, Processing, and Governance. The Data Ingestion Layer acts as the entry point for diverse data workloads, accommodating real-time event streaming via Apache Kafka, event-driven data flows managed by Apache NiFi, and batch file ingestions facilitated by an NFS Gateway. Subsequently, the data flows into the Data Storage Layer, which provides the persistence backbone. This layer relies on the Hadoop Distributed File System (HDFS) for scalable raw and columnar storage, while Apache HBase offers a low-latency NoSQL database approach. For schema registry and structural metadata management, the Hive Metastore operates alongside the core storage mechanisms.
-
-Situated above the storage infrastructure, the Processing Layer is responsible for executing analytical workloads and distributing computing resources. Apache YARN serves as the central resource scheduler, allocating capabilities to in-memory engines such as Apache Spark 3 and Directed Acyclic Graph (DAG) execution environments like Apache Tez. To support structured querying and Business Intelligence operations, Hive Server 2 processes SQL workloads over the Hadoop ecosystem, while the Phoenix Query Server abstracts SQL interactions directly over HBase.
-
-Finally, the Governance Layer ensures security, auditability, and coordination across the \emph{cluster}. Apache Ranger centralises role-based access control (RBAC) policies and data masking, enforcing them across the ingestion, storage, and processing layers. The audit logs generated by these policies are indexed by Infra Solr, enabling structured search capabilities. Additionally, Apache Atlas provides metadata cataloguing, and Apache ZooKeeper ensures distributed coordination and leader election among the components. The lifecycle and health of these services are continuously monitored through the Apache Ambari interface, offering a cohesive operational view of the \emph{Data Lake}.
+\paragraph{Governance.} Apache Ranger enforces role-based access control and
+data-masking policies; its audit logs are indexed by Infra Solr. Apache
+ZooKeeper provides distributed coordination and leader election, and Apache
+Ambari monitors service health and lifecycle across the cluster.
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\linewidth]{content/assets/datalake-architecture.pdf}
-  \caption{Final Data Lake Architecture — Functional layers for the Default Profile.}
+  \caption{Data Lake architecture---functional layers for the Default Profile.
+           Apache Atlas, shown in the diagram for completeness, was not deployed
+           in the current study; its integration is discussed as future work in
+           Section~\ref{sec:conclusion}.}
   \label{fig:arch-default}
 \end{figure}
 
-\subsection{Data Lake Installation Profiles}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Installation Profiles}
 
-To accommodate varying analytical needs and processing workloads, the proposed framework supports three distinct installation profiles, each defining a specific subset of the architecture previously detailed. The selection of a profile dictates which components are distributed across the \emph{master} and \emph{worker} nodes during the automated provisioning stage.
+The framework supports three installation profiles, each deploying a different
+subset of the architecture described above. The choice of profile determines
+which components are distributed across the master and worker nodes during the
+automated provisioning phase.
 
-As detailed in Table~\ref{tab:comp-default}, the \textbf{Default Profile} deploys the complete \emph{Data Lake} architecture. This profile encompasses the full spectrum of ingestion, storage, processing, and governance capabilities, including Apache NiFi, HBase, Spark, Hive, and Ranger. It serves as a comprehensive baseline for environments requiring end-to-end functionality without structural restrictions.
+The \textbf{Default Profile} (Table~\ref{tab:comp-default}) installs the full
+stack across all four layers---ingestion, storage, processing, and
+governance---including NiFi, Kafka, HBase, Spark, Hive, and Ranger. It targets
+environments that require end-to-end Data Lake functionality.
 
-Conversely, the \textbf{Data Science Profile}, is streamlined to focus on large-scale analytical processing and SQL-based workloads. This setup omits the event-driven ingestion pipelines of NiFi and the low-latency NoSQL database (HBase), prioritising computational resources for Apache Spark and Hive Server operations. This design choice provides an optimised environment for training machine learning models and parallel data analysis while maintaining centralised governance through Apache Ranger.
+The \textbf{Data Science Profile} (Table~\ref{tab:comp-data-science}) omits the
+flow-based ingestion layer (NiFi) and the low-latency NoSQL tier (HBase,
+Phoenix), concentrating cluster resources on Spark and Hive for analytical
+processing and SQL-based workloads. This profile was used for the benchmark
+evaluation reported in Section~\ref{sec:use-case}.
 
-Lastly, the \textbf{Software Engineering Profile}, caters to transactional workloads and real-time data flow orchestration. Accordingly, it concentrates on data ingestion and fast-retrieval storage mechanisms by deploying Apache NiFi, Kafka, and Apache HBase along with Phoenix. Analytical engines such as Spark and Hive are excluded to ensure sufficient resources remain available for sustained data transport and event streaming operations.
+The \textbf{Software Engineering Profile} retains NiFi, Kafka, HBase, and
+Phoenix but excludes the analytical engines (Spark, Hive), reserving resources
+for sustained event streaming and fast-retrieval operations.
 
 \begin{table}[htbp]
   \centering
-  \caption{Component Mapping for the Default Profile}
+  \caption{Component mapping---Default Profile.}
   \label{tab:comp-default}
   \renewcommand{\arraystretch}{1.2}
   \begin{tabular}{@{} p{0.38\linewidth} p{0.58\linewidth} @{}}
     \hline
     \textbf{Node \& Role} & \textbf{Installed Components} \\
     \hline
-    \textbf{master.cdp (10.0.0.2)} \newline \textit{Master Node (Cluster Management, Core Masters)} & Ambari Server, HBase Master, HistoryServer, NameNode, Phoenix Query Server, Ranger Admin, Ranger UserSync, ResourceManager, Secondary NameNode, Spark 3 JobHistoryServer, ZooKeeper Server \\
+    \textbf{master.cdp (10.0.0.2)} \newline \textit{Master Node} & Ambari Server, HBase Master, HistoryServer, NameNode, Phoenix Query Server, Ranger Admin, Ranger UserSync, ResourceManager, Secondary NameNode, Spark~3 JobHistoryServer, ZooKeeper Server \\
     \hline
-    \textbf{node1.cdp (10.0.0.3)} \newline \textit{Worker Node 1 (Data/Compute, specialized services)} & DataNode, Hive Metastore, Hive Server, Kafka Broker, NFS Gateway, NiFi CA, NiFi Master, NodeManager, ZooKeeper Server \\
+    \textbf{node1.cdp (10.0.0.3)} \newline \textit{Worker Node~1} & DataNode, Hive Metastore, Hive Server, Kafka Broker, NFS Gateway, NiFi CA, NiFi Master, NodeManager, ZooKeeper Server \\
     \hline
-    \textbf{node2.cdp (10.0.0.4)} \newline \textit{Worker Node 2 (Data/Compute, specialized services)} & DataNode, Kafka Broker, NodeManager, Spark 3 ThriftServer, ZooKeeper Server \\
+    \textbf{node2.cdp (10.0.0.4)} \newline \textit{Worker Node~2} & DataNode, Kafka Broker, NodeManager, Spark~3 ThriftServer, ZooKeeper Server \\
     \hline
-    \textbf{node3.cdp (10.0.0.5)} \newline \textit{Worker Node 3 (Data/Compute, specialized services)} & DataNode, HBase RegionServer, Kafka Broker, NodeManager, Ranger TagSync, Spark 3 Livy2 Server \\
+    \textbf{node3.cdp (10.0.0.5)} \newline \textit{Worker Node~3} & DataNode, HBase RegionServer, Kafka Broker, NodeManager, Ranger TagSync, Spark~3 Livy2 Server \\
     \hline
   \end{tabular}
 \end{table}
 
-%\begin{table}[htbp]
-% \centering
-%  \caption{Component Mapping for the Data Science Profile}
-%  \label{tab:comp-data-science}
-%  \renewcommand{\arraystretch}{1.2}
-%  \begin{tabular}{@{} p{0.38\linewidth} p{0.58\linewidth} @{}}
-%    \hline
-%    \textbf{Node \& Role} & \textbf{Installed Components} \\
-%    \hline
-%    \textbf{master.cdp (10.0.0.2)} \newline \textit{Master Node (Cluster Management, Core Masters)} & HistoryServer, NameNode, Ranger Admin, Ranger UserSync, ResourceManager, Secondary NameNode, Spark 3 JobHistoryServer, ZooKeeper Server \\
-%    \hline
-%    \textbf{node1.cdp (10.0.0.3)} \newline \textit{Worker Node 1 (Data/Compute, specialized services)} & DataNode, Hive Metastore, Hive Server, Kafka Broker, NFS Gateway, NodeManager, ZooKeeper Server \\
-%    \hline
-%    \textbf{node2.cdp (10.0.0.4)} \newline \textit{Worker Node 2 (Data/Compute, specialized services)} & DataNode, Kafka Broker, NodeManager, Spark 3 ThriftServer, ZooKeeper Server \\
-%    \hline
-%    \textbf{node3.cdp (10.0.0.5)} \newline \textit{Worker Node 3 (Data/Compute, specialized services)} & DataNode, Kafka Broker, NodeManager, Ranger TagSync, Spark 3 Livy2 Server \\
-%    \hline
-%  \end{tabular}
-%\end{table}
+\begin{table}[htbp]
+  \centering
+  \caption{Component mapping---Data Science Profile.}
+  \label{tab:comp-data-science}
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{@{} p{0.38\linewidth} p{0.58\linewidth} @{}}
+    \hline
+    \textbf{Node \& Role} & \textbf{Installed Components} \\
+    \hline
+    \textbf{master.cdp (10.0.0.2)} \newline \textit{Master Node} & HistoryServer, NameNode, Ranger Admin, Ranger UserSync, ResourceManager, Secondary NameNode, Spark~3 JobHistoryServer, ZooKeeper Server \\
+    \hline
+    \textbf{node1.cdp (10.0.0.3)} \newline \textit{Worker Node~1} & DataNode, Hive Metastore, Hive Server, Kafka Broker, NFS Gateway, NodeManager, ZooKeeper Server \\
+    \hline
+    \textbf{node2.cdp (10.0.0.4)} \newline \textit{Worker Node~2} & DataNode, Kafka Broker, NodeManager, Spark~3 ThriftServer, ZooKeeper Server \\
+    \hline
+    \textbf{node3.cdp (10.0.0.5)} \newline \textit{Worker Node~3} & DataNode, Kafka Broker, NodeManager, Ranger TagSync, Spark~3 Livy2 Server \\
+    \hline
+  \end{tabular}
+\end{table}
