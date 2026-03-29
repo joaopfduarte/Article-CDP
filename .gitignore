@@ -53,3 +53,4 @@ Thumbs.db
 # Scripts locais
 compile.sh
 wordcount.txt
+/content/assets/experimental-data/*
