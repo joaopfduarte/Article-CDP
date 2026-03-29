@@ -191,11 +191,23 @@ for block-based, replicated storage with parallel execution engines such as MapR
 and Spark \citep{hadoop_hdfs_design_2025, marz2015bigdata}. Clemlab's OpenSource Data 
 Platform (ODP) packages these components for streamlined cluster deployment, with 
 Apache Ambari providing centralised orchestration and monitoring 
-\citep{clemlab_odp_docs_intro_1310}. Oracle Cloud Infrastructure (OCI) documents its 
-IaaS offerings through publicly accessible guides \citep{oci_docs}, and its perpetual 
-Free Tier includes ARM-based Ampere A1 instances --- an opportunity to assemble a 
-multi-node Hadoop cluster at zero monetary cost that remains largely unexplored in 
+\citep{clemlab_odp_docs_intro_1310}. Oracle Cloud Infrastructure (OCI) documents its
+IaaS offerings through publicly accessible guides \citep{oci_docs}, and its perpetual
+Free Tier includes ARM-based Ampere A1 instances --- an opportunity to assemble a
+multi-node Hadoop cluster at zero monetary cost that remains largely unexplored in
 the literature.
+
+The financial viability of cloud deployments has been examined primarily through the
+lens of cost optimisation on paid tiers. Right-sizing instances, leveraging spot
+pricing, and reserving capacity are common strategies
+\citep{deochake2026cloudaiinfrastructurecost}, and FinOps frameworks have formalised
+the discipline of aligning cloud spending with business value
+\citep{vo2025finopsagentusecase}. Industry surveys confirm that cost management
+remains the top cloud challenge for the majority of organisations
+\citep{flexera2025stateofcloud}. These approaches, however, assume a non-zero
+expenditure baseline. The possibility of operating a full Big Data stack within a
+perpetual free-tier allocation---where the cost is strictly zero but the resource
+ceiling is severe---has not been systematically investigated.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Big Data Processing on ARM and Constrained Hardware}
@@ -246,17 +258,21 @@ however, was historically developed for and tested on x86-64 hardware, creating
 potential compatibility barriers for ARM deployments --- particularly in the 
 availability of pre-compiled packages and JVM optimisations \citep{8287751}.
 
-Two empirical studies are directly relevant. \citet{loghin2015performance} benchmarked 
-Big Data workloads on clusters of small nodes, including ARM-based boards, and found 
-that such configurations can be competitive for specific workloads despite lower 
-per-node throughput. \citet{8287751} evaluated Hadoop and Spark on commodity ARM64 
-servers, reporting 
-favourable cost-efficiency ratios and concluding that ARM-based clusters represent a 
-promising direction for budget-sensitive deployments. Both studies, however, tested 
-benchmark execution on manually provisioned clusters. Neither addressed the automated, 
-end-to-end deployment of the Hadoop stack on ARM hardware, nor operated under the 
-extreme resource constraints of a cloud free tier (typically 1~vCPU and 6~GB of RAM 
-per node).
+Two empirical studies are directly relevant. \citet{loghin2015performance} benchmarked
+Big Data workloads on clusters of small nodes, including ARM-based boards, and showed
+that I/O-bound workloads are less sensitive to processor micro-architecture than
+CPU-bound ones, making low-power nodes a viable option when throughput per core is not
+the primary constraint. \citet{8287751} evaluated Hadoop and Spark on commodity ARM64
+servers and reported favourable cost-efficiency ratios, concluding that ARM-based
+clusters represent a promising direction for budget-sensitive deployments. Their
+experiments, however, were conducted on hardware with considerably higher per-node
+resources than those available on a cloud free tier. Both studies relied on manually
+provisioned, bare-metal or dedicated clusters and did not incorporate Infrastructure
+as Code tooling into the deployment workflow. Neither addressed the automated,
+end-to-end deployment of the Hadoop stack on ARM hardware, nor operated under the
+extreme resource constraints of a cloud free tier, where each node is limited to
+1~vCPU and 6~GB of RAM and the total cluster capacity does not exceed 4~vCPUs and
+24~GB.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Infrastructure as Code for Cluster Provisioning}
@@ -310,20 +326,26 @@ properties make IaC particularly attractive for research reproducibility:
 state, and \emph{reproducibility}, whereby a third party can recreate the environment 
 from the code alone.
 
-\citet{Bollineni2022IaCDataEngineering} examines IaC adoption in data 
-engineering and argues that it mitigates configuration drift, reduces operational risk, 
-and improves pipeline predictability. The analysis, however, remains at the level of 
-general principles; it does not report on a specific, end-to-end deployment validated 
-through benchmarking. More broadly, the combination of Terraform for declarative cloud 
-provisioning with Ansible for procedural application configuration is a recognised 
-industry practice, yet its application to deploying a full Hadoop ecosystem on 
-free-tier ARM instances has not, to our knowledge, been documented in the academic 
-literature.
+\citet{Bollineni2022IaCDataEngineering} examines IaC adoption in data
+engineering and argues that it mitigates configuration drift, reduces operational risk,
+and improves pipeline predictability. The analysis, however, remains at the level of
+general principles; it does not report on a specific, end-to-end deployment validated
+through benchmarking. \citet{morris2016infrastructure} provides a comprehensive
+treatment of IaC principles---idempotency, version control, and automated
+testing---but focuses on general server management rather than on the particular
+challenges of orchestrating a multi-service Hadoop stack. More broadly, the combination
+of Terraform for declarative cloud provisioning with Ansible for procedural application
+configuration is a recognised industry practice, yet its application to deploying a
+full Hadoop ecosystem on free-tier ARM instances has not, to our knowledge, been
+documented in the academic literature.
 
 \vspace{0.5em}
 \noindent
-In summary, prior work has established the viability of ARM processors for Big Data 
-workloads and the value of IaC for infrastructure management, but these threads have 
-not been brought together. No published study offers a fully automated pipeline for 
-deploying a Hadoop-based Data Lake on free-tier ARM cloud instances, validated through 
-a reproducible benchmark. The present work addresses this gap.
+In summary, prior work has established the viability of ARM processors for Big Data
+workloads, the value of IaC for infrastructure management, and the importance of cost
+optimisation in cloud deployments, but these threads have not been brought together. No
+published study offers a fully automated pipeline for deploying a Hadoop-based Data
+Lake on free-tier ARM cloud instances, validated through a reproducible benchmark. The
+present work addresses this gap by combining Terraform and Ansible into a single
+pipeline that provisions and configures a four-node Hadoop cluster on the OCI Free
+Tier and by evaluating the resulting environment under the Star Schema Benchmark.

@@ -81,7 +81,11 @@ benchmark.
 
 Several limitations should be noted. The benchmark was conducted at a single
 scale factor (SF\,=\,10), on a fixed four-node cluster, and without an x86
-baseline for direct architectural comparison. The hard ceiling of 4~OCPUs and
+baseline for direct architectural comparison. Furthermore, the two Spark
+configurations differ not only in caching behaviour but also in memory
+allocation and shuffle settings (Section~\ref{sec:use-case}), introducing a
+confounding variable that prevents the caching effect from being fully
+isolated. The hard ceiling of 4~OCPUs and
 24~GB of RAM fundamentally restricts both processing parallelism and caching
 capacity. Additionally, whilst the ODP stack executed on the ARM
 microarchitecture without critical failures, potential behavioural differences
@@ -98,7 +102,10 @@ extended to real-time ingestion pipelines using NiFi and Kafka in conjunction
 with Spark Structured Streaming, validating the Default profile under sustained
 streaming workloads. Performance may improve through columnar storage formats
 such as ORC or Parquet combined with predicate-pushdown optimisations, reducing
-the I/O overhead observed in the disk-bound phases. Horizontal scalability could
+the I/O overhead observed in the disk-bound phases. A controlled comparison
+between the ARM-based free-tier cluster and an equivalent x86 deployment would
+isolate architectural effects from resource-constraint effects, addressing one
+of the principal limitations of the present study. Horizontal scalability could
 be assessed by federating multiple Free Tier tenancies or by migrating to paid
 ARM instances with higher virtual core allocations, alleviating the executor
 bottleneck identified in this study. Finally, the integration of Apache Atlas

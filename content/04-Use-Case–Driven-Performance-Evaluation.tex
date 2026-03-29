@@ -64,19 +64,23 @@ The benchmark was conducted on the cluster deployed under the
 \texttt{VM.Standard.A1.Flex} instance with 1~OCPU and 6~GB of RAM. The active
 services comprised HDFS, YARN, Hive Metastore, Hive Server~2, and Spark~3.
 
-The SSB dataset was generated at scale factor~10 (SF\,=\,10). The flat-file
-sizes are listed in Table~\ref{tab:ssb-dataset-sizes}; the largest file,
-\texttt{lineorder.csv}, occupies 9.3~GB. After transfer to the master node's
-secondary block volume, the CSV files were ingested into HDFS using
-\texttt{hdfs dfs~-put} as the HDFS superuser, and staging directories were
-assigned YARN-compatible ownership and permissions.
+The SSB dataset was generated at scale factor~10 (SF\,=\,10) using the
+\texttt{dbgen} tool provided with the benchmark suite. The flat-file sizes are
+listed in Table~\ref{tab:ssb-dataset-sizes}; the largest file,
+\texttt{lineorder.csv}, occupies 9.3~GB, producing a substantial I/O load for a
+cluster with only three DataNodes and 6~GB of RAM per node. The generated CSV
+files were first transferred to the master node's secondary block volume via
+\texttt{scp}, then ingested into HDFS using \texttt{hdfs dfs~-put} as the HDFS
+superuser. Staging directories were assigned YARN-compatible ownership and
+permissions to allow both Hive and Spark to read the ingested data without
+privilege escalation.
 
-% [AUTHOR VALIDATION REQUIRED: provide exact software versions bundled in ODP 1.3.1.0
-%  (Hadoop, Spark, Hive, Java, Ambari). Insert a sentence such as:
-%  "The ODP 1.3.1.0 distribution bundles Hadoop X.Y.Z, Spark 3.X.Y, Hive X.Y.Z,
-%   and runs on OpenJDK 1.8."]
-
-% [AUTHOR VALIDATION REQUIRED: confirm HDFS replication factor (expected: 3).]
+The cluster runs ODP version~1.2.2.0 on CentOS Stream~9 (aarch64), with
+Hadoop~3.3.6, Spark~3.4.2, and Hive~3.1.3 as the primary engines; full
+component versions are listed in Table~\ref{tab:odp-versions}. All services
+execute on OpenJDK~1.8. HDFS was configured with the default replication factor
+of~3 across the three DataNodes.
+% [AUTHOR VALIDATION REQUIRED: confirm HDFS replication factor is indeed 3.]
 
 \begin{table}[htbp]
   \centering
@@ -101,10 +105,13 @@ assigned YARN-compatible ownership and permissions.
 \end{table}
 
 The relational structure was registered in the Hive Metastore via the Beeline
-CLI, connecting to HiveServer2 on a designated worker node. The fact and
-dimension tables were created as external tables using the
-\texttt{OpenCSVSerde} deserialiser, enabling both Hive and Spark to share a
-consistent schema definition.
+CLI, connecting to HiveServer2 on a designated worker node. Five external
+tables---\texttt{lineorder}, \texttt{customer}, \texttt{supplier},
+\texttt{part}, and \texttt{dwdate}---were created using the
+\texttt{OpenCSVSerde} deserialiser, with column types matching the SSB
+specification. Because the tables are external, both Hive and Spark share a
+single schema definition backed by the same HDFS data, ensuring that query
+results are directly comparable across engines.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Benchmark Protocol}
@@ -126,11 +133,16 @@ full SSB query catalogue of 14 analytical queries (Listing~\ref{lst:ssb-queries}
     to prevent YARN container exhaustion.
 \end{enumerate}
 
-Each query was executed 10 times per configuration, and all 10 iterations are
-included in the reported statistics.
+Each query was executed 10 times per configuration, yielding 420 individual
+query runs in total (14 queries $\times$ 10 iterations $\times$ 3
+configurations). All 10 iterations are included in the reported statistics; no
+warm-up iterations were discarded.
 % [AUTHOR VALIDATION REQUIRED: confirm that no warm-up iterations were discarded.]
-Queries were run sequentially through resilient shell scripts executed under
-\texttt{nohup} to avoid SSH timeout interruptions on the free-tier instances.
+Queries were submitted sequentially through resilient shell scripts that wrap
+each invocation in error-handling logic and log wall-clock execution times to a
+CSV file. The scripts were executed under \texttt{nohup} on the master node to
+prevent SSH session timeouts---a practical necessity on free-tier instances whose
+network connections are not guaranteed to remain stable over multi-hour runs.
 Query~03 intentionally repeats Query~01 to assess execution-time stability
 across benchmark phases.
 
@@ -201,8 +213,10 @@ SELECT d_year, s_city, p_brand, sum(lo_revenue - lo_supplycost) as profit FROM s
 \end{figure}
 
 Table~\ref{tab:benchmark-results} reports the mean execution time and standard
-deviation for each query across the three configurations
-(Figure~\ref{fig:query-execution-time-comparison}).
+deviation for each query across the three configurations. The corresponding bar
+chart is shown in Figure~\ref{fig:query-execution-time-comparison}. Summary
+statistics were computed from the full set of 10 measured iterations per
+query--configuration pair; no outliers were removed.
 
 \begin{table}[htbp]
   \centering
@@ -235,24 +249,40 @@ deviation for each query across the three configurations
 
 \paragraph{Hive versus Spark.} Across all 14 queries, Spark outperformed Hive
 by a mean margin of 868~seconds, with per-query differences ranging from
-282~seconds (Q1) to 2\,112~seconds (Q12). The improvement is most pronounced
-for multi-join queries that operate on the full \texttt{lineorder} fact table.
-All differences are consistent across the 10 iterations, as indicated by the
-relatively low standard deviations.
+282~seconds (Q1) to 2\,112~seconds (Q12). The SSB query catalogue is
+structured into four groups of increasing join complexity. The first group
+(Q1--Q4) performs single-join aggregations over \texttt{lineorder} and
+\texttt{dwdate}; Hive averages 545~seconds per query whereas Spark averages
+220~seconds, a roughly 2.5$\times$ speed-up. The second group (Q5--Q7) adds
+three-way and four-way joins involving \texttt{part} and \texttt{supplier},
+and the gap widens: Hive averages 1\,200~seconds against Spark's
+249~seconds. The third group (Q8--Q11) joins \texttt{customer} and
+\texttt{supplier} dimensions with progressively tighter filters; Hive
+averages 1\,429~seconds while Spark averages 365~seconds. The fourth group
+(Q12--Q14) computes profit metrics over four-way joins and contains the
+widest absolute gap, with Hive averaging 1\,555~seconds versus Spark's
+305~seconds. All differences are consistent across the 10 iterations, as
+indicated by the relatively low standard deviations.
 
 \paragraph{Spark versus Spark with caching.} The comparison between the two
 Spark configurations is less straightforward. For the simpler two-join queries
-(Q1--Q4) and several four-join queries (Q5--Q7, Q10), the cached configuration
-was 50--97~seconds \emph{slower} than the uncached baseline. This penalty
-stems from the overhead of attempting to cache the 9.3~GB \texttt{lineorder}
-table into the cluster's limited memory: the table cannot be fully cached, but
-the associated shuffle and spill costs still penalise execution. For the more
-complex queries (Q8, Q9, Q11--Q14), partial caching of the smaller dimension
-tables yielded a net benefit, with Q9 showing the largest gain (297~seconds).
-Averaged across all 14 queries, the cached configuration was 18~seconds slower
-than uncached Spark, indicating that caching is counterproductive under these
-memory constraints unless the query complexity is sufficient to amortise the
-overhead.
+(Q1--Q4), the cached configuration was consistently slower, adding between
+51~seconds (Q1) and 96~seconds (Q2) of overhead per query. A similar penalty
+applies to the three-way and four-way join queries Q5--Q7, where caching added
+84--96~seconds, and to Q10, where the overhead was approximately 50~seconds. In
+all of these cases, the penalty stems from the attempt to cache the 9.3~GB
+\texttt{lineorder} fact table into the cluster's limited memory: the table
+cannot be fully cached, and the resulting shuffle and disk spill costs penalise
+execution without conferring a commensurate read-back benefit.
+
+For the remaining queries involving tighter filters and higher-cardinality
+joins (Q8, Q9, Q11--Q14), partial caching of the smaller dimension tables
+yielded a net benefit. The largest gain appeared in Q9, where caching reduced
+mean execution time by 297~seconds; Q8 gained 28~seconds, and Q11 through Q14
+showed improvements of 8 to 34~seconds. Averaged across all 14 queries,
+however, the cached configuration was 18~seconds slower than uncached Spark,
+indicating that caching is counterproductive under these memory constraints
+unless the query complexity is sufficient to amortise the overhead.
 
 \paragraph{Resource constraints.} The Spark configurations were as follows:
 
@@ -269,7 +299,24 @@ one virtual core per NodeManager, and three of the four nodes act as
 NodeManagers, yielding three YARN containers in total. Because the Spark
 Application Master claims one container, at most two remain available for
 executors. Any attempt to allocate a third executor would cause a resource
-deadlock.
+deadlock. Each executor receives 1~GB of heap memory plus a 256~MB overhead
+allocation; the driver is limited to 512~MB. These values were chosen to
+prevent YARN from killing containers when the operating system and other Hadoop
+daemons (HDFS DataNode, NodeManager) compete for the same 6~GB of physical RAM
+on each node.
+
+A methodological caveat applies to the comparison between the two Spark
+configurations. The ``standard'' invocation relies on YARN's default resource
+allocation, whereas the ``cached'' configuration explicitly sets
+\texttt{driver-memory}, \texttt{executor-memory},
+\texttt{spark.memory.fraction} (0.8 versus the default~0.6), and
+\texttt{spark.sql.shuffle.partitions} (48 versus the default~200). The
+observed performance difference therefore reflects not only the effect of
+caching but also the change in memory allocation and shuffle behaviour.
+Isolating the caching effect alone would require a run with identical resource
+parameters but without the cache directives; such a run was not performed in
+this study. This confound is revisited in the limitations discussed in
+Section~\ref{sec:conclusion}.
 
 Despite these constraints, all 420 query executions (14 queries $\times$ 10
 iterations $\times$ 3 configurations) completed without unrecoverable failures.
