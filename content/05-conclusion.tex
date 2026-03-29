@@ -16,8 +16,8 @@ API, incorporating an automated recovery procedure that retries failed
 installations up to three times. Second, the deployment process has been
 documented through three provisioning workflow diagrams and two component-mapping
 tables, providing a reproducible reference for future deployments. Third, the
-framework's applicability was validated through the Star Schema Benchmark (SSB)
-at scale factor~10, as detailed in Section~\ref{sec:use-case}.
+framework's applicability was validated through the Star Schema Benchmark (SSB),
+ as detailed in Section~\ref{sec:use-case}.
 
 The benchmark results partially corroborate the initial hypothesis. Spark
 consistently outperformed Hive across all 14 SSB queries, with mean speed-up
@@ -34,18 +34,15 @@ suggest that, under severe memory constraints, caching is counterproductive
 unless the query complexity is sufficient to amortise the shuffle and spill
 overhead.
 
-The platform remained operationally stable throughout all 420 query executions,
+The platform remained operationally stable throughout all query executions,
 completing every iteration without unrecoverable failures. This confirms that a
 multi-node Hadoop cluster with distributed storage, analytical processing, and
-governance services can be sustained at zero monetary cost on the OCI Free Tier.
-The framework also supports ingestion components (NiFi, Kafka) through the
-Default installation profile, though these were not evaluated in the present
-benchmark.
+governance services can be sustained at zero monetary cost on the OCI Free Tier with limited performance.
 
 \subsection*{Limitations}
 
 Several limitations should be noted. The benchmark was conducted at a single
-scale factor (SF\,=\,10), on a fixed four-node cluster, and without an x86
+scale factor, on a fixed four-node cluster, and without an x86
 baseline for direct architectural comparison. Furthermore, the two Spark
 configurations differ not only in caching behaviour but also in memory
 allocation and shuffle settings (Section~\ref{sec:use-case}), introducing a
@@ -56,9 +53,7 @@ capacity. Additionally, whilst the ODP stack executed on the ARM
 microarchitecture without critical failures, potential behavioural differences
 compared to x86 deployments, particularly regarding JVM optimisations and the
 availability of pre-compiled packages, warrant consideration before adopting
-the platform in production-grade environments. The experiment evaluated only
-the Data Science installation profile; the Default and Software Engineering
-profiles remain unvalidated.
+the platform in production-grade environments.
 
 \subsection*{Future Work}
 
