@@ -11,8 +11,8 @@ different workload types.
 
 The infrastructure runs on Oracle Cloud Infrastructure (OCI), using ARM-based
 Ampere A1 Flex instances available through the OCI Free Tier. The cluster
-consists of four virtual machines---one master node and three worker
-nodes---hosted within a single subnet of an OCI tenancy
+consists of four virtual machines,one master node and three worker
+nodes,hosted within a single subnet of an OCI tenancy
 (Figure~\ref{fig:topology}). Each node is a \texttt{VM.Standard.A1.Flex}
 instance with 1~OCPU (ARMv8) and 6~GB of RAM, yielding a total cluster capacity
 of 4~OCPUs and 24~GB of RAM. The instances run CentOS Stream~9 on the aarch64
@@ -41,8 +41,8 @@ three sequential phases, illustrated in
 Figures~\ref{fig:prov-terraform}--\ref{fig:prov-cluster}.
 
 \paragraph{Phase~1: Terraform provisioning.}
-The user configures a small set of Terraform variables---the permitted IP range
-and the desired installation profile---and executes \texttt{terraform apply}.
+The user configures a small set of Terraform variables,the permitted IP range
+and the desired installation profile,and executes \texttt{terraform apply}.
 Terraform then generates a TLS RSA key pair, provisions the network layer
 (Virtual Cloud Network, subnet, security list, and Internet Gateway), and
 creates the four compute instances. Ansible playbooks and Ambari API interaction
@@ -52,7 +52,7 @@ phase (Figure~\ref{fig:prov-terraform}).
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\linewidth]{content/assets/provisioning-01-terraform.pdf}
-  \caption{Provisioning workflow---Phase~1: Terraform execution sequence.}
+  \caption{Provisioning workflow,Phase~1: Terraform execution sequence.}
   \label{fig:prov-terraform}
 \end{figure}
 
@@ -62,9 +62,9 @@ and Ansible, configures host resolution via \texttt{/etc/hosts} on all nodes,
 and applies baseline OS security rules (Figure~\ref{fig:prov-os}). Ansible is
 installed only on the master, which orchestrates the remaining configuration
 through SSH connections to each worker. The \texttt{site.yml} playbook installs
-prerequisite packages---notably OpenJDK~1.8 as the JVM runtime for all Hadoop
+prerequisite packages,notably OpenJDK~1.8 as the JVM runtime for all Hadoop
 services and chrony for NTP-based clock synchronisation across the
-cluster---initialises the PostgreSQL-backed Ambari database schemas, and deploys
+cluster,initialises the PostgreSQL-backed Ambari database schemas, and deploys
 the Ambari Server on the master and Ambari Agents on all four nodes. At this
 point the cluster is ready to receive the application-level deployment
 orchestrated by Ambari.
@@ -94,14 +94,14 @@ Free Tier network bandwidth.
   \begin{minipage}[t]{0.48\linewidth}
     \centering
     \includegraphics[width=\linewidth]{content/assets/provisioning-02-os.pdf}
-    \caption{Provisioning workflow---Phase~2: OS-level configuration
+    \caption{Provisioning workflow,Phase~2: OS-level configuration
              via cloud-init and Ansible.}
     \label{fig:prov-os}
   \end{minipage}\hfill
   \begin{minipage}[t]{0.48\linewidth}
     \centering
     \includegraphics[width=\linewidth]{content/assets/provisioning-03-cluster.pdf}
-    \caption{Provisioning workflow---Phase~3: Ambari REST API cluster
+    \caption{Provisioning workflow,Phase~3: Ambari REST API cluster
              deployment with automated recovery logic.}
     \label{fig:prov-cluster}
   \end{minipage}
@@ -178,7 +178,7 @@ web-based interface for configuration changes.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\linewidth]{content/assets/datalake-architecture.pdf}
-  \caption{Data Lake architecture---functional layers for the Default Profile.
+  \caption{Data Lake architecture,functional layers for the Default Profile.
            Apache Atlas, shown in the diagram for completeness, was not deployed
            in the current study; its integration is discussed as future work in
            Section~\ref{sec:conclusion}.}
@@ -196,8 +196,8 @@ Ambari-driven deployment phase. This design allows the same IaC codebase to
 serve distinct use cases without duplicating infrastructure definitions.
 
 The \textbf{Default Profile} (Table~\ref{tab:comp-default}) installs the full
-stack across all four layers---ingestion, storage, processing, and
-governance---including NiFi, Kafka, HBase, Spark, Hive, and Ranger. It targets
+stack across all four layers,ingestion, storage, processing, and
+governance,including NiFi, Kafka, HBase, Spark, Hive, and Ranger. It targets
 environments that require end-to-end Data Lake functionality and serves as the
 reference architecture against which the other profiles are derived.
 
@@ -218,7 +218,7 @@ transactional operations.
 
 \begin{table}[htbp]
   \centering
-  \caption{Component mapping---Default Profile.}
+  \caption{Component mapping,Default Profile.}
   \label{tab:comp-default}
   \renewcommand{\arraystretch}{1.2}
   \begin{tabular}{@{} p{0.38\linewidth} p{0.58\linewidth} @{}}
@@ -238,7 +238,7 @@ transactional operations.
 
 \begin{table}[htbp]
   \centering
-  \caption{Component mapping---Data Science Profile.}
+  \caption{Component mapping,Data Science Profile.}
   \label{tab:comp-data-science}
   \renewcommand{\arraystretch}{1.2}
   \begin{tabular}{@{} p{0.38\linewidth} p{0.58\linewidth} @{}}

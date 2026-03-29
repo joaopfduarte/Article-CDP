@@ -57,8 +57,8 @@ of~3 across the three DataNodes.
 
 The relational structure was registered in the Hive Metastore via the Beeline
 CLI, connecting to HiveServer2 on a designated worker node. Five external
-tables---\texttt{lineorder}, \texttt{customer}, \texttt{supplier},
-\texttt{part}, and \texttt{dwdate}---were created using the
+tables,\texttt{lineorder}, \texttt{customer}, \texttt{supplier},
+\texttt{part}, and \texttt{dwdate},were created using the
 \texttt{OpenCSVSerde} deserialiser, with column types matching the SSB
 specification. Because the tables are external, both Hive and Spark share a
 single schema definition backed by the same HDFS data, ensuring that query
@@ -91,7 +91,7 @@ warm-up iterations were discarded.
 Queries were submitted sequentially through resilient shell scripts that wrap
 each invocation in error-handling logic and log wall-clock execution times to a
 CSV file. The scripts were executed under \texttt{nohup} on the master node to
-prevent SSH session timeouts---a practical necessity on free-tier instances whose
+prevent SSH session timeouts,a practical necessity on free-tier instances whose
 network connections are not guaranteed to remain stable over multi-hour runs.
 Query~03 intentionally repeats Query~01 to assess execution-time stability
 across benchmark phases.

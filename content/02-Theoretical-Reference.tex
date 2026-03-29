@@ -15,7 +15,7 @@ storage, and networking resources that consumers assemble into custom applicatio
 stacks \citep{tanenbaum2017distributed}. For data-intensive workloads, this model has
 given rise to two dominant storage paradigms. The \emph{Data Warehouse} enforces a
 \emph{schema-on-write} discipline, requiring data to be cleaned, transformed, and
-modelled before ingestion --- reliable, but rigid and costly to extend. The
+modelled before ingestion , reliable, but rigid and costly to extend. The
 \emph{Data Lake}, in contrast, stores raw data under a \emph{schema-on-read} model,
 offering ingestion flexibility at the risk of poor governance if cataloguing is
 neglected.
@@ -40,7 +40,7 @@ Platform (ODP) packages these components for streamlined cluster deployment, wit
 Apache Ambari providing centralised orchestration and monitoring
 \citep{clemlab_odp_docs_intro_1310}. Oracle Cloud Infrastructure (OCI) documents its
 IaaS offerings through publicly accessible guides \citep{oci_docs}, and its perpetual
-Free Tier includes ARM-based Ampere A1 instances --- an opportunity to assemble a
+Free Tier includes ARM-based Ampere A1 instances , an opportunity to assemble a
 multi-node Hadoop cluster at zero monetary cost that remains largely unexplored in
 the literature.
 
@@ -53,8 +53,8 @@ the discipline of aligning cloud spending with business value
 remains the top cloud challenge for the majority of organisations
 \citep{flexera2025stateofcloud}. These approaches, however, assume a non-zero
 expenditure baseline. The possibility of operating a full Big Data stack within a
-perpetual free-tier allocation---where the cost is strictly zero but the resource
-ceiling is severe---has not been systematically investigated.
+perpetual free-tier allocation,where the cost is strictly zero but the resource
+ceiling is severe,has not been systematically investigated.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Big Data Processing on ARM and Constrained Hardware}
@@ -65,7 +65,7 @@ Reduced Instruction Set Computer (RISC) tradition, exemplified by ARM. ARM proce
 execute simpler instructions at lower energy cost per operation, yielding higher power
 efficiency and lower acquisition cost \citep{hennessy2019computer}. The Hadoop ecosystem,
 however, was historically developed for and tested on x86-64 hardware, creating
-potential compatibility barriers for ARM deployments --- particularly in the
+potential compatibility barriers for ARM deployments , particularly in the
 availability of pre-compiled packages and JVM optimisations \citep{8287751}.
 
 Two empirical studies are directly relevant. \citet{loghin2015performance} benchmarked
@@ -87,8 +87,8 @@ extreme resource constraints of a cloud free tier, where each node is limited to
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Infrastructure as Code for Cluster Provisioning}
 
-Infrastructure as Code (IaC) replaces manual, console-driven server configuration ---
-often termed \emph{ClickOps} --- with codified, version-controlled artefacts that
+Infrastructure as Code (IaC) replaces manual, console-driven server configuration ,
+often termed \emph{ClickOps} , with codified, version-controlled artefacts that
 define the desired state of an environment \citep{morris2016infrastructure}. Two
 properties make IaC particularly attractive for research reproducibility:
 \emph{idempotency}, whereby repeated execution converges to the same infrastructure
@@ -100,8 +100,8 @@ engineering and argues that it mitigates configuration drift, reduces operationa
 and improves pipeline predictability. The analysis, however, remains at the level of
 general principles; it does not report on a specific, end-to-end deployment validated
 through benchmarking. \citet{morris2016infrastructure} provides a comprehensive
-treatment of IaC principles---idempotency, version control, and automated
-testing---but focuses on general server management rather than on the particular
+treatment of IaC principles,idempotency, version control, and automated
+testing,but focuses on general server management rather than on the particular
 challenges of orchestrating a multi-service Hadoop stack. More broadly, the combination
 of Terraform for declarative cloud provisioning with Ansible for procedural application
 configuration is a recognised industry practice, yet its application to deploying a
