@@ -10,9 +10,9 @@ First, the proposed framework automates the end-to-end creation and
 configuration of a Hadoop cluster on the Oracle Cloud Infrastructure (OCI) Free
 Tier, using Terraform for declarative provisioning and Ansible for idempotent
 configuration management. As documented in Section~\ref{sec:arch}, the pipeline
-proceeds through three phases,resource provisioning, OS bootstrapping via
+proceeds through three phases, resource provisioning, OS bootstrapping via
 \texttt{cloud-init}, and cluster deployment through the Ambari REST
-API,incorporating an automated recovery procedure that retries failed
+API, incorporating an automated recovery procedure that retries failed
 installations up to three times. Second, the deployment process has been
 documented through three provisioning workflow diagrams and two component-mapping
 tables, providing a reproducible reference for future deployments. Third, the
@@ -21,7 +21,7 @@ at scale factor~10, as detailed in Section~\ref{sec:use-case}.
 
 The benchmark results partially corroborate the initial hypothesis. Spark
 consistently outperformed Hive across all 14 SSB queries, with mean speed-up
-margins ranging from 282 to 2\,112~seconds per query. The anticipated advantage
+margins ranging from 282 to 2{,}112~seconds per query. The anticipated advantage
 of in-memory caching, however, did not materialise as expected. For simpler
 queries (Q1--Q7, Q10), the caching overhead actually degraded performance by
 50--97~seconds relative to uncached Spark, because the 9.3~GB
@@ -54,8 +54,8 @@ isolated. The hard ceiling of 4~OCPUs and
 24~GB of RAM fundamentally restricts both processing parallelism and caching
 capacity. Additionally, whilst the ODP stack executed on the ARM
 microarchitecture without critical failures, potential behavioural differences
-compared to x86 deployments,particularly regarding JVM optimisations and the
-availability of pre-compiled packages,warrant consideration before adopting
+compared to x86 deployments, particularly regarding JVM optimisations and the
+availability of pre-compiled packages, warrant consideration before adopting
 the platform in production-grade environments. The experiment evaluated only
 the Data Science installation profile; the Default and Software Engineering
 profiles remain unvalidated.
@@ -73,7 +73,4 @@ isolate architectural effects from resource-constraint effects, addressing one
 of the principal limitations of the present study. Horizontal scalability could
 be assessed by federating multiple Free Tier tenancies or by migrating to paid
 ARM instances with higher virtual core allocations, alleviating the executor
-bottleneck identified in this study. Finally, the integration of Apache Atlas
-for automated metadata cataloguing would strengthen the governance layer,
-mitigating the risk of \emph{data-swamp} scenarios discussed in
-Section~\ref{sec:literature}.
+bottleneck identified in this study.

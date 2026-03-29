@@ -12,7 +12,7 @@ with limited budgets.
 
 One avenue for reducing this barrier is the combination of free-tier cloud offerings with
 energy-efficient processor architectures. Oracle Cloud Infrastructure (OCI) provides
-perpetual access to ARM-based Ampere A1 instances at no charge, within defined resource
+ access to ARM-based Ampere A1 instances at no charge, within defined resource
 limits \citep{oci_docs}. Prior work has shown that commodity ARM64 servers can sustain Big
 Data workloads at a fraction of the energy and acquisition cost of x86 hardware
 \citep{8287751, loghin2015performance}, and FinOps practices formalise the discipline of
@@ -54,9 +54,9 @@ The principal contributions are:
     multi-node Hadoop Data Lake on the OCI Free Tier, supporting multiple installation
     profiles tailored to different workload types.
     \item Empirical evidence that Apache Spark consistently outperforms Apache Hive on
-    ARM-constrained clusters, with mean performance margins of 282 to 2\,112~seconds
+    ARM-constrained clusters, with mean performance margins of 282 to 2{,}112~seconds
     per query in SSB workloads at scale factor~10.
-    \item A documented analysis of in-memory caching under severe resource constraints,
+    \item A documented analysis of in-memory caching under resource constraints,
     showing that caching is counterproductive for simpler queries when the largest fact
     table cannot be fully cached, and yields net gains only for complex multi-join
     workloads.

@@ -57,8 +57,8 @@ of~3 across the three DataNodes.
 
 The relational structure was registered in the Hive Metastore via the Beeline
 CLI, connecting to HiveServer2 on a designated worker node. Five external
-tables,\texttt{lineorder}, \texttt{customer}, \texttt{supplier},
-\texttt{part}, and \texttt{dwdate},were created using the
+tables, \texttt{lineorder}, \texttt{customer}, \texttt{supplier},
+\texttt{part}, and \texttt{dwdate}, were created using the
 \texttt{OpenCSVSerde} deserialiser, with column types matching the SSB
 specification. Because the tables are external, both Hive and Spark share a
 single schema definition backed by the same HDFS data, ensuring that query
@@ -75,7 +75,7 @@ full SSB query catalogue of 14 analytical queries (Listing~\ref{lst:ssb-queries}
     to HDFS, operating within its native MapReduce-like execution model. This
     configuration tolerates severe memory limitations at the cost of processing
     speed.
-    \item \textbf{Spark (cold, no caching):} Spark reads data directly from
+    \item \textbf{Spark (no caching):} Spark reads data directly from
     HDFS without retaining any table in memory. This provides a baseline for
     Spark's performance under the same storage back-end as Hive.
     \item \textbf{Spark with caching:} Prior to querying, all SSB tables are
@@ -88,10 +88,10 @@ Each query was executed 10 times per configuration, yielding 420 individual
 query runs in total (14 queries $\times$ 10 iterations $\times$ 3
 configurations). All 10 iterations are included in the reported statistics; no
 warm-up iterations were discarded.
-Queries were submitted sequentially through resilient shell scripts that wrap
-each invocation in error-handling logic and log wall-clock execution times to a
-CSV file. The scripts were executed under \texttt{nohup} on the master node to
-prevent SSH session timeouts,a practical necessity on free-tier instances whose
+Queries were submitted sequentially through shell scripts that wrap
+each invocation and log wall-clock execution times to a
+log file. The scripts were executed under \texttt{nohup} on the master node to
+prevent SSH session timeouts, a practical necessity on free-tier instances whose
 network connections are not guaranteed to remain stable over multi-hour runs.
 Query~03 intentionally repeats Query~01 to assess execution-time stability
 across benchmark phases.
@@ -181,34 +181,34 @@ query--configuration pair; no outliers were removed.
     Q2  &  561.1\,(\pm 23.0) & 203.0\,\phantom{0}(\pm 9.7) & 298.7\,(\pm 11.7) \\
     Q3  &  518.8\,(\pm 21.9) & 213.0\,\phantom{0}(\pm 7.9) & 299.4\,(\pm 14.1) \\
     Q4  &  557.0\,(\pm 42.8) & 204.9\,(\pm 12.4) & 295.3\,(\pm 11.7) \\
-    Q5  & 1120.2\,(\pm 44.0) & 257.8\,\phantom{0}(\pm 6.1) & 354.2\,(\pm 14.4) \\
-    Q6  & 1519.3\,(\pm 65.3) & 238.2\,(\pm 10.8) & 334.0\,(\pm 20.6) \\
+    Q5  & 1{,}120.2\,(\pm 44.0) & 257.8\,\phantom{0}(\pm 6.1) & 354.2\,(\pm 14.4) \\
+    Q6  & 1{,}519.3\,(\pm 65.3) & 238.2\,(\pm 10.8) & 334.0\,(\pm 20.6) \\
     Q7  &  959.4\,(\pm 59.9) & 252.5\,(\pm 13.1) & 336.2\,(\pm 22.9) \\
-    Q8  & 1175.1\,(\pm 62.2) & 318.3\,(\pm 20.3) & 290.0\,\phantom{0}(\pm 9.2) \\
-    Q9  & 1871.5\,(\pm 87.3) & 574.8\,(\pm 27.5) & 277.7\,(\pm 14.4) \\
-    Q10 & 1785.5\,(\pm 77.8) & 288.2\,(\pm 17.1) & 338.1\,(\pm 15.2) \\
+    Q8  & 1{,}175.1\,(\pm 62.2) & 318.3\,(\pm 20.3) & 290.0\,\phantom{0}(\pm 9.2) \\
+    Q9  & 1{,}871.5\,(\pm 87.3) & 574.8\,(\pm 27.5) & 277.7\,(\pm 14.4) \\
+    Q10 & 1{,}785.5\,(\pm 77.8) & 288.2\,(\pm 17.1) & 338.1\,(\pm 15.2) \\
     Q11 &  884.4\,(\pm 26.7) & 278.3\,(\pm 16.7) & 268.0\,(\pm 14.8) \\
-    Q12 & 2459.1\,(\pm 77.9) & 347.2\,(\pm 21.1) & 339.4\,(\pm 14.6) \\
-    Q13 & 1326.0\,(\pm 75.7) & 279.0\,(\pm 10.3) & 258.2\,(\pm 12.1) \\
+    Q12 & 2{,}459.1\,(\pm 77.9) & 347.2\,(\pm 21.1) & 339.4\,(\pm 14.6) \\
+    Q13 & 1{,}326.0\,(\pm 75.7) & 279.0\,(\pm 10.3) & 258.2\,(\pm 12.1) \\
     Q14 &  881.0\,(\pm 45.1) & 288.1\,\phantom{0}(\pm 6.2) & 253.8\,(\pm 16.5) \\
     \hline
   \end{tabular}
 \end{table}
 
 \paragraph{Hive versus Spark.} Across all 14 queries, Spark outperformed Hive
-by a mean margin of 868~seconds, with per-query differences ranging from
-282~seconds (Q1) to 2\,112~seconds (Q12). The SSB query catalogue is
+by a mean margin of 1{,}197~seconds, with per-query differences ranging from
+282~seconds (Q1) to 2{,}112~seconds (Q12). The SSB query catalogue is
 structured into four groups of increasing join complexity. The first group
 (Q1--Q4) performs single-join aggregations over \texttt{lineorder} and
 \texttt{dwdate}; Hive averages 545~seconds per query whereas Spark averages
 220~seconds, a roughly 2.5$\times$ speed-up. The second group (Q5--Q7) adds
 three-way and four-way joins involving \texttt{part} and \texttt{supplier},
-and the gap widens: Hive averages 1\,200~seconds against Spark's
+and the gap widens: Hive averages 1{,}200~seconds against Spark's
 249~seconds. The third group (Q8--Q11) joins \texttt{customer} and
 \texttt{supplier} dimensions with progressively tighter filters; Hive
-averages 1\,429~seconds while Spark averages 365~seconds. The fourth group
+averages 1{,}429~seconds while Spark averages 365~seconds. The fourth group
 (Q12--Q14) computes profit metrics over four-way joins and contains the
-widest absolute gap, with Hive averaging 1\,555~seconds versus Spark's
+widest absolute gap, with Hive averaging 1{,}555~seconds versus Spark's
 305~seconds. All differences are consistent across the 10 iterations, as
 indicated by the relatively low standard deviations.
 

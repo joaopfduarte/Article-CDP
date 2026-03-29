@@ -5,10 +5,10 @@ framework that automates the deployment of a Hadoop-based Data Lake on Oracle
 Cloud Infrastructure Free Tier ARM instances. Using Terraform and Ansible, the
 framework provisions a four-node ARM cluster and installs the OpenSource Data
 Platform stack via Apache Ambari, supporting multiple installation profiles. The
-Star Schema Benchmark (SF\,=\,10) was executed under three
-configurations,Hive, Spark, and Spark with caching,to evaluate query
+Star Schema Benchmark (SSB) was executed under three
+configurations, Hive, Spark, and Spark with caching, to evaluate query
 performance on constrained hardware. Spark outperformed Hive by mean margins of
-282 to 2\,112~seconds per query. In-memory caching degraded performance for
+282 to 2{,}112~seconds per query. In-memory caching degraded performance for
 simpler queries owing to insufficient memory for the largest fact table, and
 yielded improvements only for complex multi-join workloads. These results confirm
 the viability of zero-cost, reproducible distributed analytics for research and
