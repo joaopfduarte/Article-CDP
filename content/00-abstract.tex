@@ -1,5 +1,20 @@
 \begin{abstract}
-The high cost of proprietary Big Data infrastructure and software licenses presents a significant barrier to entry for academic research and small organizations. This paper presents a cost-effective, open-source Data Lake solution deployed on the Oracle Cloud Infrastructure (OCI) Free Tier. The methodology leverages an architecture of ARM compute instances, orchestrated by Apache Ambari within the Open Source Data Platform (ODP) stack. The proposed architecture establishes a complete data pipeline, enabling data ingestion via Apache NiFi and Kafka, distributed storage with HDFS, and processing using Apache Spark and Hive. Performance evaluations demonstrate that the OCI Free Tier provides sufficient resources to support a functional, multi-node Hadoop cluster capable of handling moderate workloads. The results validate the viability of this model as a reproducible, low-cost platform for democratizing access to Big Data technologies in educational and research environments. \bnote{Garantir que o abstract reflita quantitativamente os resultados de performance do capítulo 5 antes da submissão.}
+The high cost of proprietary Big Data infrastructure and software licenses presents a significant 
+barrier to entry for academic research and small organisations. This paper proposes a cost-effective, 
+open-source Data Lake solution deployed entirely on the Oracle Cloud Infrastructure (OCI) Free Tier. 
+The methodology leverages a cluster of ARM compute instances, autonomously orchestrated by Apache 
+Ambari within the Open Source Data Platform (ODP) ecosystem. The proposed architecture establishes a 
+comprehensive data pipeline, integrating ingestion via Apache NiFi and Kafka, distributed storage 
+with HDFS, and computational analysis using Apache Spark and Hive. To validate the 
+viability and resilience of the provisioned environment, stress-testing was conducted 
+utilising the Star Schema Benchmark (SSB) catalog. Analytical evaluations compared traditional 
+disk-bound batch processing in Hive against distributed execution in Spark. Performance metrics 
+revealed that, despite severe infrastructural constraints, the Spark engine consistently yielded 
+a performance edge, frequently outperforming Hive operations by margins exceeding 200 
+seconds per query. The empirical results validate the feasibility of this constraint-driven, 
+Infrastructure-as-Code (IaC) model as a fully reproducible and functional multi-node distributed 
+system, democratising access to Big Data technologies for research and educational 
+purposes.
 \end{abstract}
 
 \KEYWORD{Big Data; Data Lake; Apache Ambari; Cost-effective Computing; Hadoop Cluster; Free Tier; Infrastructure as Code; Cloud Computing; ARM Architecture; Data Governance; Distributed Systems.}

@@ -171,6 +171,10 @@ spark-sql --master yarn   --num-executors 2   --executor-cores 1   --driver-memo
 
 It is critical to note that the restriction to two executors (\texttt{--num-executors 2}) is dictated by a strict physical CPU constraint established within the YARN configuration, rather than mere memory limitations. With four nodes provisioned, only three act as NodeManagers capable of running YARN containers. As the blueprint configures exactly one virtual core (\texttt{vCore}) per node, the cluster is capped at three concurrent containers. Given that the Spark Application Master inherently reserves one container, a maximum of two containers remain available for Spark executors. Any attempt to allocate three or more executors would result in a resource deadlock.
 
-As a concluding remark on this test case, despite the severe hardware constraints, Spark demonstrated a flexible capability to consume available RAM effectively whilst falling back to disk allocations when necessary. However, owing to the strict infrastructural limits---primarily preventing the complete caching of the fact table---it is evident that the benchmark's performance could be substantially improved by provisioning greater RAM resources to the Spark engine.
+As a concluding remark on this test case, despite the severe hardware constraints, 
+Spark demonstrated a flexible capability to consume available RAM effectively whilst falling back 
+to disk allocations when necessary. However, owing to the strict infrastructural limits, primarily 
+preventing the complete caching of the fact table, it is evident that the benchmark's performance 
+could be substantially improved by provisioning greater RAM resources to the Spark engine.
 
 % Placeholder for results tables, charts, and discussion.
