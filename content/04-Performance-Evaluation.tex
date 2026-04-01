@@ -43,13 +43,9 @@ of~3 across the three DataNodes.
     \textbf{File} & \textbf{Size} \\
     \hline
     lineorder.csv & 9.3 GB \\
-    \hline
     customer.csv  & 3.3 GB \\
-    \hline
     supplier.csv  & 211.7 MB \\
-    \hline
     part.csv      & 176.7 MB \\
-    \hline
     dwdate.csv    & 272.4 KB \\
     \hline
   \end{tabular}
@@ -93,53 +89,53 @@ each invocation and log wall-clock execution times to a
 log file. The scripts were executed under \texttt{nohup} on the master node to
 prevent SSH session timeouts, a practical necessity on free-tier instances whose
 network connections are not guaranteed to remain stable over multi-hour runs.
-Query~03 intentionally repeats Query~01 to assess execution-time stability
+Q1.2b intentionally repeats Q1.2a to assess execution-time stability
 across benchmark phases.
 
 The star schema and the 14 analytical queries are shown in
 Figure~\ref{fig:ssb-schema} and Listing~\ref{lst:ssb-queries}, respectively.
 
 \begin{lstlisting}[language=SQL, caption={SSB benchmark analytical queries.}, label={lst:ssb-queries}, frame=single, basicstyle=\ttfamily\scriptsize]
--- Query 01
+-- Q1.2a
 SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_yearmonthnum = 199401 AND lo_discount between 4 and 6 AND lo_quantity between 26 and 35;
 
--- Query 02
+-- Q1.1
 SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_year = 1993 AND lo_discount between 1 and 3 AND lo_quantity < 25;
 
--- Query 03 (intentional repeat of Query 01)
+-- Q1.2b (intentional repeat of Q1.2a)
 SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_yearmonthnum = 199401 AND lo_discount between 4 and 6 AND lo_quantity between 26 and 35;
 
--- Query 04
+-- Q1.3
 SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_weeknuminyear = 6 AND d_year = 1994 AND lo_discount between 5 and 7 AND lo_quantity between 26 and 35;
 
--- Query 05
+-- Q2.1
 SELECT sum(lo_revenue), d_year, p_brand FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.part ON lo_partkey = p_partkey JOIN ssb.supplier ON lo_suppkey = s_suppkey WHERE p_category LIKE '%MFGR#12%' AND s_region LIKE '%AMERICA%' GROUP BY d_year, p_brand ORDER BY d_year, p_brand;
 
--- Query 06
+-- Q2.2
 SELECT sum(lo_revenue), d_year, p_brand FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.part ON lo_partkey = p_partkey JOIN ssb.supplier ON lo_suppkey = s_suppkey WHERE p_brand between 'MFGR#2221' and 'MFGR#2228' AND s_region LIKE '%ASIA%' GROUP BY d_year, p_brand ORDER BY d_year, p_brand;
 
--- Query 07
+-- Q2.3
 SELECT sum(lo_revenue), d_year, p_brand FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.part ON lo_partkey = p_partkey JOIN ssb.supplier ON lo_suppkey = s_suppkey WHERE p_brand LIKE '%MFGR#2221%' AND s_region LIKE '%EUROPE%' GROUP BY d_year, p_brand ORDER BY d_year, p_brand;
 
--- Query 08
+-- Q3.1
 SELECT c_nation, s_nation, d_year, sum(lo_revenue) as revenue FROM ssb.lineorder JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE c_region LIKE '%ASIA%' AND s_region LIKE '%ASIA%' AND d_year >= 1992 AND d_year <= 1997 GROUP BY c_nation, s_nation, d_year ORDER BY d_year asc, revenue desc;
 
--- Query 09
+-- Q3.2
 SELECT c_city, s_city, d_year, sum(lo_revenue) as revenue FROM ssb.lineorder JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE c_nation LIKE '%UNITED STATES%' AND s_nation LIKE '%UNITED STATES%' AND d_year >= 1992 AND d_year <= 1997 GROUP BY c_city, s_city, d_year ORDER BY d_year asc, revenue desc;
 
--- Query 10
+-- Q3.3
 SELECT c_city, s_city, d_year, sum(lo_revenue) as revenue FROM ssb.lineorder JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE (c_city LIKE '%UNITED KI1%' or c_city LIKE '%UNITED KI5%') AND (s_city LIKE '%UNITED KI1%' or s_city LIKE '%UNITED KI5%') AND d_year >= 1992 AND d_year <= 1997 GROUP BY c_city, s_city, d_year ORDER BY d_year asc, revenue desc;
 
--- Query 11
+-- Q3.4
 SELECT c_city, s_city, d_year, sum(lo_revenue) as revenue FROM ssb.lineorder JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE (c_city LIKE '%UNITED KI1%' or c_city LIKE '%UNITED KI5%') AND (s_city LIKE '%UNITED KI1%' or s_city LIKE '%UNITED KI5%') AND d_yearmonth LIKE '%Dec1997%' GROUP BY c_city, s_city, d_year ORDER BY d_year asc, revenue desc;
 
--- Query 12
+-- Q4.1
 SELECT d_year, c_nation, sum(lo_revenue - lo_supplycost) as profit FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.part ON lo_partkey = p_partkey WHERE c_region LIKE '%AMERICA%' AND s_region LIKE '%AMERICA%' AND (p_mfgr LIKE '%MFGR#1%' or p_mfgr LIKE '%MFGR#2%') GROUP BY d_year, c_nation ORDER BY d_year, c_nation;
 
--- Query 13
+-- Q4.2
 SELECT d_year, s_nation, p_category, sum(lo_revenue - lo_supplycost) as profit FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.part ON lo_partkey = p_partkey WHERE c_region LIKE '%AMERICA%' AND s_region LIKE '%AMERICA%' AND (d_year = 1997 or d_year = 1998) AND (p_mfgr LIKE '%MFGR#1%' or p_mfgr LIKE '%MFGR#2%') GROUP BY d_year, s_nation, p_category ORDER BY d_year, s_nation, p_category;
 
--- Query 14
+-- Q4.3
 SELECT d_year, s_city, p_brand, sum(lo_revenue - lo_supplycost) as profit FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey JOIN ssb.customer ON lo_custkey = c_custkey JOIN ssb.supplier ON lo_suppkey = s_suppkey JOIN ssb.part ON lo_partkey = p_partkey WHERE c_region LIKE '%AMERICA%' AND s_nation LIKE '%UNITED STATES%' AND (d_year = 1997 or d_year = 1998) AND p_category LIKE '%MFGR#14%' GROUP BY d_year, s_city, p_brand ORDER BY d_year, s_city, p_brand;
 \end{lstlisting}
 
@@ -154,7 +150,7 @@ SELECT d_year, s_city, p_brand, sum(lo_revenue - lo_supplycost) as profit FROM s
     
     \vspace{2em}
     
-    \includegraphics[width=0.85\linewidth]{content/assets/graphic.pdf}
+    \includegraphics[width=1.0\linewidth]{content/assets/graphic.pdf}
     \caption{Query execution time comparison: Hive vs.\ Spark vs.\ Spark
              with caching.}
     \label{fig:query-execution-time-comparison}
@@ -177,56 +173,56 @@ query--configuration pair; no outliers were removed.
     \hline
     \textbf{Query} & \textbf{Hive} & \textbf{Spark} & \textbf{Spark+Cache} \\
     \hline
-    Q1  &  541.5\,(\pm 14.9) & 259.9\,(\pm 11.1) & 311.0\,(\pm 11.9) \\
-    Q2  &  561.1\,(\pm 23.0) & 203.0\,\phantom{0}(\pm 9.7) & 298.7\,(\pm 11.7) \\
-    Q3  &  518.8\,(\pm 21.9) & 213.0\,\phantom{0}(\pm 7.9) & 299.4\,(\pm 14.1) \\
-    Q4  &  557.0\,(\pm 42.8) & 204.9\,(\pm 12.4) & 295.3\,(\pm 11.7) \\
-    Q5  & 1{,}120.2\,(\pm 44.0) & 257.8\,\phantom{0}(\pm 6.1) & 354.2\,(\pm 14.4) \\
-    Q6  & 1{,}519.3\,(\pm 65.3) & 238.2\,(\pm 10.8) & 334.0\,(\pm 20.6) \\
-    Q7  &  959.4\,(\pm 59.9) & 252.5\,(\pm 13.1) & 336.2\,(\pm 22.9) \\
-    Q8  & 1{,}175.1\,(\pm 62.2) & 318.3\,(\pm 20.3) & 290.0\,\phantom{0}(\pm 9.2) \\
-    Q9  & 1{,}871.5\,(\pm 87.3) & 574.8\,(\pm 27.5) & 277.7\,(\pm 14.4) \\
-    Q10 & 1{,}785.5\,(\pm 77.8) & 288.2\,(\pm 17.1) & 338.1\,(\pm 15.2) \\
-    Q11 &  884.4\,(\pm 26.7) & 278.3\,(\pm 16.7) & 268.0\,(\pm 14.8) \\
-    Q12 & 2{,}459.1\,(\pm 77.9) & 347.2\,(\pm 21.1) & 339.4\,(\pm 14.6) \\
-    Q13 & 1{,}326.0\,(\pm 75.7) & 279.0\,(\pm 10.3) & 258.2\,(\pm 12.1) \\
-    Q14 &  881.0\,(\pm 45.1) & 288.1\,\phantom{0}(\pm 6.2) & 253.8\,(\pm 16.5) \\
+    Q1.2a &  541.5\,\pm 14.9 & 259.9\,\pm 11.1 & 311.0\,\pm 11.9 \\
+    Q1.1  &  561.1\,\pm 23.0 & 203.0\,\phantom{0}\pm 9.7 & 298.7\,\pm 11.7 \\
+    Q1.2b &  518.8\,\pm 21.9 & 213.0\,\phantom{0}\pm 7.9 & 299.4\,\pm 14.1 \\
+    Q1.3  &  557.0\,\pm 42.8 & 204.9\,\pm 12.4 & 295.3\,\pm 11.7 \\
+    Q2.1  & 1{,}120.2\,\pm 44.0 & 257.8\,\phantom{0}\pm 6.1 & 354.2\,\pm 14.4 \\
+    Q2.2  & 1{,}519.3\,\pm 65.3 & 238.2\,\pm 10.8 & 334.0\,\pm 20.6 \\
+    Q2.3  &  959.4\,\pm 59.9 & 252.5\,\pm 13.1 & 336.2\,\pm 22.9 \\
+    Q3.1  & 1{,}175.1\,\pm 62.2 & 318.3\,\pm 20.3 & 290.0\,\phantom{0}\pm 9.2 \\
+    Q3.2  & 1{,}871.5\,\pm 87.3 & 574.8\,\pm 27.5 & 277.7\,\pm 14.4 \\
+    Q3.3  & 1{,}785.5\,\pm 77.8 & 288.2\,\pm 17.1 & 338.1\,\pm 15.2 \\
+    Q3.4  &  884.4\,\pm 26.7 & 278.3\,\pm 16.7 & 268.0\,\pm 14.8 \\
+    Q4.1  & 2{,}459.1\,\pm 77.9 & 347.2\,\pm 21.1 & 339.4\,\pm 14.6 \\
+    Q4.2  & 1{,}326.0\,\pm 75.7 & 279.0\,\pm 10.3 & 258.2\,\pm 12.1 \\
+    Q4.3  &  881.0\,\pm 45.1 & 288.1\,\phantom{0}\pm 6.2 & 253.8\,\pm 16.5 \\
     \hline
   \end{tabular}
 \end{table}
 
 \paragraph{Hive versus Spark.} Across all 14 queries, Spark outperformed Hive
 by a mean margin of 868~seconds, with per-query differences ranging from
-282~seconds (Q1) to 2{,}112~seconds (Q12). The SSB query catalogue is
+282~seconds (Q1.2a) to 2{,}112~seconds (Q4.1). The SSB query catalogue is
 structured into four groups of increasing join complexity. The first group
-(Q1--Q4) performs single-join aggregations over \texttt{lineorder} and
+(Q1.1, Q1.2a, Q1.2b, Q1.3) performs single-join aggregations over \texttt{lineorder} and
 \texttt{dwdate}; Hive averages 545~seconds per query whereas Spark averages
-220~seconds, a roughly 2.5$\times$ speed-up. The second group (Q5--Q7) adds
+220~seconds, a roughly 2.5$\times$ speed-up. The second group (Q2.1--Q2.3) adds
 three-way and four-way joins involving \texttt{part} and \texttt{supplier},
 and the gap widens: Hive averages 1{,}200~seconds against Spark's
-249~seconds. The third group (Q8--Q11) joins \texttt{customer} and
+249~seconds. The third group (Q3.1--Q3.4) joins \texttt{customer} and
 \texttt{supplier} dimensions with progressively tighter filters; Hive
 averages 1{,}429~seconds while Spark averages 365~seconds. The fourth group
-(Q12--Q14) computes profit metrics over four-way joins and contains the
+(Q4.1--Q4.3) computes profit metrics over four-way joins and contains the
 widest absolute gap, with Hive averaging 1{,}555~seconds versus Spark's
 305~seconds. All differences are consistent across the 10 iterations, as
 indicated by the relatively low standard deviations.
 
 \paragraph{Spark versus Spark with caching.} The comparison between the two
 Spark configurations is less straightforward. For the simpler two-join queries
-(Q1--Q4), the cached configuration was consistently slower, adding between
-51~seconds (Q1) and 96~seconds (Q2) of overhead per query. A similar penalty
-applies to the three-way and four-way join queries Q5--Q7, where caching added
-84--96~seconds, and to Q10, where the overhead was approximately 50~seconds. In
+(Q1.1, Q1.2a, Q1.2b, Q1.3), the cached configuration was consistently slower, adding between
+51~seconds (Q1.2a) and 96~seconds (Q1.1) of overhead per query. A similar penalty
+applies to the three-way and four-way join queries Q2.1--Q2.3, where caching added
+84--96~seconds, and to Q3.3, where the overhead was approximately 50~seconds. In
 all of these cases, the penalty stems from the attempt to cache the 9.3~GB
 \texttt{lineorder} fact table into the cluster's limited memory: the table
 cannot be fully cached, and the resulting shuffle and disk spill costs penalise
 execution without conferring a commensurate read-back benefit.
 
 For the remaining queries involving tighter filters and higher-cardinality
-joins (Q8, Q9, Q11--Q14), partial caching of the smaller dimension tables
-yielded a net benefit. The largest gain appeared in Q9, where caching reduced
-mean execution time by 297~seconds; Q8 gained 28~seconds, and Q11 through Q14
+joins (Q3.1, Q3.2, Q3.4--Q4.3), partial caching of the smaller dimension tables
+yielded a net benefit. The largest gain appeared in Q3.2, where caching reduced
+mean execution time by 297~seconds; Q3.1 gained 28~seconds, and Q3.4 through Q4.3
 showed improvements of 8 to 34~seconds. Averaged across all 14 queries,
 however, the cached configuration was 18~seconds slower than uncached Spark,
 indicating that caching is counterproductive under these memory constraints

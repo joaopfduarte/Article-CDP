@@ -23,11 +23,11 @@ The benchmark results partially corroborate the initial hypothesis. Spark
 consistently outperformed Hive across all 14 SSB queries, with mean speed-up
 margins ranging from 282 to 2{,}112~seconds per query. The anticipated advantage
 of in-memory caching, however, did not materialise as expected. For simpler
-queries (Q1--Q7, Q10), the caching overhead actually degraded performance by
+queries (Q1.1, Q1.2a, Q1.2b, Q1.3, Q2.1--Q2.3, Q3.3), the caching overhead actually degraded performance by
 50--97~seconds relative to uncached Spark, because the 9.3~GB
 \texttt{lineorder} fact table could not be fully cached into the cluster's
-limited memory. Only the more complex multi-join queries (Q8, Q9, Q11--Q14)
-benefited from partial caching of the smaller dimension tables, with Q9 showing
+limited memory. Only the more complex multi-join queries (Q3.1, Q3.2, Q3.4--Q4.3)
+benefited from partial caching of the smaller dimension tables, with Q3.2 showing
 the largest improvement at 297~seconds. On average across all queries, the
 cached configuration was 18~seconds slower than uncached Spark. These findings
 suggest that, under severe memory constraints, caching is counterproductive

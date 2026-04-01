@@ -7,12 +7,12 @@ framework provisions a four-node ARM cluster and installs the OpenSource Data
 Platform stack via Apache Ambari, supporting multiple installation profiles. The
 Star Schema Benchmark (SSB) was executed under three
 configurations, Hive, Spark, and Spark with caching, to evaluate query
-performance on constrained hardware. Spark outperformed Hive by mean margins of
-282 to 2{,}112~seconds per query. In-memory caching degraded performance for
+performance on constrained hardware. Spark outperformed Hive, reducing mean query
+execution times by 52\% to 86\%. In-memory caching degraded performance for
 simpler queries owing to insufficient memory for the largest fact table, and
 yielded improvements only for complex multi-join workloads. These results confirm
 the viability of zero-cost, reproducible distributed analytics for research and
 education.
 \end{abstract}
 
-\KEYWORD{Big Data, Data Lake, Infrastructure as Code, Apache Hadoop, Apache Spark, Cloud Computing, ARM Architecture, Distributed Systems, Star Schema Benchmark, Cost Optimisation, Free Tier, Oracle Cloud Infrastructure, Apache Ambari, Reproducibility.}
+\KEYWORD{Big Data, Data Lake, Infrastructure as Code, Apache Hadoop, Apache Spark, Cloud Computing, ARM Architecture, Distributed Systems, Star Schema Benchmark, Cost Optimisation, Free Tier, Oracle Cloud Infrastructure, Apache Ambari, Data Governance.}
