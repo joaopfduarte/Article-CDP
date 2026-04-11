@@ -1,0 +1,14 @@
+\frametitle{Par\^ametros Spark (extrato)}
+\begin{lstlisting}[language=bash, gobble=0]
+-- Spark padrao (resumo)
+spark-sql --master yarn
+
+-- Spark com cache (exemplo de linha de comando)
+spark-sql --master yarn --num-executors 2 --executor-cores 1
+  --driver-memory 512m --executor-memory 1g
+  --conf spark.executor.memoryOverhead=256m
+  --conf spark.memory.fraction=0.8
+  --conf spark.sql.shuffle.partitions=48
+  \end{lstlisting}
+  \vspace{0.25em}
+  {\scriptsize\color{cefetMuted}Dois executores: limite duro de CPU/containers no blueprint (1 vCPU por NodeManager; AM ocupa um contentor).}

@@ -1,0 +1,20 @@
+% Limitações e mensagem final
+
+\begin{frame}{Limita\c{c}\~oes}
+  \begin{itemize}
+    \item Um \textbf{\'unico fator de escala} (SSB SF\,=\,10) e \textbf{topologia fixa} de 4 n\'os; sem \textbf{baseline x86} para isolar efeito da ISA.
+    \item Spark ``padr\~ao'' vs.\ Spark+cache difere tamb\'em em \textbf{mem\'oria}, \textbf{fra\c{c}\~ao de mem\'oria Spark} e \textbf{parti\c{c}\~oes de shuffle} --- n\~ao \'e poss\'ivel atribuir o efeito s\'o ao cache.
+    \item Teto de \textbf{4 OCPU / 24~GB} limita paralelismo e capacidade de cache; JVM/pacotes \textbf{ARM} podem comportar-se distinto de deployments x86 em produ\c{c}\~ao.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{O que ficou demonstrado}
+  \begin{itemize}
+    \item \textbf{420 execu\c{c}\~oes} conclu\'idas sem falhas irrecuper\'aveis --- plataforma \textbf{est\'avel} sob stress prolongado no Free Tier.
+    \item \textbf{Viabilidade pr\'atica} de anal\'itica distribu\'ida reprodut\'ivel com \textbf{custo monet\'ario nulo} de inst\^ancias, aceitando tempos mais longos e tuning cuidadoso.
+  \end{itemize}
+  \vspace{0.5em}
+  \begin{cefetblock}{Mensagem central}
+    Spark continua prefer\'ivel a Hive neste limite extremo de recursos; \textbf{estrat\'egias de cache} validadas em clusters maiores exigem \textbf{reavalia\c{c}\~ao} quando o fato principal n\~ao cabe na RAM agregada.
+  \end{cefetblock}
+\end{frame}

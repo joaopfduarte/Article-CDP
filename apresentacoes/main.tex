@@ -1,0 +1,60 @@
+% Slides --- artigo (IaC + Data Lake no OCI Free Tier); compilar com CWD = esta pasta
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{cefetmg}
+\graphicspath{{../content/assets/}}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=cefetPrimary!80!black,
+  urlcolor=cefetAccent,
+  citecolor=cefetAccent,
+  pdftitle={Apresentacao - Data Lake Hadoop no OCI Free Tier (IaC)},
+  pdfauthor={Joao Pedro Ferreira Duarte}
+}
+
+\title[Data Lake IaC no OCI Free Tier]{An Infrastructure-as-Code Framework for Deploying Hadoop Data Lakes on Free-Tier ARM Cloud Instances}
+\author[JP Duarte]{Jo\~ao Pedro Ferreira Duarte}
+\institute[Cefet Data Platform]{%
+  Infraestrutura como c\'odigo, ARM na Oracle Cloud (Free Tier) e avalia\c{c}\~ao com Star Schema Benchmark.\\[0.35em]
+  {\mdseries Campus Tim\'oteo --- Engenharia de Computa\c{c}\~ao (CEFET-MG)}%
+}
+\date{2026}
+
+\institutionhead{%
+  Centro Federal de Educa\c{c}\~ao Tecnol\'ogica de Minas Gerais\\[0.15em]
+  {\mdseries Campus Tim\'oteo}\\[0.1em]
+  {\mdseries Gradua\c{c}\~ao em Engenharia de Computa\c{c}\~ao}%
+}
+\orientadorlinha{Evandrino Gomes Barros}
+
+\AtBeginSection[]{\cefetSectionFrame}
+
+\begin{document}
+
+\begin{frame}[plain,noframenumbering]
+  \titlepage
+\end{frame}
+
+\begin{frame}{Sum\'ario}
+  \tableofcontents
+\end{frame}
+
+\section{Contexto e contribui\c{c}\~oes}
+\input{sections/10-contexto}
+
+\section{Arquitetura e implanta\c{c}\~ao}
+\input{sections/20-arquitetura}
+
+\section{Avalia\c{c}\~ao experimental}
+\input{sections/30-testes-protocolo}
+
+\section{Resultados}
+\input{sections/40-resultados}
+
+\section{Limita\c{c}\~oes e encerramento}
+\input{sections/50-limitacoes-fecho}
+
+\cefetThanksFrame
+
+\end{document}

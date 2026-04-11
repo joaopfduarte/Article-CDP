@@ -1,0 +1,68 @@
+% Arquitetura e implantação
+
+\begin{frame}[shrink=5]{Topologia na OCI (4 n\'os ARM)}
+  \begin{itemize}
+    \item Um \textbf{mestre} e tr\^es \textbf{workers}; \texttt{VM.Standard.A1.Flex}: \textbf{1 OCPU + 6~GB RAM}/n\'o (4 OCPU / 24~GB agregados).
+    \item CentOS Stream~9 \textbf{aarch64}; volumes para HDFS/logs.
+    \item \textbf{Security list}: portas \`a Internet restritas ao necess\'ario (Ambari, Hive JDBC, Spark History, \ldots).
+  \end{itemize}
+  \vspace{0.2em}
+  \begin{center}
+    \includegraphics[width=0.88\linewidth,height=0.42\textheight,keepaspectratio]{topology.pdf}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Pipeline automatizado: fase 1 (Terraform)}
+  \begin{itemize}
+    \item Vari\'aveis: IPs permitidos, perfil; \texttt{terraform apply}.
+    \item Rede + 4 inst\^ancias; envia Ansible e scripts Ambari ao mestre.
+  \end{itemize}
+  \vspace{0.2em}
+  \begin{center}
+    \includegraphics[width=\linewidth,height=0.48\textheight,keepaspectratio]{provisioning-01-terraform.pdf}
+  \end{center}
+\end{frame}
+
+\begin{frame}[plain,t]{Fase 2: SO e pr\'e-requisitos (cloud-init + Ansible)}
+  \vspace{-0.6em}
+  {\scriptsize Python/Ansible no mestre, \texttt{/etc/hosts}, JDK~8, chrony, PostgreSQL, Ambari Server/Agents\par}
+  \vspace{0.15em}
+  \centering
+  \includegraphics[width=\linewidth,height=0.73\textheight,keepaspectratio]{provisioning-02-os.pdf}
+\end{frame}
+
+\begin{frame}[plain,t]{Fase 3: cluster ODP via Ambari (API REST + recupera\c{c}\~ao)}
+  \vspace{-0.6em}
+  {\scriptsize Blueprint JSON, cria\c{c}\~ao do cluster, ODP~1.2.2.0; recupera\c{c}\~ao autom\'atica (at\'e 3 tentativas)\par}
+  \vspace{0.15em}
+  \centering
+  \includegraphics[width=\linewidth,height=0.73\textheight,keepaspectratio]{provisioning-03-cluster.pdf}
+\end{frame}
+
+\begin{frame}[shrink=5]{Data Lake em camadas (ODP + Ambari)}
+  \small
+  \begin{itemize}
+    \item \textbf{Ingest\~ao}: Kafka para \textit{streaming}; NiFi para fluxos com \textit{back-pressure} e proveni\^encia; NFS Gateway para ingest\~ao em lote sem clientes Hadoop nos produtores.
+    \item \textbf{Armazenamento}: HDFS replicado (blocos 128~MB); HBase para acesso NoSQL de baixa lat\^encia; Hive Metastore como cat\'alogo partilhado por Hive e Spark.
+    \item \textbf{Processamento}: YARN agenda contentores; Spark~3 para anal\'itica em mem\'oria; Tez como motor DAG do Hive; HiveServer2 como SQL sobre dados no HDFS.
+    \item \textbf{Governan\c{c}a e opera\c{c}\~ao}: Ranger (RBAC, mascaramento, auditoria via Solr); ZooKeeper para coordena\c{c}\~ao; Ambari para ciclo de vida e monitoriza\c{c}\~ao do stack.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[plain,t]{Arquitetura em camadas (diagrama)}
+  \vspace{-0.55em}
+  \centering
+  \includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]{datalake-architecture.pdf}
+\end{frame}
+
+\begin{frame}{Perfis de instala\c{c}\~ao}{Benchmark no perfil \textit{data science}}
+  \begin{itemize}
+    \item \textbf{Default}: stack completo (ingest\~ao, HBase, Spark, Hive, Ranger, \ldots).
+    \item \textbf{Data science}: foco em \textbf{Spark + Hive + HDFS/YARN}; omite NiFi/HBase/Phoenix para liberar RAM/CPU --- \textbf{usado na avalia\c{c}\~ao SSB}.
+    \item \textbf{Software engineering}: fluxos NiFi/Kafka/HBase, sem motores anal\'iticos Spark/Hive.
+  \end{itemize}
+  \vspace{0.35em}
+  \begin{cefetblock}{Tempo de implanta\c{c}\~ao}
+     Orquestra\c{c}\~ao Ambari + downloads: da ordem de \textbf{tr\^es horas} no Free Tier (incluindo ciclos de recupera\c{c}\~ao, se necess\'ario).
+  \end{cefetblock}
+\end{frame}

@@ -1,0 +1,45 @@
+% Protocolo experimental (SSB)
+
+\begin{frame}{Objetivo e cen\'ario de teste}
+  \begin{itemize}
+    \item Verificar se \textbf{Spark} supera \textbf{Hive} em consultas anal\'iticas sobre hardware ARM \textbf{extremamente limitado}.
+    \item Medir se \textbf{cache em mem\'oria} no Spark melhora ou piora o tempo face ao Spark ``padr\~ao'' sobre YARN.
+    \item Cluster no perfil \texttt{data-science}: HDFS, YARN, Hive Metastore, HiveServer2, Spark~3 (ODP~1.2.2.0, CentOS Stream~9 aarch64).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Dataset SSB (fator de escala 10)}
+  \begin{itemize}
+    \item \textbf{SSB} com \texttt{dbgen}; CSV para o HDFS via n\'o mestre.
+    \item Cinco tabelas \textbf{externas} no Metastore (\texttt{OpenCSVSerde}) --- Hive e Spark partilham o mesmo esquema.
+    \item Fato \texttt{lineorder.csv}: \textbf{$\sim$9{,}3~GB} (I/O e RAM cr\'iticos a 6~GB/n\'o).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Tr\^es configura\c{c}\~oes e m\'etricas}
+  \begin{enumerate}
+    \item \textbf{Hive}: execu\c{c}\~ao orientada a disco via motor nativo do Hive.
+    \item \textbf{Spark (sem cache)}: leitura direta do HDFS, par\^ametros YARN por defeito.
+    \item \textbf{Spark + cache}: tabelas materializadas em mem\'oria \textbf{e} par\^ametros expl\'icitos de mem\'oria, executores e shuffle (ver artigo).
+  \end{enumerate}
+  \vspace{0.35em}
+  \begin{cefetalertblock}{Contagem de execu\c{c}\~oes}
+    \textbf{14 consultas} $\times$ \textbf{10 repeti\c{c}\~oes} $\times$ \textbf{3 configura\c{c}\~oes} = \textbf{420} tempos de parede registados (sem descartar warm-up).
+  \end{cefetalertblock}
+\end{frame}
+
+\begin{frame}[fragile]{Par\^ametros Spark (extrato)}
+  \begin{lstlisting}[language=bash, gobble=0]
+-- Spark padrao (resumo)
+spark-sql --master yarn
+
+-- Spark com cache (exemplo de linha de comando)
+spark-sql --master yarn --num-executors 2 --executor-cores 1
+  --driver-memory 512m --executor-memory 1g
+  --conf spark.executor.memoryOverhead=256m
+  --conf spark.memory.fraction=0.8
+  --conf spark.sql.shuffle.partitions=48
+  \end{lstlisting}
+  \vspace{0.25em}
+  {\scriptsize\color{cefetMuted}Dois executores: limite duro de CPU/containers no blueprint (1 vCPU por NodeManager; AM ocupa um contentor).}
+\end{frame}

@@ -1,0 +1,19 @@
+% Contexto e contribuições (~2 min)
+
+\begin{frame}{Motiva\c{c}\~ao}
+  \begin{itemize}
+    \item Plataformas de Big Data costumam exigir \textbf{infraestrutura cara} e licenciamento, com barreira alta para pesquisa e pequenas organiza\c{c}\~oes.
+    \item Mesmo em nuvem, \textbf{custos recorrentes} de clusters multi-n\'o limitam laborat\'orios com or\c{c}amento reduzido.
+    \item O \textbf{Oracle Cloud Infrastructure (OCI) Free Tier} oferece inst\^ancias \textbf{ARM Ampere A1} sem custo monet\'ario, por\'em com \textbf{teto severo} de CPU e RAM.
+    \item \textbf{Lacuna}: pouca evid\^encia publicada de um pipeline \textbf{IaC ponta a ponta} que provisione e configure um \textbf{Data Lake Hadoop} nesse cen\'ario.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Contribui\c{c}\~oes deste artigo}
+  \begin{enumerate}
+    \item \textbf{Pipeline IaC} (Terraform + Ansible + Apache Ambari) que cria e configura um cluster de \textbf{4 n\'os} ODP/Hadoop no Free Tier, com \textbf{perfis de instala\c{c}\~ao} configur\'aveis.
+    \item \textbf{Avalia\c{c}\~ao emp\'irica} com \textbf{Star Schema Benchmark} (SSB): compara\c{c}\~ao \textbf{Hive vs.\ Spark vs.\ Spark com cache}, sobre ARM fortemente limitado.
+    \item \textbf{An\'alise de cache} sob RAM insuficiente para o maior fato ($\sim$9{,}3~GB): quando o cache \textbf{prejudica} ou \textbf{ajuda} o tempo de consulta.
+    \item \textbf{Protocolo reprodut\'ivel} e artefatos abertos, vi\'aveis a \textbf{custo zero} em termos de inst\^ancias Free Tier.
+  \end{enumerate}
+\end{frame}
