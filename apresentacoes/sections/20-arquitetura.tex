@@ -1,15 +1,19 @@
 % Arquitetura e implantação
 
-\begin{frame}[shrink=5]{Topologia na OCI (4 n\'os ARM)}
+\begin{frame}{Topologia na OCI (4 n\'os ARM)}
   \begin{itemize}
     \item Um \textbf{mestre} e tr\^es \textbf{workers}; \texttt{VM.Standard.A1.Flex}: \textbf{1 OCPU + 6~GB RAM}/n\'o (4 OCPU / 24~GB agregados).
     \item CentOS Stream~9 \textbf{aarch64}; volumes para HDFS/logs.
     \item \textbf{Security list}: portas \`a Internet restritas ao necess\'ario (Ambari, Hive JDBC, Spark History, \ldots).
   \end{itemize}
-  \vspace{0.2em}
-  \begin{center}
-    \includegraphics[width=0.88\linewidth,height=0.42\textheight,keepaspectratio]{topology.pdf}
-  \end{center}
+\end{frame}
+
+\begin{frame}[plain,t]{Topologia na OCI (diagrama)}
+  \vspace{-0.65em}
+  {\scriptsize Quatro VMs na sub-rede; \textit{security list}, gateway e volumes para o cluster.\par}
+  \vspace{0.12em}
+  \centering
+  \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{topology.pdf}
 \end{frame}
 
 \begin{frame}{Pipeline automatizado: fase 1 (Terraform)}
@@ -17,10 +21,14 @@
     \item Vari\'aveis: IPs permitidos, perfil; \texttt{terraform apply}.
     \item Rede + 4 inst\^ancias; envia Ansible e scripts Ambari ao mestre.
   \end{itemize}
-  \vspace{0.2em}
-  \begin{center}
-    \includegraphics[width=\linewidth,height=0.48\textheight,keepaspectratio]{provisioning-01-terraform.pdf}
-  \end{center}
+\end{frame}
+
+\begin{frame}[plain,t]{Fase 1: provisionamento (Terraform)}
+  \vspace{-0.65em}
+  {\scriptsize Rede (VCN, subnet, \textit{security list}, gateway), chaves TLS, quatro inst\^ancias e c\'opia de playbooks/scripts para o mestre.\par}
+  \vspace{0.12em}
+  \centering
+  \includegraphics[width=\linewidth,height=0.70\textheight,keepaspectratio]{provisioning-01-terraform.pdf}
 \end{frame}
 
 \begin{frame}[plain,t]{Fase 2: SO e pr\'e-requisitos (cloud-init + Ansible)}
@@ -62,7 +70,7 @@
     \item \textbf{Software engineering}: fluxos NiFi/Kafka/HBase, sem motores anal\'iticos Spark/Hive.
   \end{itemize}
   \vspace{0.35em}
-  \begin{cefetblock}{Tempo de implanta\c{c}\~ao}
-     Orquestra\c{c}\~ao Ambari + downloads: da ordem de \textbf{tr\^es horas} no Free Tier (incluindo ciclos de recupera\c{c}\~ao, se necess\'ario).
+  \begin{cefetblock}{Tempo de implanta\c{c}\~ao} \\
+    Orquestra\c{c}\~ao Ambari + downloads: da ordem de \textbf{tr\^es horas} no Free Tier (incluindo ciclos de recupera\c{c}\~ao, se necess\'ario).
   \end{cefetblock}
 \end{frame}
