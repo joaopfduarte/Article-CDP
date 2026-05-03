@@ -2,7 +2,7 @@
 
 \begin{frame}{Tempos m\'edios: Hive vs.\ Spark vs.\ Spark + cache}
   \begin{itemize}
-    \item Spark \textbf{mais r\'apido que Hive} nas 14 consultas; diferen\c{c}a m\'edia da ordem de \textbf{centenas de segundos}/consulta.
+    \item Spark \textbf{mais r\'apido que Hive} nas 13 consultas; diferen\c{c}a m\'edia da ordem de \textbf{centenas de segundos}/consulta.
     \item \textbf{Cache}: frequentemente \textbf{pior} quando o fato grande n\~ao cabe na RAM; ganhos em algumas consultas mais pesadas (ex.: Q3.2).
   \end{itemize}
   \vspace{0.15em}
@@ -22,7 +22,7 @@
       & \color{white}\bfseries Spark+cache (s) \\
     \midrule
     \rowcolor{cefetBg}
-    Q1.2a & 542 & 260 & 311 \\
+    Q1.2 & 542 & 260 & 311 \\
     \rowcolor{cefetCodeBg}
     Q4.1 (pior Hive) & 2\,459 & 347 & 339 \\
     \rowcolor{cefetBg}
@@ -32,6 +32,6 @@
 
   \vspace{0.65em}
   \begin{cefetexampleblock}{S\'intese}
-    Margem m\'edia Hive$\rightarrow$Spark na ordem de \textbf{$\sim$868~s} por consulta; em m\'edia global, Spark+cache fica \textbf{$\sim$18~s mais lento} que Spark sem cache --- cache n\~ao compensa na maioria dos casos neste teto de mem\'oria.
+    Margem m\'edia Hive$\rightarrow$Spark na ordem de \textbf{$\sim$911~s} por consulta; em m\'edia global, Spark+cache fica \textbf{$\sim$18~s mais lento} que Spark sem cache --- cache n\~ao compensa na maioria dos casos neste teto de mem\'oria.
   \end{cefetexampleblock}
 \end{frame}

@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # run_hive_benchmark.sh
-# Executa as 14 consultas SSB no Hive/Beeline em modo batch, gravando
+# Executa 10 consultas SSB (Q2.1--Q4.3) no Hive/Beeline em modo batch; o catálogo completo do artigo tem 13 consultas. Gravando
 # resultados e tempos em arquivo de log. Roda com nohup/screen para
 # sobreviver a quedas de conexão SSH.
 #

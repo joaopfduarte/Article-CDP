@@ -19,10 +19,10 @@ tables, providing a reproducible reference for future deployments. Third, the
 framework's applicability was validated through the SSB, as detailed in Section~\ref{sec:use-case}.
 
 The benchmark results partially corroborate the initial hypothesis. Spark
-consistently outperformed Hive across all 14 SSB queries, with mean speed-up
+consistently outperformed Hive across all 13 SSB queries, with mean speed-up
 margins ranging from 282 to 2{,}112~seconds per query. The anticipated advantage
 of in-memory caching, however, did not materialise as expected. For simpler
-queries (Q1.1, Q1.2a, Q1.2b, Q1.3, Q2.1--Q2.3, Q3.3), the caching overhead actually degraded performance by
+queries (Q1.1, Q1.2, Q1.3, Q2.1--Q2.3, Q3.3), the caching overhead actually degraded performance by
 50--97~seconds relative to uncached Spark, because the 9.3~GB
 \texttt{lineorder} fact table could not be fully cached into the cluster's
 limited memory. Only the more complex multi-join queries (Q3.1, Q3.2, Q3.4--Q4.3)

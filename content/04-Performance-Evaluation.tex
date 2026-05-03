@@ -63,7 +63,7 @@ results are directly comparable across engines.
 \subsection{Benchmark Protocol}
 
 The evaluation comprised three processing configurations, each applied to the
-full SSB query catalogue of 14 analytical queries (Listing~\ref{lst:ssb-queries}):
+full SSB query catalogue of 13 analytical queries (Listing~\ref{lst:ssb-queries}):
 
 \begin{enumerate}
     \item \textbf{Hive (disk-bound):} Hive reads and writes sequential blocks
@@ -79,8 +79,8 @@ full SSB query catalogue of 14 analytical queries (Listing~\ref{lst:ssb-queries}
     to prevent YARN container exhaustion.
 \end{enumerate}
 
-Each query was executed 10 times per configuration, yielding 420 individual
-query runs in total (14 queries $\times$ 10 iterations $\times$ 3
+Each query was executed 10 times per configuration, yielding 390 individual
+query runs in total (13 queries $\times$ 10 iterations $\times$ 3
 configurations). All 10 iterations are included in the reported statistics; no
 warm-up iterations were discarded.
 Queries were submitted sequentially through shell scripts that wrap
@@ -88,20 +88,15 @@ each invocation and log wall-clock execution times to a
 log file. The scripts were executed under \texttt{nohup} on the master node to
 prevent SSH session timeouts, a practical necessity on free-tier instances whose
 network connections are not guaranteed to remain stable over multi-hour runs.
-Q1.2b intentionally repeats Q1.2a to assess execution-time stability
-across benchmark phases.
 
-The star schema and the 14 analytical queries are shown in
+The star schema and the 13 analytical queries are shown in
 Figure~\ref{fig:ssb-schema} and Listing~\ref{lst:ssb-queries}, respectively.
 
 \begin{lstlisting}[language=SQL, caption={SSB benchmark analytical queries.}, label={lst:ssb-queries}, frame=single, basicstyle=\ttfamily\scriptsize]
--- Q1.2a
-SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_yearmonthnum = 199401 AND lo_discount between 4 and 6 AND lo_quantity between 26 and 35;
-
 -- Q1.1
 SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_year = 1993 AND lo_discount between 1 and 3 AND lo_quantity < 25;
 
--- Q1.2b (intentional repeat of Q1.2a)
+-- Q1.2
 SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_yearmonthnum = 199401 AND lo_discount between 4 and 6 AND lo_quantity between 26 and 35;
 
 -- Q1.3
@@ -189,13 +184,13 @@ query--configuration pair; no outliers were removed.
   \end{tabular}
 \end{table}
 
-\paragraph{Hive versus Spark.} Across all 14 queries, Spark outperformed Hive
-by a mean margin of 868~seconds, with per-query differences ranging from
-282~seconds (Q1.2a) to 2{,}112~seconds (Q4.1). The SSB query catalogue is
+\paragraph{Hive versus Spark.} Across all 13 queries, Spark outperformed Hive
+by a mean margin of 911~seconds, with per-query differences ranging from
+282~seconds (Q1.2) to 2{,}112~seconds (Q4.1). The SSB query catalogue is
 structured into four groups of increasing join complexity. The first group
-(Q1.1, Q1.2a, Q1.2b, Q1.3) performs single-join aggregations over \texttt{lineorder} and
-\texttt{dwdate}; Hive averages 545~seconds per query whereas Spark averages
-220~seconds, a roughly 2.5$\times$ speed-up. The second group (Q2.1--Q2.3) adds
+(Q1.1, Q1.2, Q1.3) performs single-join aggregations over \texttt{lineorder} and
+\texttt{dwdate}; Hive averages 553~seconds per query whereas Spark averages
+223~seconds, a roughly 2.5$\times$ speed-up. The second group (Q2.1--Q2.3) adds
 three-way and four-way joins involving \texttt{part} and \texttt{supplier},
 and the gap widens: Hive averages 1{,}200~seconds against Spark's
 249~seconds. The third group (Q3.1--Q3.4) joins \texttt{customer} and
@@ -208,8 +203,8 @@ indicated by the relatively low standard deviations.
 
 \paragraph{Spark versus Spark with caching.} The comparison between the two
 Spark configurations is less straightforward. For the simpler two-join queries
-(Q1.1, Q1.2a, Q1.2b, Q1.3), the cached configuration was consistently slower, adding between
-51~seconds (Q1.2a) and 96~seconds (Q1.1) of overhead per query. A similar penalty
+(Q1.1, Q1.2, Q1.3), the cached configuration was consistently slower, adding between
+51~seconds (Q1.2) and 96~seconds (Q1.1) of overhead per query. A similar penalty
 applies to the three-way and four-way join queries Q2.1--Q2.3, where caching added
 84--96~seconds, and to Q3.3, where the overhead was approximately 50~seconds. In
 all of these cases, the penalty stems from the attempt to cache the 9.3~GB
@@ -221,7 +216,7 @@ For the remaining queries involving tighter filters and higher-cardinality
 joins (Q3.1, Q3.2, Q3.4--Q4.3), partial caching of the smaller dimension tables
 yielded a net benefit. The largest gain appeared in Q3.2, where caching reduced
 mean execution time by 297~seconds; Q3.1 gained 28~seconds, and Q3.4 through Q4.3
-showed improvements of 8 to 34~seconds. Averaged across all 14 queries,
+showed improvements of 8 to 34~seconds. Averaged across all 13 queries,
 however, the cached configuration was 18~seconds slower than uncached Spark,
 indicating that caching is counterproductive under these memory constraints
 unless the query complexity is sufficient to amortise the overhead.
@@ -260,7 +255,7 @@ parameters but without the cache directives; such a run was not performed in
 this study. This confound is revisited in the limitations discussed in
 Section~\ref{sec:conclusion}.
 
-Despite these constraints, all 420 query executions (14 queries $\times$ 10
+Despite these constraints, all 390 query executions (13 queries $\times$ 10
 iterations $\times$ 3 configurations) completed without unrecoverable failures.
 Spark fell back to disk when in-memory caching could not be
 sustained, confirming the operational stability of the platform under

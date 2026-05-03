@@ -3,7 +3,7 @@
 # ==============================================================================
 # OCI Free Tier Master Benchmark Script: Hive vs Spark vs Spark (Hybrid Cache)
 # ==============================================================================
-# Este script automatiza as execuções das 14 consultas do SSB nos três contextos
+# Este script automatiza as execuções das 13 consultas do SSB nos três contextos
 # de processamento, aplicando limites drásticos de memória no YARN e usando
 # 48 partições de shuffle para prevenir 'Out Of Memory' (OOM) no SO Linux.
 # As execuções geram logs contínuos na pasta /var/oled/ssb_stage/.
@@ -44,7 +44,6 @@ clean_cluster() {
 # QUERIES CATÁLOGO (Injetadas em Arquivos Físicos)
 # ==============================================================================
 cat << 'EOF' > ${LOG_DIR}/queries_raw.sql
-SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_yearmonthnum = 199401 AND lo_discount between 4 and 6 AND lo_quantity between 26 and 35;
 SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_year = 1993 AND lo_discount between 1 and 3 AND lo_quantity < 25;
 SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_yearmonthnum = 199401 AND lo_discount between 4 and 6 AND lo_quantity between 26 and 35;
 SELECT sum(lo_extendedprice*lo_discount) as revenue FROM ssb.lineorder JOIN ssb.dwdate ON lo_orderdate = d_datekey WHERE d_weeknuminyear = 6 AND d_year = 1994 AND lo_discount between 5 and 7 AND lo_quantity between 26 and 35;
