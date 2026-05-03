@@ -184,29 +184,34 @@ query--configuration pair; no outliers were removed.
   \end{tabular}
 \end{table}
 
-\paragraph{Hive versus Spark.} Across all 13 queries, Spark outperformed Hive
-by a mean margin of 911~seconds, with per-query differences ranging from
-282~seconds (Q1.2) to 2{,}112~seconds (Q4.1). The SSB query catalogue is
+\paragraph{Hive versus Spark.} Across all 13 queries, Spark reduced mean
+execution time relative to Hive by approximately \PaperHSRedPctMeanAgg\% when
+averaging over all queries, with per-query reductions ranging from
+\PaperHSRedPctMin\% to \PaperHSRedPctMax\%. The SSB query catalogue is
 structured into four groups of increasing join complexity. The first group
 (Q1.1, Q1.2, Q1.3) performs single-join aggregations over \texttt{lineorder} and
-\texttt{dwdate}; Hive averages 553~seconds per query whereas Spark averages
-223~seconds, a roughly 2.5$\times$ speed-up. The second group (Q2.1--Q2.3) adds
+\texttt{dwdate}; Hive averages \PaperExpHSGOneMeanHive~seconds per query whereas Spark averages
+\PaperExpHSGOneMeanSpark~seconds, corresponding to approximately \PaperExpHSGOneRedPct\% less time than Hive for this group.
+The second group (Q2.1--Q2.3) adds
 three-way and four-way joins involving \texttt{part} and \texttt{supplier},
-and the gap widens: Hive averages 1{,}200~seconds against Spark's
-249~seconds. The third group (Q3.1--Q3.4) joins \texttt{customer} and
+and the gap widens: Hive averages \PaperExpHSGTwoMeanHive~seconds against Spark's
+\PaperExpHSGTwoMeanSpark~seconds (approximately \PaperExpHSGTwoRedPct\% reduction relative to Hive).
+The third group (Q3.1--Q3.4) joins \texttt{customer} and
 \texttt{supplier} dimensions with progressively tighter filters; Hive
-averages 1{,}429~seconds while Spark averages 365~seconds. The fourth group
-(Q4.1--Q4.3) computes profit metrics over four-way joins and contains the
-widest absolute gap, with Hive averaging 1{,}555~seconds versus Spark's
-305~seconds. All differences are consistent across the 10 iterations, as
+averages \PaperExpHSGThreeMeanHive~seconds while Spark averages \PaperExpHSGThreeMeanSpark~seconds (approximately \PaperExpHSGThreeRedPct\% reduction relative to Hive).
+The fourth group
+(Q4.1--Q4.3) computes profit metrics over four-way joins and exhibits the
+largest relative margin between Hive and Spark (approximately \PaperExpHSGFourRedPct\% less time than Hive on average for this group), with Hive averaging \PaperExpHSGFourMeanHive~seconds versus Spark's
+\PaperExpHSGFourMeanSpark~seconds. All differences are consistent across the 10 iterations, as
 indicated by the relatively low standard deviations.
 
 \paragraph{Spark versus Spark with caching.} The comparison between the two
 Spark configurations is less straightforward. For the simpler two-join queries
-(Q1.1, Q1.2, Q1.3), the cached configuration was consistently slower, adding between
-51~seconds (Q1.2) and 96~seconds (Q1.1) of overhead per query. A similar penalty
-applies to the three-way and four-way join queries Q2.1--Q2.3, where caching added
-84--96~seconds, and to Q3.3, where the overhead was approximately 50~seconds. In
+(Q1.1, Q1.2, Q1.3), the cached configuration was consistently slower, increasing latency by approximately
+\PaperExpCacheQOneOverMinPct\% to \PaperExpCacheQOneOverMaxPct\% relative to uncached Spark.
+A similar penalty
+applies to the three-way and four-way join queries Q2.1--Q2.3, where caching added approximately
+\PaperExpCacheQTwoOverMinPct\% to \PaperExpCacheQTwoOverMaxPct\%, and to Q3.3, where the overhead was approximately \PaperExpCacheQThreeThreeOverPct\%. In
 all of these cases, the penalty stems from the attempt to cache the 9.3~GB
 \texttt{lineorder} fact table into the cluster's limited memory: the table
 cannot be fully cached, and the resulting shuffle and disk spill costs penalise
@@ -215,9 +220,10 @@ execution without conferring a commensurate read-back benefit.
 For the remaining queries involving tighter filters and higher-cardinality
 joins (Q3.1, Q3.2, Q3.4--Q4.3), partial caching of the smaller dimension tables
 yielded a net benefit. The largest gain appeared in Q3.2, where caching reduced
-mean execution time by 297~seconds; Q3.1 gained 28~seconds, and Q3.4 through Q4.3
-showed improvements of 8 to 34~seconds. Averaged across all 13 queries,
-however, the cached configuration was 18~seconds slower than uncached Spark,
+mean execution time relative to uncached Spark by approximately \PaperQThreeTwoCacheImprovementPct\%;
+Q3.1 improved by approximately \PaperExpQThreeOneCacheGainPct\%, and Q3.4 through Q4.3
+showed gains of approximately \PaperExpCacheQThreeFourQFourThreeGainMinPct\% to \PaperExpCacheQThreeFourQFourThreeGainMaxPct\%. Averaged across all 13 queries,
+however, the cached configuration was \PaperCacheVsSparkMeanPenaltyPct\% slower than uncached Spark,
 indicating that caching is counterproductive under these memory constraints
 unless the query complexity is sufficient to amortise the overhead.
 
