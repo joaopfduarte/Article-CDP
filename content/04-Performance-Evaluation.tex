@@ -144,17 +144,51 @@ SELECT d_year, s_city, p_brand, sum(lo_revenue - lo_supplycost) as profit FROM s
     
     \vspace{2em}
     
-    \includegraphics[width=1.0\linewidth]{content/assets/graphic.pdf}
-    \caption{Query execution time comparison: Hive vs.\ Spark vs.\ Spark
-             with caching.}
+    \includegraphics[width=1.0\linewidth]{content/assets/graphic-group.pdf}
+    \caption{Group-level mean query execution times (seconds) for the four SSB
+             complexity bands (Q1, Q2, Q3,
+             Q4), comparing Hive, Spark without cache, and Spark with
+             caching.}
     \label{fig:query-execution-time-comparison}
 \end{figure}
 
 Table~\ref{tab:benchmark-results} reports the mean execution time and standard
-deviation for each query across the three configurations. The corresponding bar
-chart is shown in Figure~\ref{fig:query-execution-time-comparison}. Summary
-statistics were computed from the full set of 10 measured iterations per
-query--configuration pair; no outliers were removed.
+deviation \emph{for each individual query} across the three configurations,
+computed from the full set of 10 measured iterations per query--configuration
+pair; no outliers were removed. Figure~\ref{fig:query-execution-time-comparison}
+provides a complementary \emph{group-level} view: the same 13 queries are rolled
+into the four bands used later in this subsection, so each cluster of bars
+summarises how the three engines behave on average for that band. The
+following points highlight how to read the chart alongside the table.
+
+\begin{itemize}
+    \item \textbf{Group~Q1} (single-join queries Q1.1--Q1.3): Hive clearly
+    dominates the bar heights; Spark without cache is much lower; Spark with
+    cache typically sits between the two or above uncached Spark, matching the
+    later observation that caching adds overhead on the lightest queries when
+    the large fact table cannot be held entirely in memory.
+    \item \textbf{Group~Q2} (Q2.1--Q2.3 with \texttt{part} and
+    \texttt{supplier}): Hive remains the slowest configuration; Spark without
+    cache delivers the largest relative drop in bar height within the group;
+    cached Spark again tends to exceed uncached Spark, signalling that the
+    cache path still pays shuffle and spill costs under the same memory ceiling.
+    \item \textbf{Group~Q3} (Q3.1--Q3.4 with \texttt{customer} and
+    \texttt{supplier}): absolute bar levels rise relative to Q1--Q2, yet Spark
+    stays well below Hive; the relative ordering between uncached and cached
+    Spark varies across the constituent queries, so the grouped bars summarise
+    a mix of modest penalties and visible gains that Table~\ref{tab:benchmark-results}
+    resolves at per-query granularity.
+    \item \textbf{Group~Q4} (profit queries Q4.1--Q4.3): Hive reaches the highest
+    averages in the figure; Spark still lowers execution substantially; cached
+    Spark can approach or beat uncached Spark where partial dimension caching
+    amortises the join workload, which is easier to see in the table for Q3.2
+    and neighbouring queries than in the aggregate bar alone.
+    \item \textbf{Across groups:} in this aggregated view, mean Hive time
+    increases from Q1 through Q4 while Spark remains comparatively flat, so the
+    visual gap between Hive and Spark widens with join complexity, consistent
+    with the quantitative group analysis below, even though the chart does not
+    depict one bar per query.
+\end{itemize}
 
 \begin{table}[htbp]
   \centering
