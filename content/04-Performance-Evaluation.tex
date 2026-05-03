@@ -136,19 +136,23 @@ SELECT d_year, s_city, p_brand, sum(lo_revenue - lo_supplycost) as profit FROM s
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Results and Analysis}
 
-\begin{figure}[p]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.85\linewidth]{content/assets/schema.pdf}
+    \includegraphics[width=\linewidth]{content/assets/schema.pdf}
     \caption{SSB star schema entity-relationship diagram.}
     \label{fig:ssb-schema}
-    
-    \vspace{2em}
-    
-    \includegraphics[width=1.0\linewidth]{content/assets/graphic-group.pdf}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{content/assets/graphic-group.pdf}
     \caption{Group-level mean query execution times (seconds) for the four SSB
-             complexity bands (Q1, Q2, Q3,
-             Q4), comparing Hive, Spark without cache, and Spark with
-             caching.}
+             complexity bands (Q1: Q1.1--Q1.3; Q2: Q2.1--Q2.3; Q3: Q3.1--Q3.4;
+             Q4: Q4.1--Q4.3), comparing Hive, Spark without cache, and Spark with
+             caching. Each bar aggregates the per-query means within the group.
+             Error bars illustrate synthetic dispersion around those means and do
+             not match the empirical standard deviations in
+             Table~\ref{tab:benchmark-results}.}
     \label{fig:query-execution-time-comparison}
 \end{figure}
 
