@@ -15,7 +15,7 @@ storage, and networking resources that consumers assemble into custom applicatio
 stacks \citep{tanenbaum2017distributed}. For data-intensive workloads, this model has
 given rise to two dominant storage paradigms. The \emph{Data Warehouse} enforces a
 \emph{schema-on-write} discipline, requiring data to be cleaned, transformed, and
-modelled before ingestion , reliable, but rigid and costly to extend. The
+modelled before ingestion, reliable, but rigid and costly to extend. The
 \emph{Data Lake}, in contrast, stores raw data under a \emph{schema-on-read} model,
 offering ingestion flexibility at the risk of poor governance if cataloguing is
 neglected.
@@ -40,7 +40,7 @@ Platform (ODP) packages these components for streamlined cluster deployment, wit
 Apache Ambari providing centralised orchestration and monitoring
 \citep{clemlab_odp_docs_intro_1310}. Oracle Cloud Infrastructure (OCI) documents its
 IaaS offerings through publicly accessible guides \citep{oci_docs}, and its perpetual
-Free Tier includes ARM-based Ampere A1 instances , an opportunity to assemble a
+Free Tier includes ARM-based Ampere A1 instances, an opportunity to assemble a
 multi-node Hadoop cluster at zero monetary cost that remains largely unexplored in
 the literature.
 
@@ -65,7 +65,7 @@ Reduced Instruction Set Computer (RISC) tradition, exemplified by ARM. ARM proce
 execute simpler instructions at lower energy cost per operation, yielding higher power
 efficiency and lower acquisition cost \citep{hennessy2019computer}. The Hadoop ecosystem,
 however, was historically developed for and tested on x86-64 hardware, creating
-potential compatibility barriers for ARM deployments , particularly in the
+potential compatibility barriers for ARM deployments, particularly in the
 availability of pre-compiled packages and JVM optimisations \citep{8287751}.
 
 Two empirical studies are directly relevant. \citet{loghin2015performance} benchmarked
@@ -78,8 +78,8 @@ clusters represent a promising direction for budget-sensitive deployments. Their
 experiments, however, were conducted on hardware with considerably higher per-node
 resources than those available on a cloud free tier. Both studies relied on manually
 provisioned, bare-metal or dedicated clusters and did not incorporate Infrastructure
-as Code tooling into the deployment workflow. Neither addressed the automated,
-end-to-end deployment of the Hadoop stack on ARM hardware, nor operated under the
+as Code tooling into the deployment workflow, what is explored in this work. Neither addressed 
+the automated, end-to-end deployment of the Hadoop stack on ARM hardware, nor operated under the
 extreme resource constraints of a cloud free tier, where each node is limited to
 1~vCPU and 6~GB of RAM and the total cluster capacity does not exceed 4~vCPUs and
 24~GB.
@@ -87,8 +87,8 @@ extreme resource constraints of a cloud free tier, where each node is limited to
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Infrastructure as Code for Cluster Provisioning}
 
-Infrastructure as Code (IaC) replaces manual, console-driven server configuration ,
-often termed \emph{ClickOps} , with codified, version-controlled artefacts that
+Infrastructure as Code (IaC) replaces manual, console-driven server configuration,
+often termed \emph{ClickOps}, with codified, version-controlled artefacts that
 define the desired state of an environment \citep{morris2016infrastructure}. Two
 properties make IaC particularly attractive for research reproducibility:
 \emph{idempotency}, whereby repeated execution converges to the same infrastructure
@@ -102,17 +102,17 @@ general principles; it does not report on a specific, end-to-end deployment vali
 through benchmarking. \citet{morris2016infrastructure} provides a comprehensive
 treatment of IaC principles, idempotency, version control, and automated
 testing, but focuses on general server management rather than on the particular
-challenges of orchestrating a multi-service Hadoop stack. More broadly, the combination
-of Terraform for declarative cloud provisioning with Ansible for procedural application
-configuration is a recognised industry practice, yet its application to deploying a
+challenges of orchestrating a multi-service Hadoop stack, as this work does. More broadly, 
+the combination of Terraform for declarative cloud provisioning with Ansible for procedural 
+application configuration is a recognised industry practice, yet its application to deploying a
 full Hadoop ecosystem on free-tier ARM instances has not, to our knowledge, been
 documented in the academic literature.
 
 In summary, prior work has established the viability of ARM processors for Big Data
 workloads, the value of IaC for infrastructure management, and the importance of cost
-optimisation in cloud deployments, but these threads have not been brought together. No
-published study offers a fully automated pipeline for deploying a Hadoop-based Data
+optimisation in cloud deployments, but these threads have not been brought together, as better as 
+being known. No published study offers a fully automated pipeline for deploying a Hadoop-based Data
 Lake on free-tier ARM cloud instances, validated through a reproducible benchmark. The
 present work addresses this gap by combining Terraform and Ansible into a single
 pipeline that provisions and configures a four-node Hadoop cluster on the OCI Free
-Tier and by evaluating the resulting environment under the Star Schema Benchmark.
+Tier and by evaluating the resulting environment under the SSB.

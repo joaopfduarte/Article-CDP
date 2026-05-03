@@ -30,7 +30,7 @@ integrates these elements end to end.
 
 This paper addresses this gap by presenting an open-source IaC framework that automates
 the deployment and configuration of a Hadoop-based Data Lake on the OCI Free Tier. The
-framework provisions a four-node ARM cluster and installs the OpenSource Data Platform
+framework provisions a four-node ARM cluster and installs the Clemlab's OpenSource Data Platform
 (ODP) stack via Apache Ambari. To validate the resulting environment, the Star Schema
 Benchmark (SSB) is executed under three processing configurations, comparing query
 execution times on severely constrained hardware.
@@ -44,7 +44,7 @@ The research objectives are threefold:
     \item Document the automated deployment pipeline as a reproducible reference for
     future deployments.
     \item Evaluate the framework's practical applicability by benchmarking analytical
-    query performance under the Star Schema Benchmark.
+    query performance under the SSB.
 \end{enumerate}
 
 The principal contributions are:
@@ -55,7 +55,7 @@ The principal contributions are:
     profiles tailored to different workload types.
     \item Empirical evidence that Apache Spark consistently outperforms Apache Hive on
     ARM-constrained clusters, with mean performance margins of 282 to 2{,}112~seconds
-    per query in SSB workloads at scale factor~10.
+    per query in SSB workloads.
     \item A documented analysis of in-memory caching under resource constraints,
     showing that caching is counterproductive for simpler queries when the largest fact
     table cannot be fully cached, and yields net gains only for complex multi-join

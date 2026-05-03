@@ -12,10 +12,10 @@ different workload types.
 The infrastructure runs on Oracle Cloud Infrastructure (OCI), using ARM-based
 Ampere A1 Flex instances available through the OCI Free Tier. The cluster
 consists of four virtual machines, one master node and three worker
-nodes, hosted within a single subnet of an OCI tenancy
-(Figure~\ref{fig:topology}). Each node is a \texttt{VM.Standard.A1.Flex}
+nodes, hosted within a single subnet of an OCI tenancy as despicted in
+Figure~\ref{fig:topology}. Each node is a \texttt{VM.Standard.A1.Flex}
 instance with 1~OCPU (ARMv8) and 6~GB of RAM, yielding a total cluster capacity
-of 4~OCPUs and 24~GB of RAM. The instances run CentOS Stream~9 on the aarch64
+of 4~OCPUs and 24~GB of RAM. The instances run OL9 (RHEL-compatible) on the aarch64
 architecture. Persistent block volumes are attached to each instance for HDFS
 data and log storage.
 
@@ -108,9 +108,9 @@ Free Tier network bandwidth.
 
 The resulting environment is organised into four functional layers, depicted in
 Figure~\ref{fig:arch-default}. The software stack is built on version~1.2.2.0
-of the OpenSource Data Platform (ODP) \citep{clemlab_odp_docs_intro_1310},
+of the ODP \citep{clemlab_odp_docs_intro_1310},
 managed by Apache Ambari. ODP distributes its components as native aarch64 RPM
-packages for CentOS Stream~9, ensuring that every service in the Hadoop
+packages for OL9, ensuring that every service in the Hadoop
 ecosystem executes natively on the ARM Ampere A1 instances without
 cross-compilation or emulation. Table~\ref{tab:odp-versions} lists the
 principal component versions deployed in this study.

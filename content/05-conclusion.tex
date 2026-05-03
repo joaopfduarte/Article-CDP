@@ -16,7 +16,7 @@ API, incorporating an automated recovery procedure that retries failed
 installations up to three times. Second, the deployment process has been
 documented through three provisioning workflow diagrams and two component-mapping
 tables, providing a reproducible reference for future deployments. Third, the
-framework's applicability was validated through the Star Schema Benchmark (SSB),
+framework's applicability was validated through the SSB,
  as detailed in Section~\ref{sec:use-case}.
 
 The benchmark results partially corroborate the initial hypothesis. Spark
@@ -41,9 +41,8 @@ governance services can be sustained at zero monetary cost on the OCI Free Tier 
 
 \subsection*{Limitations}
 
-Several limitations should be noted. The benchmark was conducted at a single
-scale factor, on a fixed four-node cluster, and without an x86
-baseline for direct architectural comparison. Furthermore, the two Spark
+Several limitations should be noted. The benchmark was conducted on a fixed four-node cluster, 
+and without an x86 baseline for direct architectural comparison. Furthermore, the two Spark
 configurations differ not only in caching behaviour but also in memory
 allocation and shuffle settings (Section~\ref{sec:use-case}), introducing a
 confounding variable that prevents the caching effect from being fully
