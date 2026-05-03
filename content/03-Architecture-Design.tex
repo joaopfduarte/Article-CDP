@@ -14,8 +14,8 @@ Ampere A1 Flex instances available through the OCI Free Tier. The cluster
 consists of four virtual machines, one master node and three worker
 nodes, hosted within a single subnet of an OCI tenancy as despicted in
 Figure~\ref{fig:topology}. Each node is a \texttt{VM.Standard.A1.Flex}
-instance with 1~OCPU (ARMv8) and 6~GB of RAM, yielding a total cluster capacity
-of 4~OCPUs and 24~GB of RAM. The instances run OL9 (RHEL-compatible) on the aarch64
+instance with 1~OCPU (ARMv8), 6~GB of RAM and 50GB of storage, yielding a total cluster capacity
+of 4~OCPUs, 24~GB of RAM and 200GB of storage. The instances run OL9 (RHEL-compatible) on the aarch64
 architecture. Persistent block volumes are attached to each instance for HDFS
 data and log storage.
 
@@ -142,8 +142,8 @@ principal component versions deployed in this study.
 data producers from consumers to support high-throughput workloads. Apache NiFi
 manages flow-based data routing with built-in back-pressure control, data
 provenance tracking, and a visual pipeline editor. An NFS Gateway provides a
-POSIX-compatible mount point for batch file ingestion, allowing external systems
-to write data directly into HDFS without requiring Hadoop client libraries.
+ mount point for batch file ingestion, allowing external systems to write data directly 
+ into HDFS without requiring Hadoop client libraries.
 
 \paragraph{Storage.} HDFS provides block-based, replicated storage for raw and
 columnar data. Files are split into blocks (128~MB by default) and replicated
@@ -166,7 +166,7 @@ Livy for REST-based remote job submission.
 and data-masking policies across all services in the stack; its audit logs are
 indexed by Infra Solr for structured search and compliance reporting. Apache
 ZooKeeper provides distributed coordination and leader election, ensuring that
-services such as HDFS, HBase, and Kafka can recover from node failures without
+services, such as HDFS, HBase, and Kafka can recover from node failures without
 manual intervention. Apache Ambari serves as the central management console,
 monitoring service health and lifecycle across the cluster and providing a
 web-based interface for configuration changes.
