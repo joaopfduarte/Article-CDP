@@ -47,7 +47,7 @@ Terraform then generates a \emph{Transport Layer Security} (TLS) RSA key pair, p
 (Virtual Cloud Network, subnet, security list, and Internet Gateway), and
 creates the four compute instances. Ansible playbooks and Ambari API interaction
 scripts are uploaded to the master node's temporary directory as part of this
-phase (Figure~\ref{fig:prov-terraform}).
+phase as seen in Figure~\ref{fig:prov-terraform}.
 
 \begin{figure}[htbp]
   \centering
@@ -59,7 +59,7 @@ phase (Figure~\ref{fig:prov-terraform}).
 \paragraph{Phase~2: OS-level configuration.}
 On first boot, a \texttt{cloud-init} script on the master node installs Python
 and Ansible, configures host resolution via \texttt{/etc/hosts} on all nodes,
-and applies baseline OS security rules (Figure~\ref{fig:prov-os}). Ansible is
+and applies baseline OS security rules as shown in Figure~\ref{fig:prov-os}. Ansible is
 installed only on the master, which orchestrates the remaining configuration
 through SSH connections to each worker. The \texttt{site.yml} playbook installs
 prerequisite packages, notably OpenJDK~1.8 as the JVM runtime for all Hadoop
@@ -77,7 +77,7 @@ registers the application blueprint via the Ambari \emph{representational state 
 it also encodes service-level configurations such as the HDFS replication
 factor, \emph{Yet Another Resource Negotiator} (YARN) scheduler settings, and Hive Metastore connection parameters. The
 script then submits a cluster-creation request that references the registered
-blueprint and a host-mapping template (Figure~\ref{fig:prov-cluster}).
+blueprint and a host-mapping template as demonstrated in Figure~\ref{fig:prov-cluster}.
 
 During this phase, Ambari downloads the ODP~1.2.2.0 \emph{Red Hat Package Manager} (RPM) packages from an
 external repository, installs them on each node, and starts the services in
