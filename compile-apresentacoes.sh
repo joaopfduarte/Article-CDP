@@ -2,6 +2,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+mkdir -p "$ROOT/content/assets/generated"
+python3 "$ROOT/content/assets/scripts/compute_paper_metrics.py" --check-consistency --write-macros "$ROOT/content/assets/generated/benchmark_macros.tex"
 AP="$ROOT/apresentacoes"
 cd "$AP"
 

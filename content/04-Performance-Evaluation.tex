@@ -221,17 +221,9 @@ however, the cached configuration was 18~seconds slower than uncached Spark,
 indicating that caching is counterproductive under these memory constraints
 unless the query complexity is sufficient to amortise the overhead.
 
-\paragraph{Resource constraints.} The Spark configurations were as follows:
-
-\begin{lstlisting}[language=SQL, caption={Spark launch parameters.}, label={lst:spark-configuration}, frame=single, basicstyle=\ttfamily\scriptsize]
--- standard execution
-spark-sql --master yarn
--- cached execution
-spark-sql --master yarn   --num-executors 2   --executor-cores 1   --driver-memory 512m   --executor-memory 1g   --conf spark.executor.memoryOverhead=256m   --conf spark.memory.fraction=0.8   --conf spark.sql.shuffle.partitions=48
-\end{lstlisting}
-
-The restriction to two executors (\texttt{-{}-num-executors\,2}) reflects a
-hard CPU constraint, not merely a memory limitation. The blueprint configures
+\paragraph{Resource constraints.}
+The restriction to two executors reflects a hard CPU constraint, not merely a 
+memory limitation. The blueprint configures
 one virtual core per NodeManager, and three of the four nodes act as
 NodeManagers, yielding three YARN containers in total. Because the Spark
 Application Master claims one container, at most two remain available for

@@ -1,0 +1,30 @@
+{
+  "description": "Mean query times (seconds) over 10 runs; must match Table in content/04-Performance-Evaluation.tex. Update this file when the table changes, then run compute_paper_metrics.py.",
+  "queries": [
+    {"id": "Q1.1", "hive": 561.1, "spark": 203.0, "spark_cache": 298.7},
+    {"id": "Q1.2", "hive": 541.5, "spark": 259.9, "spark_cache": 311.0},
+    {"id": "Q1.3", "hive": 557.0, "spark": 204.9, "spark_cache": 295.3},
+    {"id": "Q2.1", "hive": 1120.2, "spark": 257.8, "spark_cache": 354.2},
+    {"id": "Q2.2", "hive": 1519.3, "spark": 238.2, "spark_cache": 334.0},
+    {"id": "Q2.3", "hive": 959.4, "spark": 252.5, "spark_cache": 336.2},
+    {"id": "Q3.1", "hive": 1175.1, "spark": 318.3, "spark_cache": 290.0},
+    {"id": "Q3.2", "hive": 1871.5, "spark": 574.8, "spark_cache": 277.7},
+    {"id": "Q3.3", "hive": 1785.5, "spark": 288.2, "spark_cache": 338.1},
+    {"id": "Q3.4", "hive": 884.4, "spark": 278.3, "spark_cache": 268.0},
+    {"id": "Q4.1", "hive": 2459.1, "spark": 347.2, "spark_cache": 339.4},
+    {"id": "Q4.2", "hive": 1326.0, "spark": 279.0, "spark_cache": 258.2},
+    {"id": "Q4.3", "hive": 881.0, "spark": 288.1, "spark_cache": 253.8}
+  ],
+  "subsets": {
+    "cache_overhead_narrative": [
+      "Q1.1",
+      "Q1.2",
+      "Q1.3",
+      "Q2.1",
+      "Q2.2",
+      "Q2.3",
+      "Q3.3"
+    ],
+    "cache_benefit_narrative": ["Q3.1", "Q3.2", "Q3.4", "Q4.1", "Q4.2", "Q4.3"]
+  }
+}
