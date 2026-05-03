@@ -132,11 +132,20 @@ principal component versions deployed in this study.
     Apache Kafka                 & 2.8.1 \\
     Apache NiFi                  & 1.24.0 \\
     Apache Ranger                & 2.4.0 \\
+    Apache Atlas                 & 2.3.0 \\
+    Apache Solr & 7.7.3 \\
     Apache ZooKeeper             & 3.8.3 \\
     Java Runtime                 & OpenJDK~1.8 \\
     \hline
   \end{tabular}
 \end{table}
+
+The architecture diagram in Figure~\ref{fig:arch-default} partitions the
+platform into four functional layers: ingestion, storage, processing, and
+governance. The following four paragraphs examine each layer in that sequence,
+relating the deployed ODP services to the responsibilities implied by the
+diagram. Table~\ref{tab:odp-versions} lists the software versions assumed
+throughout this discussion.
 
 \paragraph{Ingestion.} Apache Kafka handles real-time event streaming, decoupling
 data producers from consumers to support high-throughput workloads. Apache NiFi
@@ -164,8 +173,12 @@ Livy for REST-based remote job submission.
 
 \paragraph{Governance.} Apache Ranger enforces role-based access control (RBAC)
 and data-masking policies across all services in the stack; its audit logs are
-indexed by Infra Solr for structured search and compliance reporting. Apache
-ZooKeeper provides distributed coordination and leader election, ensuring that
+indexed by Infra Solr for structured search and compliance reporting.
+Apache Atlas complements Ranger by centralising technical metadata and
+end-to-end data lineage for entities registered in the Hive Metastore and other
+integrated services, supporting data discovery and impact analysis while Ranger
+continues to enforce fine-grained authorization and audit policy.
+Apache ZooKeeper provides distributed coordination and leader election, ensuring that
 services, such as HDFS, HBase, and Kafka can recover from node failures without
 manual intervention. Apache Ambari serves as the central management console,
 monitoring service health and lifecycle across the cluster and providing a
