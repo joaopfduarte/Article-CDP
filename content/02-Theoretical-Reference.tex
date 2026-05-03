@@ -33,8 +33,8 @@ throughout the lifecycle. These barriers motivate the search for entry-level pla
 that lower the financial threshold without forfeiting the core distributed-storage and
 processing capabilities that analytical workloads require.
 
-The Hadoop ecosystem addresses the distributed-processing requirement by coupling HDFS
-for block-based, replicated storage with parallel execution engines such as MapReduce
+The Hadoop ecosystem addresses the distributed-processing requirement by coupling the
+Hadoop Distributed File System (HDFS) for block-based, replicated storage with parallel execution engines such as MapReduce
 and Spark \citep{hadoop_hdfs_design_2025, marz2015bigdata}. Clemlab's OpenSource Data
 Platform (ODP) packages these components for streamlined cluster deployment, with
 Apache Ambari providing centralised orchestration and monitoring
@@ -66,7 +66,7 @@ execute simpler instructions at lower energy cost per operation, yielding higher
 efficiency and lower acquisition cost \citep{hennessy2019computer}. The Hadoop ecosystem,
 however, was historically developed for and tested on x86-64 hardware, creating
 potential compatibility barriers for ARM deployments, particularly in the
-availability of pre-compiled packages and JVM optimisations \citep{8287751}.
+availability of pre-compiled packages and Java Virtual Machine (JVM) optimisations \citep{8287751}.
 
 Two empirical studies are directly relevant. \citet{loghin2015performance} benchmarked
 Big Data workloads on clusters of small nodes, including ARM-based boards, and showed
@@ -78,7 +78,7 @@ clusters represent a promising direction for budget-sensitive deployments. Their
 experiments, however, were conducted on hardware with considerably higher per-node
 resources than those available on a cloud free tier. Both studies relied on manually
 provisioned, bare-metal or dedicated clusters and did not incorporate Infrastructure
-as Code tooling into the deployment workflow, what is explored in this work. Neither addressed 
+as Code tooling into the deployment workflow, which the present work addresses. Neither addressed
 the automated, end-to-end deployment of the Hadoop stack on ARM hardware, nor operated under the
 extreme resource constraints of a cloud free tier, where each node is limited to
 1~vCPU and 6~GB of RAM and the total cluster capacity does not exceed 4~vCPUs and
@@ -87,7 +87,7 @@ extreme resource constraints of a cloud free tier, where each node is limited to
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Infrastructure as Code for Cluster Provisioning}
 
-Infrastructure as Code (IaC) replaces manual, console-driven server configuration,
+IaC replaces manual, console-driven server configuration,
 often termed \emph{ClickOps}, with codified, version-controlled artefacts that
 define the desired state of an environment \citep{morris2016infrastructure}. Two
 properties make IaC particularly attractive for research reproducibility:
@@ -110,9 +110,8 @@ documented in the academic literature.
 
 In summary, prior work has established the viability of ARM processors for Big Data
 workloads, the value of IaC for infrastructure management, and the importance of cost
-optimisation in cloud deployments, but these threads have not been brought together, as better as 
-being known. No published study offers a fully automated pipeline for deploying a Hadoop-based Data
-Lake on free-tier ARM cloud instances, validated through a reproducible benchmark. The
+optimisation in cloud deployments, yet the literature still lacks a fully automated pipeline that deploys a Hadoop-based Data
+Lake on free-tier ARM cloud instances and validates it through a reproducible benchmark. The
 present work addresses this gap by combining Terraform and Ansible into a single
 pipeline that provisions and configures a four-node Hadoop cluster on the OCI Free
 Tier and by evaluating the resulting environment under the SSB.

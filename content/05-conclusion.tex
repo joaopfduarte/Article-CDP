@@ -16,8 +16,7 @@ API, incorporating an automated recovery procedure that retries failed
 installations up to three times. Second, the deployment process has been
 documented through three provisioning workflow diagrams and two component-mapping
 tables, providing a reproducible reference for future deployments. Third, the
-framework's applicability was validated through the SSB,
- as detailed in Section~\ref{sec:use-case}.
+framework's applicability was validated through the SSB, as detailed in Section~\ref{sec:use-case}.
 
 The benchmark results partially corroborate the initial hypothesis. Spark
 consistently outperformed Hive across all 14 SSB queries, with mean speed-up
@@ -38,7 +37,8 @@ The platform remained operationally stable throughout all query executions,
 completing every iteration without unrecoverable failures. This confirms that a
 multi-node Hadoop cluster with distributed storage, analytical processing, and
 governance services can be sustained at zero monetary cost on the OCI Free Tier with limited performance.
-%
+
+\subsection*{Limitations}
 
 Several limitations should be noted. The benchmark was conducted on a fixed four-node cluster, 
 and without an x86 baseline for direct architectural comparison. Furthermore, the two Spark
@@ -52,7 +52,8 @@ microarchitecture without critical failures, potential behavioural differences
 compared to x86 deployments, particularly regarding JVM optimisations and the
 availability of pre-compiled packages, warrant consideration before adopting
 the platform in production-grade environments.
-%
+
+\subsection*{Future Work}
 
 Several directions merit further investigation. The evaluation could be
 extended to real-time ingestion pipelines using NiFi and Kafka in conjunction
