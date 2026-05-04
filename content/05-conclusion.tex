@@ -1,71 +1,41 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-This work addressed the high cost barrier that limits access to Big Data
-infrastructure for academic institutions and resource-constrained organisations.
-The three research objectives --- IaC
-automation of Hadoop on free-tier ARM with Terraform and Ansible,
- documentation of the deployment pipeline as a reproducible reference, and
- SSB benchmarking of analytical query performance --- have been met as follows.
+Big Data platforms remain expensive to provision and difficult to reproduce,
+which narrows access for academic units and smaller organisations. The wider
+literature increasingly emphasises Infrastructure-as-Code and scripted
+deployment as safeguards against configuration drift; situating a full Hadoop
+Data Lake on Oracle Cloud Infrastructure Free Tier ARM instances extends that
+line of work to a deliberately minimal budget and hardware envelope where few
+published end-to-end references exist.
 
-First, the proposed framework automates the end-to-end creation and
-configuration of a Hadoop cluster on the Oracle Cloud Infrastructure (OCI) Free
-Tier, using Terraform for declarative provisioning and Ansible for idempotent
-configuration management. The pipeline
-proceeds through three phases, resource provisioning, OS bootstrapping via
-\texttt{cloud-init}, and cluster deployment through the Ambari REST
-API, incorporating an automated recovery procedure that retries failed
-installations up to three times. Second, the deployment process has been
-documented through three provisioning workflow diagrams and two component-mapping
-tables, providing a reproducible reference for future deployments. Third, the
-framework's applicability was validated through the SSB, as detailed in Section~\ref{sec:use-case}.
+This paper presented an open-source pipeline that provisions a four-node ODP
+cluster through Terraform, Ansible, and the Ambari API, with automated recovery
+on failed installs. Installation profiles let the same codebase target
+different workloads; the Star Schema Benchmark was executed on the
+data-science profile to stress Spark and Hive under tight memory and
+CPU ceilings.
 
-The benchmark results partially corroborate the initial hypothesis. Spark
-consistently outperformed Hive across all 13 SSB queries, reducing mean execution
-time relative to Hive by \PaperHSRedPctMin\% to \PaperHSRedPctMax\% on a per-query basis.
-The anticipated advantage
-of in-memory caching, however, did not materialise as expected. For simpler
-queries (Q1.1, Q1.2, Q1.3, Q2.1--Q2.3, Q3.3), the caching overhead actually degraded performance by
-approximately \PaperCacheOverheadNarrativeMinPct\% to \PaperCacheOverheadNarrativeMaxPct\% relative to uncached Spark, because the 9.3~GB
-\texttt{lineorder} fact table could not be fully cached into the cluster's
-limited memory. Only the more complex multi-join queries (Q3.1, Q3.2, Q3.4--Q4.3)
-benefited from partial caching of the smaller dimension tables, with Q3.2 showing
-the largest improvement at approximately \PaperQThreeTwoCacheImprovementPct\% faster than uncached Spark.
-On average across all queries, the
-cached configuration was \PaperCacheVsSparkMeanPenaltyPct\% slower than uncached Spark. These findings
-suggest that, under severe memory constraints, caching is counterproductive
-unless the query complexity is sufficient to amortise the shuffle and spill
-overhead.
+Empirically, Spark reduced mean query time relative to Hive on every SSB query
+by \PaperHSRedPctMin\% to \PaperHSRedPctMax\% per query. In-memory caching did
+not deliver a uniform gain: lighter queries slowed by roughly
+\PaperCacheOverheadNarrativeMinPct\% to \PaperCacheOverheadNarrativeMaxPct\%
+against uncached Spark because the 9.3~GB lineorder table could not
+fit entirely in RAM, whereas several heavier multi-join queries benefited from
+partial dimension caching (up to about \PaperQThreeTwoCacheImprovementPct\%
+improvement on Q3.2). Averaged over all thirteen queries, the cached
+configuration remained \PaperCacheVsSparkMeanPenaltyPct\% slower than uncached
+Spark. All benchmark runs completed without unrecoverable failures,
+so the stack proved usable for sustained testing despite the constraints.
 
-The platform remained operationally stable throughout all query executions,
-completing every iteration without unrecoverable failures. This confirms that a
-multi-node Hadoop cluster with distributed storage, analytical processing, and
-governance services can be sustained at zero monetary cost on the OCI Free Tier with limited performance.
-%
+The study has clear limits. It used a fixed four-node cluster with no x86
+baseline, so architectural effects cannot be separated from the ARM
+free-tier envelope. Four OCPUs and 24~GB of RAM cap parallelism and cacheable volume,
+and differences in JVM behaviour or packaging between ARM and x86 should be
+weighed before any production adoption.
 
-Several limitations should be noted. The benchmark was conducted on a fixed four-node cluster, 
-and without an x86 baseline for direct architectural comparison. Furthermore, the two Spark
-configurations differ not only in caching behaviour but also in memory
-allocation and shuffle settings, introducing a
-confounding variable that prevents the caching effect from being fully
-isolated. The hard ceiling of 4~OCPUs and
-24~GB of RAM fundamentally restricts both processing parallelism and caching
-capacity. Additionally, whilst the ODP stack executed on the ARM
-microarchitecture without critical failures, potential behavioural differences
-compared to x86 deployments, particularly regarding JVM optimisations and the
-availability of pre-compiled packages, warrant consideration before adopting
-the platform in production-grade environments.
-%
-
-Several directions merit further investigation. The evaluation could be
-extended to real-time ingestion pipelines using NiFi and Kafka in conjunction
-with Spark Structured Streaming, validating the Default profile under sustained
-streaming workloads. Performance may improve through columnar storage formats
-such as ORC or Parquet combined with predicate-pushdown optimisations, reducing
-the I/O overhead observed in the disk-bound phases. A controlled comparison
-between the ARM-based free-tier cluster and an equivalent x86 deployment would
-isolate architectural effects from resource-constraint effects, addressing one
-of the principal limitations of the present study. Horizontal scalability could
-be assessed by federating multiple Free Tier tenancies or by migrating to paid
-ARM instances with higher virtual core allocations, alleviating the executor
-bottleneck identified in this study.
+Future work could exercise streaming-oriented paths with Spark Structured Streaming, adopt
+columnar formats such as ORC or Parquet to cut disk I/O, run a controlled ARM
+versus x86 comparison, and explore horizontal scale through additional
+tenancies or paid instances with more executors to relax the bottlenecks seen
+here.
