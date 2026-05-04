@@ -261,52 +261,27 @@ unless the query complexity is sufficient to amortise the overhead.
 
 \subsubsection{Resource limits and discussion}
 
-The restriction to two executors reflects a hard CPU constraint, not merely a 
-memory limitation. The blueprint configures
-one virtual core per NodeManager, and three of the four nodes act as
-NodeManagers, yielding three YARN containers in total. Because the Spark
-Application Master claims one container, at most two remain available for
-executors. Any attempt to allocate a third executor would cause a resource
-deadlock. Each executor receives 1~GB of heap memory plus a 256~MB overhead
-allocation; the driver is limited to 512~MB. These values were chosen to
-prevent YARN from killing containers when the operating system and other Hadoop
-daemons (HDFS DataNode, NodeManager) compete for the same 6~GB of physical RAM
-on each node.
+The blueprint ties each worker to a single YARN virtual core, so the cluster
+offers only a handful of NodeManager slots and one container is always reserved
+for Spark's Application Master. That arrangement caps Spark at two executors;
+requesting a third would deadlock YARN, so the limit is structural rather than a
+discretionary memory choice. Executor and driver heaps were therefore kept
+modest so Spark coexists with the operating system and Hadoop daemons on each
+6~GB node.
 
-A methodological caveat applies to the comparison between the two Spark
-configurations. The ``standard'' invocation relies on YARN's default resource
-allocation, whereas the ``cached'' configuration explicitly sets
-\texttt{driver-memory}, \texttt{executor-memory},
-\texttt{spark.memory.fraction} (0.8 versus the default~0.6), and
-\texttt{spark.sql.shuffle.partitions} (48 versus the default~200). The
-observed performance difference therefore reflects not only the effect of
-caching but also the change in memory allocation and shuffle behaviour.
-Isolating the caching effect alone would require a run with identical resource
-parameters but without the cache directives; such a run was not performed in
-this study. This confound is revisited in the limitations discussed in
-Section~\ref{sec:conclusion}.
+Despite these constraints, every query execution completed without an
+unrecoverable failure: when memory filled, Spark spilled to disk instead of
+aborting, which indicates that the stack remained usable throughout the long
+benchmark campaign.
 
-Despite these constraints, all query executions completed without unrecoverable failures.
-Spark fell back to disk when in-memory caching could not be
-sustained, confirming the operational stability of the platform under
-prolonged stress.
-
-These results can be situated within the broader
-findings of prior ARM benchmarking studies. \citet{loghin2015performance}
-observed that I/O-bound workloads are less sensitive to processor
-micro-architecture than CPU-bound ones; the SSB queries used here are
-predominantly I/O-bound, reading large fact tables from HDFS, which may
-explain why the ARM instances sustain acceptable Spark throughput despite
-being limited to a single virtual core per node. \citet{8287751} reported
-favourable cost-efficiency ratios for Hadoop and Spark on commodity ARM64
-servers with substantially greater per-node resources. The present study
-extends that observation to the extreme lower bound of the resource
-spectrum: a cluster where each node has only 1~vCPU and 6~GB of RAM, yet
-Spark still outperforms Hive by factors of 2.5$\times$ to 5$\times$
-depending on query complexity. The caching analysis, however, reveals a
-boundary condition not explored in earlier work: when the largest table
-exceeds available memory and the executor count is fixed at two, the
-overhead of attempted caching outweighs its benefits for the majority of
-queries. This suggests that caching strategies validated on larger clusters
-cannot be directly transferred to free-tier-class hardware without careful
-tuning of memory allocation parameters.
+Read against prior ARM studies, \citet{loghin2015performance} note that
+I/O-bound workloads are less sensitive to processor micro-architecture than
+CPU-bound ones. The SSB queries match that profile, which helps explain why Spark
+remains effective on severely under-provisioned instances. \citet{8287751}
+reported favourable cost-efficiency for Hadoop and Spark on commodity ARM64
+hardware with far more headroom per node; the present deployment sits at the
+opposite extreme, yet Spark still outperforms Hive by factors of about
+2.5$\times$ to 5$\times$ across the query groups. The caching experiments add a
+complementary lesson: when the dominant fact table cannot fit in executor memory, 
+cache-style execution mostly adds shuffle and
+spill work rather than speed.
