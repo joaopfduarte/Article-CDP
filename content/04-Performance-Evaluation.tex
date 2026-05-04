@@ -52,9 +52,9 @@ of~3 across the three DataNodes.
 The relational structure was registered in the Hive Metastore via the Beeline
 CLI, connecting to HiveServer2 on a designated worker node. Five external
 tables, \texttt{lineorder}, \texttt{customer}, \texttt{supplier},
-\texttt{part}, and \texttt{dwdate}, were created using the
-\texttt{OpenCSVSerde} deserialiser, with column types matching the SSB
-specification. Because the tables are external, both Hive and Spark share a
+\texttt{part}, and \texttt{dwdate}, were created transforming CSV files into Hive tables, accessible by HDFS, 
+with column types matching the SSB specification.
+Because the tables are external, both Hive and Spark share a
 single schema definition backed by the same HDFS data, ensuring that query
 results are directly comparable across engines.
 
@@ -178,17 +178,11 @@ following points highlight how to read the chart alongside the table.
     stays well below Hive; the relative ordering between uncached and cached
     Spark varies across the constituent queries, so the grouped bars summarise
     a mix of modest penalties and visible gains that Table~\ref{tab:benchmark-results}
-    resolves at per-query granularity.
+    resolves at per-query details.
     \item \textbf{Group~Q4} (profit queries Q4.1--Q4.3): Hive reaches the highest
     averages in the figure; Spark still lowers execution substantially; cached
     Spark can approach or beat uncached Spark where partial dimension caching
-    amortises the join workload, which is easier to see in the table for Q3.2
-    and neighbouring queries than in the aggregate bar alone.
-    \item \textbf{Across groups:} in this aggregated view, mean Hive time
-    increases from Q1 through Q4 while Spark remains comparatively flat, so the
-    visual gap between Hive and Spark widens with join complexity, consistent
-    with the quantitative group analysis below, even though the chart does not
-    depict one bar per query.
+    amortises the join workload..
 \end{itemize}
 
 \begin{table}[htbp]
@@ -249,10 +243,11 @@ Spark configurations is less straightforward. For the simpler two-join queries
 A similar penalty
 applies to the three-way and four-way join queries Q2.1--Q2.3, where caching added approximately
 \PaperExpCacheQTwoOverMinPct\% to \PaperExpCacheQTwoOverMaxPct\%, and to Q3.3, where the overhead was approximately \PaperExpCacheQThreeThreeOverPct\%. In
-all of these cases, the penalty stems from the attempt to cache the 9.3~GB
-\texttt{lineorder} fact table into the cluster's limited memory: the table
-cannot be fully cached, and the resulting shuffle and disk spill costs penalise
-execution without conferring a commensurate read-back benefit.
+each case Spark tries to cache the whole 9.3~GB \texttt{lineorder} table, but the
+cluster does not have enough RAM to keep it entirely in memory. Only part of the
+table stays cached; the rest is shuffled and spilled to disk, so the job pays
+extra I/O and shuffle work while still reading most of the fact data from disk,
+which is why caching slows these runs instead of speeding them up.
 
 For the remaining queries involving tighter filters and higher-cardinality
 joins (Q3.1, Q3.2, Q3.4--Q4.3), partial caching of the smaller dimension tables
