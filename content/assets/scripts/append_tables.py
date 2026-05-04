@@ -13,7 +13,7 @@ data = {
         "node2.cdp (10.0.0.4)": ["ZOOKEEPER_SERVER", "KAFKA_BROKER", "DATANODE", "NODEMANAGER", "SPARK3_THRIFTSERVER", "HDFS_CLIENT", "YARN_CLIENT", "MAPREDUCE2_CLIENT", "TEZ_CLIENT", "HIVE_CLIENT", "ZOOKEEPER_CLIENT", "INFRA_SOLR_CLIENT", "SPARK3_CLIENT"],
         "node3.cdp (10.0.0.5)": ["KAFKA_BROKER", "DATANODE", "NODEMANAGER", "RANGER_TAGSYNC", "SPARK3_LIVY2_SERVER", "HDFS_CLIENT", "YARN_CLIENT", "MAPREDUCE2_CLIENT", "TEZ_CLIENT", "HIVE_CLIENT", "ZOOKEEPER_CLIENT", "INFRA_SOLR_CLIENT", "SPARK3_CLIENT"]
     },
-    "Software Engineering": {
+    "Streaming": {
         "master.cdp (10.0.0.2)": ["SECONDARY_NAMENODE", "NAMENODE", "APP_TIMELINE_SERVER", "RESOURCEMANAGER", "TIMELINE_READER", "YARN_REGISTRY_DNS", "HISTORYSERVER", "HBASE_MASTER", "ZOOKEEPER_SERVER", "PHOENIX_QUERY_SERVER", "HDFS_CLIENT", "YARN_CLIENT", "MAPREDUCE2_CLIENT", "HBASE_CLIENT", "ZOOKEEPER_CLIENT", "INFRA_SOLR"],
         "node1.cdp (10.0.0.3)": ["ZOOKEEPER_SERVER", "DATANODE", "NFS_GATEWAY", "NODEMANAGER", "NIFI_CA", "HDFS_CLIENT", "YARN_CLIENT", "MAPREDUCE2_CLIENT", "HBASE_CLIENT", "ZOOKEEPER_CLIENT"],
         "node2.cdp (10.0.0.4)": ["ZOOKEEPER_SERVER", "NIFI_MASTER", "DATANODE", "NODEMANAGER", "HDFS_CLIENT", "YARN_CLIENT", "MAPREDUCE2_CLIENT", "HBASE_CLIENT", "ZOOKEEPER_CLIENT"],
@@ -87,7 +87,11 @@ roles = {
 for profile, nodes in data.items():
     latex.append("\\begin{table}[htbp]")
     latex.append("  \\centering")
-    latex.append(f"  \\caption{{Component Mapping for the {profile} Profile}}")
+    if profile == "Streaming":
+        caption = "Component Mapping for the Streaming profile"
+    else:
+        caption = f"Component Mapping for the {profile} Profile"
+    latex.append(f"  \\caption{{{caption}}}")
     safe_prof = profile.lower().replace(' ', '-')
     latex.append(f"  \\label{{tab:comp-{safe_prof}}}")
     # Decrease row separation internally for tighter fit

@@ -15,7 +15,7 @@ consists of four virtual machines, one master node and three worker
 nodes, hosted within a single subnet of an OCI tenancy as depicted in
 Figure~\ref{fig:topology}. Each node is a \texttt{VM.Standard.A1.Flex}
 instance with 1~\emph{Oracle CPU capacity unit} (OCPU; analogous to one general-purpose vCPU) on the ARMv8 architecture, 6~GB of RAM and 50GB of storage, yielding a total cluster capacity
-of 4~OCPUs, 24~GB of RAM and 200GB of storage. The instances run OL9 (RHEL-compatible) on the aarch64
+of 4~OCPUs, 24~GB of RAM and 200GB of storage. The physical host processors for this shape are Ampere Altra Q80-30, with a maximum frequency of 3.0~GHz; each provisioned OCPU maps to dedicated core capacity on that processor family. The instances run OL9 (RHEL-compatible) on the aarch64
 architecture. Persistent block volumes are attached to each instance for HDFS
 data and log storage.
 
@@ -40,7 +40,7 @@ Deployment is fully automated through Infrastructure as Code and proceeds in
 three sequential phases, illustrated in
 Figures~\ref{fig:prov-terraform}--\ref{fig:prov-cluster}.
 
-\paragraph{Phase~1: Terraform provisioning.}
+\noindent\textbf{Phase~1: Terraform provisioning.}
 The user configures a small set of Terraform variables, the permitted IP range
 and the desired installation profile, and executes \texttt{terraform apply}.
 Terraform then generates a \emph{Transport Layer Security} (TLS) RSA key pair, provisions the network layer
@@ -56,7 +56,7 @@ phase as seen in Figure~\ref{fig:prov-terraform}.
   \label{fig:prov-terraform}
 \end{figure}
 
-\paragraph{Phase~2: OS-level configuration.}
+\noindent\textbf{Phase~2: OS-level configuration.}
 On first boot, a \texttt{cloud-init} script on the master node installs Python
 and Ansible, configures host resolution via \texttt{/etc/hosts} on all nodes,
 and applies baseline OS security rules as shown in Figure~\ref{fig:prov-os}. Ansible is
@@ -69,7 +69,7 @@ the Ambari Server on the master and Ambari Agents on all four nodes. At this
 point the cluster is ready to receive the application-level deployment
 orchestrated by Ambari.
 
-\paragraph{Phase~3: Ambari-driven cluster deployment.}
+\noindent\textbf{Phase~3: Ambari-driven cluster deployment.}
 Once the Ambari infrastructure is running, a shell script on the master node
 registers the application blueprint via the Ambari \emph{representational state transfer} (REST) API. The blueprint is a
 \emph{JavaScript Object Notation} (JSON) document that maps each Hadoop component to its designated node role
@@ -82,13 +82,10 @@ blueprint and a host-mapping template as demonstrated in Figure~\ref{fig:prov-cl
 During this phase, Ambari downloads the ODP~1.2.2.0 \emph{Red Hat Package Manager} (RPM) packages from an
 external repository, installs them on each node, and starts the services in
 dependency order. The deployment incorporates an automated recovery engine: if
-Ambari reports a failure at any stage, the engine stops the Ambari Server,
-clears HDFS and HBase state directories, resets the PostgreSQL database, and
-restarts the server, retrying the full deployment up to three times. If all
+Ambari reports a failure at any stage, the engine retries the full deployment with a 
+recovery policy. If all
 retries are exhausted, a manual initialisation script is available as a
-fallback. The end-to-end process, including potential recovery cycles and the
-retrieval of external component binaries, takes approximately three hours on the
-Free Tier network bandwidth.
+final fallback.
 
 \begin{figure}[htbp]
   \centering
@@ -142,26 +139,30 @@ principal component versions deployed in this study.
 
 The architecture diagram in Figure~\ref{fig:arch-default} partitions the
 platform into four functional layers: ingestion, storage, processing, and
-governance. The following four paragraphs examine each layer in that sequence,
-relating the deployed ODP services to the responsibilities implied by the
-diagram. Table~\ref{tab:odp-versions} lists the software versions assumed
-throughout this discussion.
+governance. The following two subsubsections group those layers into ingestion and
+storage, then processing and governance, relating the deployed ODP services to the
+responsibilities implied by the diagram. Table~\ref{tab:odp-versions} lists the
+software versions assumed throughout this discussion.
 
-\paragraph{Ingestion.} Apache Kafka handles real-time event streaming, decoupling
+\subsubsection{Ingestion and storage}
+
+Apache Kafka handles real-time event streaming, decoupling
 data producers from consumers to support high-throughput workloads. Apache NiFi
 manages flow-based data routing with built-in back-pressure control, data
 provenance tracking, and a visual pipeline editor. A \emph{Network File System} (NFS) Gateway provides a
 POSIX-compatible mount point for batch file ingestion, allowing external systems to write data directly
 into HDFS without requiring Hadoop client libraries.
 
-\paragraph{Storage.} HDFS provides block-based, replicated storage for raw and
+HDFS provides block-based, replicated storage for raw and
 columnar data. Files are split into blocks (128~MB by default) and replicated
 across the three DataNodes for fault tolerance. Apache HBase offers low-latency
 NoSQL access for random read/write workloads. The Hive Metastore maintains
 schema and structural metadata for tables registered across the platform,
 enabling both Hive and Spark to share a common catalogue of table definitions.
 
-\paragraph{Processing.} Apache YARN schedules cluster resources by allocating
+\subsubsection{Processing and governance}
+
+Apache YARN schedules cluster resources by allocating
 containers to processing engines according to the capacity available on each
 NodeManager. Apache Spark~3 performs in-memory analytics and is the primary
 engine for the benchmark workloads evaluated in this study. Apache Tez provides
@@ -171,9 +172,12 @@ as the entry point for business-intelligence tools and the Beeline CLI. The
 Phoenix Query Server enables SQL access over HBase tables. Spark~3 includes
 Livy for REST-based remote job submission.
 
-\paragraph{Governance.} Apache Ranger enforces role-based access control (RBAC)
+Apache Ranger enforces role-based access control (RBAC)
 and data-masking policies across all services in the stack; its audit logs are
 indexed by Infra Solr for structured search and compliance reporting.
+Solr is fed whenever Ranger persists auditable events, policy checks and
+allow/deny outcomes on data and service access, administrative changes to policies
+and users.
 Apache Atlas complements Ranger by centralising technical metadata and
 end-to-end data lineage for entities registered in the Hive Metastore and other
 integrated services, supporting data discovery and impact analysis while Ranger
@@ -209,18 +213,25 @@ reference architecture against which the other profiles are derived.
 
 The \textbf{Data Science Profile} (Table~\ref{tab:comp-data-science}) omits the
 flow-based ingestion layer (NiFi) and the low-latency NoSQL tier (HBase,
-Phoenix), concentrating cluster resources on Spark and Hive for analytical
-processing and SQL-based workloads. By removing the memory and CPU overhead of
-ingestion-oriented services, this profile frees resources for the in-memory
-processing that Spark requires. It was used for the benchmark evaluation
-reported in Section~\ref{sec:use-case}. Note that Kafka brokers remain in this
-profile to support future streaming integration, although they were not
-exercised during the benchmark.
+Phoenix), concentrating cluster resources on the analytical tier. Spark is the
+primary engine for in-memory and DAG-centric execution, while Hive remains
+fully deployed: Hive Server~2 continues to expose the SQL interface and JDBC/ODBC
+entry point, and the shared Hive Metastore holds the canonical table definitions
+that both Hive and Spark use over the same HDFS data, so disk-bound Hive
+workloads and interactive Spark jobs are first-class peers rather than an
+afterthought. By removing the memory and CPU overhead of NiFi, HBase, and
+Phoenix, this profile frees resources for those engines. Ingestion without NiFi
+still proceeds in batch through Spark (or cluster file utilities) reading and
+writing datasets on HDFS, and can be extended to streaming by feeding Kafka topics
+that Spark consumers process; Kafka brokers therefore remain in this profile to
+support that path and future streaming integration, although they were not
+exercised during the benchmark. The profile was used for the evaluation reported
+in Section~\ref{sec:use-case}.
 
-The \textbf{Software Engineering Profile} retains NiFi, Kafka, HBase, and
-Phoenix but excludes the analytical engines (Spark, Hive), reserving resources
-for sustained event streaming, flow-based ingestion, and fast-retrieval
-transactional operations.
+The \textbf{Streaming profile} retains NiFi, Kafka, HBase, and Phoenix but
+excludes the analytical engines (Spark, Hive), targeting sustained event
+streaming and flow-based ingestion while keeping HBase and Phoenix for
+low-latency transactional access and point look-ups alongside the Kafka backbone.
 
 \begin{table}[htbp]
   \centering

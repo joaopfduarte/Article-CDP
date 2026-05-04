@@ -41,7 +41,7 @@ Approach: **soft-delete** — all removals are done by commenting out, never by 
 12. **SSB scale factor not stated** — essential for reproducibility.
 13. **Apache Atlas** mentioned in architecture description but absent from all profile tables and only reappears as future work — inconsistency.
 14. **Abstract/Conclusion claim NiFi+Kafka pipeline** but benchmark uses Data Science profile which excludes them.
-15. **Data Science and Software Engineering profile tables** are commented out — should they be included?
+15. **Data Science and Streaming profile tables** are commented out — should they be included?
 
 ### Prose Quality
 16. AI-artefact phrases to remove: "leverages", "comprehensive", "it is important to note", "in this context", "encompasses the full spectrum", "robust".
@@ -79,7 +79,7 @@ All edits use **soft-delete**: original text is commented out (LaTeX `%`), never
 1. **SSB scale factor**: What scale factor was used? (SF=1? SF=10? SF=100?)
 2. **Query 01 vs Query 03**: Identical SQL — copy-paste error or intentional?
 3. **Apache Atlas**: Was it actually deployed? It appears in the architecture figure description but not in any installation profile table and resurfaces only as future work.
-4. **Profile tables**: Should the commented-out Data Science and Software Engineering tables be included?
+4. **Profile tables**: Should the commented-out Data Science and Streaming profile tables be included?
 5. **Run protocol**: Were there warm-up runs? Was the first iteration discarded?
 
 ## Verification Plan

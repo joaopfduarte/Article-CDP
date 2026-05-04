@@ -222,7 +222,9 @@ following points highlight how to read the chart alongside the table.
   \end{tabular}
 \end{table}
 
-\paragraph{Hive versus Spark.} Across all 13 queries, Spark reduced mean
+\subsubsection{Hive, Spark, and caching}
+
+Across all 13 queries, Spark reduced mean
 execution time relative to Hive by approximately \PaperHSRedPctMeanAgg\% when
 averaging over all queries, with per-query reductions ranging from
 \PaperHSRedPctMin\% to \PaperHSRedPctMax\%. The SSB query catalogue is
@@ -243,7 +245,7 @@ largest relative margin between Hive and Spark (approximately \PaperExpHSGFourRe
 \PaperExpHSGFourMeanSpark~seconds. All differences are consistent across the 10 iterations, as
 indicated by the relatively low standard deviations.
 
-\paragraph{Spark versus Spark with caching.} The comparison between the two
+The comparison between the two
 Spark configurations is less straightforward. For the simpler two-join queries
 (Q1.1, Q1.2, Q1.3), the cached configuration was consistently slower, increasing latency by approximately
 \PaperExpCacheQOneOverMinPct\% to \PaperExpCacheQOneOverMaxPct\% relative to uncached Spark.
@@ -265,7 +267,8 @@ however, the cached configuration was \PaperCacheVsSparkMeanPenaltyPct\% slower 
 indicating that caching is counterproductive under these memory constraints
 unless the query complexity is sufficient to amortise the overhead.
 
-\paragraph{Resource constraints.}
+\subsubsection{Resource limits and discussion}
+
 The restriction to two executors reflects a hard CPU constraint, not merely a 
 memory limitation. The blueprint configures
 one virtual core per NodeManager, and three of the four nodes act as
@@ -297,7 +300,7 @@ Spark fell back to disk when in-memory caching could not be
 sustained, confirming the operational stability of the platform under
 prolonged stress.
 
-\paragraph{Discussion.} These results can be situated within the broader
+These results can be situated within the broader
 findings of prior ARM benchmarking studies. \citet{loghin2015performance}
 observed that I/O-bound workloads are less sensitive to processor
 micro-architecture than CPU-bound ones; the SSB queries used here are

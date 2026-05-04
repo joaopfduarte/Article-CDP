@@ -67,7 +67,7 @@
   \begin{itemize}
     \item \textbf{Default}: stack completo (ingest\~ao, HBase, Spark, Hive, Ranger, \ldots).
     \item \textbf{Data science}: foco em \textbf{Spark + Hive + HDFS/YARN}; omite NiFi/HBase/Phoenix para liberar RAM/CPU --- \textbf{usado na avalia\c{c}\~ao SSB}.
-    \item \textbf{Software engineering}: fluxos NiFi/Kafka/HBase, sem motores anal\'iticos Spark/Hive.
+    \item \textbf{Streaming profile}: NiFi/Kafka para ingest\~ao e eventos; HBase/Phoenix para acesso de baixa lat\^encia; sem Spark/Hive anal\'iticos.
   \end{itemize}
   \vspace{0.35em}
   \begin{cefetblock}{Tempo de implanta\c{c}\~ao} \\

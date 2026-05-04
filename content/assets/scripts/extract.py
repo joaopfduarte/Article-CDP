@@ -1,9 +1,10 @@
 import json
 
+# Editorial label "Streaming profile"; blueprint path keeps software-engineering (IaC repo unchanged).
 files = [
     ("Default", r"content\assets\source-external\infra-terraform\assets\blueprint.json"),
     ("Data Science", r"content\assets\source-external\infra-terraform\assets\blueprint-data-science\blueprint.json"),
-    ("Software Engineering", r"content\assets\source-external\infra-terraform\assets\blueprint-software-engineering\blueprint.json")
+    ("Streaming profile", r"content\assets\source-external\infra-terraform\assets\blueprint-software-engineering\blueprint.json")
 ]
 
 with open("temp.txt", "w", encoding="utf-8") as out:
