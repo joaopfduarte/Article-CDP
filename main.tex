@@ -68,6 +68,10 @@ Vol. \theVOL, No. \theISSUE, \thePUBYEAR\hfill\thepage}}%
 \input{content/04-Performance-Evaluation}
 \input{content/05-conclusion}
 
+% Flush pending floats before the unnumbered references block (starred section
+% does not trigger placeins [section] barriers).
+\FloatBarrier
+
 % Bibliography
 % Use plainnat or similar style as per Inderscience requirement (often unsrt or plain)
 % The sample used natbib, so we stick to it if the class loads it.

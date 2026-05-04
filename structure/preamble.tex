@@ -22,9 +22,17 @@
   showstringspaces=false,
 }
 
+% Float placement: singlecol-new.cls sets all float fractions and page glue for
+% the target journal---do not \renewcommand those parameters or \@fptop/\@fpbot
+% here (editorial rule). Only additive aids are allowed below.
+
 % Hyperlinks
 \usepackage[hidelinks]{hyperref}
 \usepackage[authoryear, round]{natbib}
+
+% Keeps floats from drifting past the end of each \section (does not override
+% class float fractions). Confirm against the journal's allowed-packages list.
+\usepackage[section]{placeins}
 \usepackage{enumitem} % For compact lists
 \setlist[enumerate]{leftmargin=*, topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=0pt}
 \setlist[itemize]{leftmargin=*, topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=0pt}

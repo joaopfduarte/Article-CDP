@@ -1,7 +1,7 @@
 \section{Performance Evaluation}
 \label{sec:use-case}
 
-This section evaluates the provisioned cluster through the SSB \citep{oneil2009star}. The central question is whether Spark's in-memory
+This section evaluates the provisioned cluster through the SSB. The central question is whether Spark's in-memory
 processing outperforms Hive's disk-bound execution on the severely constrained
 ARM hardware described in Section~\ref{sec:arch}, and whether explicit caching
 yields further gains.
@@ -11,8 +11,7 @@ yields further gains.
 
 The benchmark was conducted on the cluster deployed under the
 \texttt{data-science} installation profile
-(Table~\ref{tab:comp-data-science}). Each of the four nodes is a
-\texttt{VM.Standard.A1.Flex} instance with 1~OCPU and 6~GB of RAM. The active
+(Table~\ref{tab:comp-data-science}). The active
 services comprised HDFS, YARN, Hive Metastore, Hive Server~2, and Spark~3.
 
 The SSB dataset was generated using the
@@ -80,9 +79,7 @@ full SSB query catalogue of 13 analytical queries (Listing~\ref{lst:ssb-queries}
 \end{enumerate}
 
 Each query was executed 10 times per configuration, yielding 390 individual
-query runs in total (13 queries $\times$ 10 iterations $\times$ 3
-configurations). All 10 iterations are included in the reported statistics; no
-warm-up iterations were discarded.
+query runs in total.
 Queries were submitted sequentially through shell scripts that wrap
 each invocation and log wall-clock execution times to a
 log file. The scripts were executed under \texttt{nohup} on the master node to
@@ -294,8 +291,7 @@ parameters but without the cache directives; such a run was not performed in
 this study. This confound is revisited in the limitations discussed in
 Section~\ref{sec:conclusion}.
 
-Despite these constraints, all 390 query executions (13 queries $\times$ 10
-iterations $\times$ 3 configurations) completed without unrecoverable failures.
+Despite these constraints, all query executions completed without unrecoverable failures.
 Spark fell back to disk when in-memory caching could not be
 sustained, confirming the operational stability of the platform under
 prolonged stress.
