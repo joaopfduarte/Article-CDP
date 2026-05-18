@@ -50,7 +50,6 @@ Thumbs.db
 
 !content/assets/**
 
-# Scripts locais
-compile.sh
+# Local build artefacts
 wordcount.txt
 /content/assets/experimental-data/*
