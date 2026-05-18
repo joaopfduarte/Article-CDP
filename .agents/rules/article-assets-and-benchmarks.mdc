@@ -1,0 +1,14 @@
+---
+description: Protect benchmark assets, generated macros, and research artefacts.
+globs: "**/content/assets/**"
+alwaysApply: false
+---
+
+# Assets and benchmark artefacts
+
+When changing `content/assets/**`:
+
+1. Keep benchmark scripts, data, diagrams, and generated files coherent.
+2. Treat `content/assets/generated/benchmark_macros.tex` as a generated contract consumed by manuscript/slides.
+3. If benchmark logic changes, verify dependent scripts under `content/assets/scripts/` still produce compatible outputs.
+4. Avoid deleting or renaming shared assets referenced by `content/*.tex` or `apresentacoes/main.tex` without updating those references.

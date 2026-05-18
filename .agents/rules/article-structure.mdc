@@ -1,0 +1,14 @@
+---
+description: Keep top-level article and slide build structure consistent.
+globs: "**/compile*.sh"
+alwaysApply: false
+---
+
+# Build and repository structure
+
+When editing compile scripts or build flow:
+
+1. Keep `compile-apresentacoes.sh` aligned with `apresentacoes/main.tex` output expectations.
+2. Keep generated metrics integration intact (`content/assets/generated/benchmark_macros.tex`).
+3. Ensure build instructions reflect tracked repository files rather than local-only scripts.
+4. Do not assume monograph-specific commands or legacy controller files.

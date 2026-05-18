@@ -1,0 +1,17 @@
+---
+description: Route agents to the correct Article-CDP skills and workflows.
+alwaysApply: true
+---
+
+# Article-CDP global context
+
+Before substantial edits in `content/**/*.tex`, `bib/references.bib`, `apresentacoes/**/*.tex`, or `content/assets/**`:
+
+1. Use the matching skill under `.agents/skills/`:
+   - `article-evidence-and-sources` for literature claims and citation quality.
+   - `article-academic-language` for language and style refinement.
+   - `article-repository-infrastructure` for repository structure, build flow, and generated artefacts.
+   - `article-latex-debug-workflow` for compile-and-log verification.
+   - `article-conventional-commits` for Conventional Commit workflows.
+2. Align decisions with the article workflow documented in `main.tex` and chapters under `content/`.
+3. Never reference missing legacy paths (`config/`, `arch-scripts/`, `AGENTS.md`) for this repository.

@@ -1,0 +1,15 @@
+---
+description: Keep bibliography entries aligned with manuscript citations.
+globs: "**/bib/references.bib"
+alwaysApply: false
+---
+
+# Bibliography maintenance
+
+When editing `bib/references.bib`:
+
+1. Keep citation keys stable and descriptive.
+2. Ensure entries support claims made in `content/*.tex`.
+3. Preserve valid BibTeX syntax and required fields for each entry type.
+4. Keep repository comments factual and concise (for example, data corrections or access-date notes).
+5. If citation style constraints change, keep `main.tex` and bibliography expectations consistent.

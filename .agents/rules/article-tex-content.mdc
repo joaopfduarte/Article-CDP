@@ -1,0 +1,14 @@
+---
+description: Enforce compile-and-log evidence for substantive TeX edits.
+globs: "**/*.tex"
+alwaysApply: false
+---
+
+# Editing `.tex` content
+
+For substantive edits in `content/`, `main.tex`, or `apresentacoes/`:
+
+1. Follow `article-latex-debug-workflow` and verify with real compilation evidence.
+2. Do not claim “build is clean” without checking the relevant log output.
+3. Use `article-academic-language` for style-only revisions.
+4. Use `article-evidence-and-sources` when updating factual claims tied to references.

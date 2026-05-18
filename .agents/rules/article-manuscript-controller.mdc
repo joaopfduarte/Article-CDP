@@ -1,0 +1,17 @@
+---
+description: Main manuscript orchestration points for Article-CDP.
+globs: "{**/main.tex,**/structure/preamble.tex}"
+alwaysApply: false
+---
+
+# Manuscript control files
+
+Changes here affect the entire article build:
+
+- `main.tex` defines document structure, chapter inclusion, and bibliography linkage.
+- `structure/preamble.tex` defines package and macro behaviour used across chapters.
+
+After substantive changes:
+
+1. Verify chapter includes and bibliography path (`bib/references`) remain valid.
+2. Confirm edits remain compatible with the class file and chapter files under `content/`.
